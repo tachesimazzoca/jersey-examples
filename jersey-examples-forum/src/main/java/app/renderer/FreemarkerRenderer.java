@@ -18,41 +18,46 @@ import java.nio.charset.Charset;
 import java.util.Locale;
 
 public class FreemarkerRenderer implements Renderer {
+    
     private static class TemplateLoader extends
             CacheLoader<String, Configuration> {
+        private String directory;
+        
+        public TemplateLoader(String directory) {
+            this.directory = directory;
+        }
+
         @Override
         public Configuration load(String key) throws Exception {
             final Configuration configuration = new Configuration();
             configuration.setObjectWrapper(new DefaultObjectWrapper());
             configuration.loadBuiltInEncodingMap();
             configuration.setDefaultEncoding(Charsets.UTF_8.name());
-            configuration.setDirectoryForTemplateLoading(new File("/"));
+            configuration.setDirectoryForTemplateLoading(new File(directory));
             return configuration;
         }
     }
 
     private final LoadingCache<String, Configuration> configurationCache;
 
-    public FreemarkerRenderer() {
+    public FreemarkerRenderer(String dir) {
         this.configurationCache = CacheBuilder.newBuilder()
                 .concurrencyLevel(128)
-                .build(new TemplateLoader());
+                .build(new TemplateLoader(dir));
     }
 
     @Override
     public void render(String path, Object attr, Locale locale,
             OutputStream output) throws IOException, TemplateException {
+        String realpath = path;
+        if (!realpath.endsWith(".ftl")) {
+            realpath += ".ftl";
+        }
         final Configuration configuration =
-                configurationCache.getUnchecked(path);
+                configurationCache.getUnchecked(realpath);
         final Charset charset = Charset.forName(
                 configuration.getEncoding(locale));
-        String realpath;
-        if (path.startsWith("/")) {
-            realpath = path;
-        } else {
-            realpath = this.getClass().getResource(
-                    "/views/freemarker").getPath() + "/" + path;
-        }
+
         final Template template = configuration.getTemplate(
                 realpath, charset.name());
         template.process(attr,
