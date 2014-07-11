@@ -12,10 +12,12 @@
          <param-name>javax.ws.rs.Application</param-name>
          <param-value>app.AppResourceConfig</param-value>
      </init-param>
+     <!--
      <init-param>
          <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
-         <param-value>^/(index\.html)?$</param-value>
+         <param-value>^/assets/.*$</param-value>
      </init-param>
+     -->
    </filter>
    <filter-mapping>
      <filter-name>Jersey Web Application</filter-name>
