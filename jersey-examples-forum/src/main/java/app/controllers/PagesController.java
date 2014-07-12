@@ -8,7 +8,7 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
-import app.core.Page;
+import app.core.View;
 
 @Path("/")
 @Produces(MediaType.TEXT_HTML)
@@ -37,6 +37,6 @@ public class PagesController {
     @GET
     @Path("pages/{name}.html")
     public Response page(@PathParam("name") String name) {
-        return Response.ok(new Page("pages/" + name, params)).build();
+        return Response.ok(new View("pages/" + name, params)).build();
     }
 }

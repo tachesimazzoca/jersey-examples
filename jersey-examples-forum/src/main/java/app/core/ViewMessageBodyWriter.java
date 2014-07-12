@@ -21,31 +21,31 @@ import app.renderer.Renderer;
 
 @Provider
 @Produces(MediaType.WILDCARD)
-public class PageMessageBodyWriter implements MessageBodyWriter<Page> {
+public class ViewMessageBodyWriter implements MessageBodyWriter<View> {
     @Context
     private HttpHeaders headers;
 
     private static final Logger LOGGER = Logger
-            .getLogger(PageMessageBodyWriter.class.getName());
+            .getLogger(ViewMessageBodyWriter.class.getName());
 
     private final Renderer renderer;
 
-    public PageMessageBodyWriter(Renderer renderer) {
+    public ViewMessageBodyWriter(Renderer renderer) {
         this(renderer, File.separator);
     }
 
-    public PageMessageBodyWriter(Renderer renderer, String directory) {
+    public ViewMessageBodyWriter(Renderer renderer, String directory) {
         this.renderer = renderer;
     }
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType,
             Annotation[] annotations, MediaType mediaType) {
-        return Page.class.isAssignableFrom(type);
+        return View.class.isAssignableFrom(type);
     }
 
     @Override
-    public long getSize(Page t,
+    public long getSize(View t,
             Class<?> type,
             Type genericType,
             Annotation[] annotations,
@@ -54,7 +54,7 @@ public class PageMessageBodyWriter implements MessageBodyWriter<Page> {
     }
 
     @Override
-    public void writeTo(Page t,
+    public void writeTo(View t,
             Class<?> type,
             Type genericType,
             Annotation[] annotations,

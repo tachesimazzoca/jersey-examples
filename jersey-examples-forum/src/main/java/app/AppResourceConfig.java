@@ -2,25 +2,29 @@ package app;
 
 import com.sun.jersey.api.core.ScanningResourceConfig;
 
-import app.controllers.*;
-import app.core.*;
-import app.renderer.FreemarkerRenderer;
-
 import com.google.common.collect.ImmutableMap;
+
+import app.core.*;
+import app.controllers.*;
+import app.renderer.*;
 
 public class AppResourceConfig extends ScanningResourceConfig {
     public AppResourceConfig() {
-        // PageMessageBodyWriter
+        // config
+        Configuration config = TypesafeConfig.load();
+
+        // renderer
         String templateDir = this.getClass()
                 .getResource("/views/freemarker").getPath();
-        getSingletons().add(
-                new PageMessageBodyWriter(new FreemarkerRenderer(templateDir)));
+        ImmutableMap<String, Object> sharedVariables =
+                ImmutableMap.<String, Object> of("config", config);
+        Renderer renderer = new FreemarkerRenderer(templateDir, sharedVariables);
 
-        // PageController
-        ImmutableMap.Builder<String, Object> configBuilder =
-                new ImmutableMap.Builder<String, Object>();
-        configBuilder.put("html", ImmutableMap.<String, String> of(
-                "title", "<jersey-examples-forum>"));
-        getSingletons().add(new PagesController(configBuilder.build()));
+        // providers
+        getSingletons().add(new ViewMessageBodyWriter(renderer));
+
+        // controllers
+        getSingletons().add(new PagesController());
+        getSingletons().add(new SignupController());
     }
 }

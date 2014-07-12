@@ -5,16 +5,16 @@ import java.util.Map;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
-public class Page {
+public class View {
     private final String template;
     private final Map<String, Object> attributes;
 
-    public Page(String template) {
+    public View(String template) {
         this.template = template;
         this.attributes = ImmutableMap.of();
     }
 
-    public Page(String template, Map<String, Object> attributes) {
+    public View(String template, Map<String, Object> attributes) {
         this.template = template;
         this.attributes = attributes;
     }
@@ -40,10 +40,10 @@ public class Page {
             return new Builder();
         }
 
-        public Page build() throws IllegalArgumentException {
+        public View build() throws IllegalArgumentException {
             if (!template.isPresent())
                 throw new IllegalArgumentException("template must be not null");
-            return new Page(template.get(), attributeBuilder.build());
+            return new View(template.get(), attributeBuilder.build());
         }
 
         public Builder template(String template) {

@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
 
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
@@ -17,14 +18,19 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
+import java.util.Map;
+
 public class FreemarkerRenderer implements Renderer {
-    
+
     private static class TemplateLoader extends
             CacheLoader<String, Configuration> {
-        private String directory;
-        
-        public TemplateLoader(String directory) {
+        private final String directory;
+        private final Map<String, Object> sharedVariables;
+
+        public TemplateLoader(String directory,
+                Map<String, Object> sharedVariables) {
             this.directory = directory;
+            this.sharedVariables = sharedVariables;
         }
 
         @Override
@@ -34,6 +40,11 @@ public class FreemarkerRenderer implements Renderer {
             configuration.loadBuiltInEncodingMap();
             configuration.setDefaultEncoding(Charsets.UTF_8.name());
             configuration.setDirectoryForTemplateLoading(new File(directory));
+            for (Map.Entry<String, Object> entry : sharedVariables
+                    .entrySet()) {
+                configuration.setSharedVariable(
+                        entry.getKey(), entry.getValue());
+            }
             return configuration;
         }
     }
@@ -41,9 +52,13 @@ public class FreemarkerRenderer implements Renderer {
     private final LoadingCache<String, Configuration> configurationCache;
 
     public FreemarkerRenderer(String dir) {
+        this(dir, ImmutableMap.<String, Object> of());
+    }
+
+    public FreemarkerRenderer(String dir, Map<String, Object> sharedVariables) {
         this.configurationCache = CacheBuilder.newBuilder()
                 .concurrencyLevel(128)
-                .build(new TemplateLoader(dir));
+                .build(new TemplateLoader(dir, sharedVariables));
     }
 
     @Override

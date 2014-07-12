@@ -1,16 +1,17 @@
-<#macro defaultLayout title="">
+<#macro defaultLayout pageTitle="">
+<#if pageTitle?has_content>
+  <#assign title="${pageTitle?html} | ${(config.html.title)!'Untitled'}">
+<#else>
+  <#assign title="${(config.html.title)!'Untitled'}">
+</#if>
 <html>
 <head>
-<#if title?has_content>
-  <title>${title?html} | ${(html.title)?html}</title>
-<#else>
-  <title>${(html.title)?html}</title>
-</#if>
+  <title>${title?html}</title>
 </head>
 <body>
 <div id="wrapper">
   <div id="header">
-    <h1>${(html.title)?html}</h1>
+    <h1>${title?html}</h1>
   </div>
   <div id="content">
     <#nested/>
