@@ -25,18 +25,23 @@ import app.core.FormHelper;
 import app.core.Jackson;
 import app.core.Storage;
 import app.core.View;
+import app.models.User;
+import app.models.UserDao;
 import app.models.SignupForm;
 
 import static app.core.Util.params;
 
 @Path("/signup")
 public class SignupController {
-    private final Storage signupStorage;
     private final Validator validator;
+    private final Storage signupStorage;
+    private final UserDao userDao;
 
-    public SignupController(Storage signupStorage) {
-        this.signupStorage = signupStorage;
+    public SignupController(Storage signupStorage, UserDao userDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+        this.signupStorage = signupStorage;
+        this.userDao = userDao;
     }
 
     @GET
@@ -62,6 +67,13 @@ public class SignupController {
                     .build();
         }
 
+        if (userDao.findByEmail(form.getEmail()).isPresent()) {
+            View view = new View("signup/entry", params(
+                    "form", new FormHelper<SignupForm>(form, errors)));
+            return Response.status(Response.Status.FORBIDDEN).entity(view)
+                    .build();
+        }
+
         Map<String, Object> params = params(
                 "email", form.getEmail(),
                 "password", form.getPassword());
@@ -80,18 +92,23 @@ public class SignupController {
             JsonMappingException,
             IOException {
         Optional<String> ser = signupStorage.read(code);
+        if (!ser.isPresent()) {
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+
         @SuppressWarnings("unchecked")
         Map<String, String> params = Jackson.newObjectMapper().readValue(ser.get(), Map.class);
 
-        final String LF = String.format("%n");
-        StringBuilder sb = new StringBuilder();
-        sb.append("Email: ");
-        sb.append(params.get("email"));
-        sb.append(LF);
-        sb.append("Password: ");
-        sb.append(params.get("password"));
-        sb.append(LF);
+        if (userDao.findByEmail(params.get("email")).isPresent()) {
+            return Response.status(Response.Status.FORBIDDEN).entity("The email is already used")
+                    .build();
+        }
+        User user = new User();
+        user.setEmail(params.get("email"));
+        user.setStatus(User.Status.ACTIVATED);
+        user.updatePassword(params.get("password"));
+        User savedUser = userDao.save(user);
 
-        return Response.ok(sb.toString()).type(MediaType.TEXT_PLAIN).build();
+        return Response.ok(savedUser.getPasswordHash()).type(MediaType.TEXT_PLAIN).build();
     }
 }

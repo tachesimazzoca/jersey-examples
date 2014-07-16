@@ -8,6 +8,7 @@ import javax.persistence.EntityManagerFactory;
 import java.util.Map;
 
 import app.core.*;
+import app.models.*;
 import app.controllers.*;
 import app.renderer.*;
 
@@ -22,7 +23,10 @@ public class AppResourceConfig extends ScanningResourceConfig {
         EntityManagerFactory ef =
                 Persistence.createEntityManagerFactory("default");
         Storage signupStorage = new JPAStorage(ef, "signup_storage");
-                
+               
+        // dao
+        UserDao userDao = new UserDaoImpl(ef);
+        
         // renderer
         String templateDir = this.getClass()
                 .getResource("/views/freemarker").getPath();
@@ -34,6 +38,6 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // controllers
         getSingletons().add(new PagesController());
-        getSingletons().add(new SignupController(signupStorage));
+        getSingletons().add(new SignupController(signupStorage, userDao));
     }
 }

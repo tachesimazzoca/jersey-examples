@@ -14,8 +14,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <jersey.version>1.18.1</jersey.version>
-    <guice.version>3.0</guice.version>
     <jackson.version>2.4.1</jackson.version>
+    <hibernate.version>4.3.5.Final</hibernate.version>
     <el.version>2.2.4</el.version>
   </properties>
   <dependencies>
@@ -38,6 +38,11 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.4</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.9</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -76,8 +81,13 @@
     </dependency>
     <dependency>
       <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>${hibernate.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
-      <version>4.3.5.Final</version>
+      <version>${hibernate.version}</version>
     </dependency>
     <dependency>
       <groupId>com.h2database</groupId>
