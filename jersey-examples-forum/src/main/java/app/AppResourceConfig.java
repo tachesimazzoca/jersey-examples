@@ -2,7 +2,6 @@ package app;
 
 import com.sun.jersey.api.core.ScanningResourceConfig;
 
-import javax.persistence.Persistence;
 import javax.persistence.EntityManagerFactory;
 
 import java.util.Map;
@@ -20,8 +19,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
         Configuration config = TypesafeConfig.load();
 
         // storage
-        EntityManagerFactory ef =
-                Persistence.createEntityManagerFactory("default");
+        EntityManagerFactory ef = JPA.ef();
         Storage signupStorage = new JPAStorage(ef, "signup_storage");
                
         // dao
