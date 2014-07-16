@@ -2,6 +2,7 @@ package app.controllers;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -35,6 +36,7 @@ import static app.core.Util.params;
 import java.util.logging.Logger;
 
 @Path("/signup")
+@Produces(MediaType.TEXT_HTML)
 public class SignupController {
     private static final Logger LOGGER = Logger.getLogger(
             SignupController.class.getName());
@@ -49,7 +51,7 @@ public class SignupController {
         this.signupStorage = signupStorage;
         this.userDao = userDao;
     }
-
+    
     @GET
     @Path("entry")
     public Response entry() {
