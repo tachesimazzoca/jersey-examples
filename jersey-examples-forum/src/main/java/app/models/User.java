@@ -9,10 +9,13 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.RandomStringUtils;
 
 @Entity
 @Table(name = "users")
 public class User {
+    private static final int PASSWORD_SALT_LENGTH = 4;
+
     @Id
     @GeneratedValue
     private Long id;
@@ -26,7 +29,7 @@ public class User {
     private String passwordHash = "";
 
     @Convert(converter = User.StatusConverter.class)
-    private Status status = Status.ACTIVATED;
+    private Status status = Status.ACTIVE;
 
     public Long getId() {
         return id;
@@ -68,17 +71,75 @@ public class User {
         this.status = status;
     }
 
-    public void updatePassword(String password) {
-        setPasswordHash(DigestUtils.sha1Hex(getPasswordSalt() + password));
+    public void refreshPassword(String password) {
+        setPasswordSalt(RandomStringUtils.randomAlphanumeric(PASSWORD_SALT_LENGTH));
+        setPasswordHash(hashPassword(password, getPasswordSalt()));
     }
 
-    public void updatePassword(String password, String salt) {
+    public void refreshPassword(String password, String salt) {
+        if (salt == null || salt.length() != PASSWORD_SALT_LENGTH)
+            throw new IllegalArgumentException(
+                    "The length of the parameter salt must be equal to " + PASSWORD_SALT_LENGTH);
         setPasswordSalt(salt);
-        setPasswordHash(DigestUtils.sha1Hex(salt + password));
+        setPasswordHash(hashPassword(password, getPasswordSalt()));
+    }
+
+    public boolean isEqualPassword(String password) {
+        return hashPassword(password, getPasswordSalt()).equals(getPasswordHash());
+    }
+
+    private String hashPassword(String password, String salt) {
+        return DigestUtils.sha1Hex(salt + password);
+    }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((email == null) ? 0 : email.hashCode());
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((passwordHash == null) ? 0 : passwordHash.hashCode());
+        result = prime * result + ((passwordSalt == null) ? 0 : passwordSalt.hashCode());
+        result = prime * result + ((status == null) ? 0 : status.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        User other = (User) obj;
+        if (email == null) {
+            if (other.email != null)
+                return false;
+        } else if (!email.equals(other.email))
+            return false;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        if (passwordHash == null) {
+            if (other.passwordHash != null)
+                return false;
+        } else if (!passwordHash.equals(other.passwordHash))
+            return false;
+        if (passwordSalt == null) {
+            if (other.passwordSalt != null)
+                return false;
+        } else if (!passwordSalt.equals(other.passwordSalt))
+            return false;
+        if (status != other.status)
+            return false;
+        return true;
     }
 
     public enum Status {
-        INACTIVATED(0), ACTIVATED(1), VERIFYING(2);
+        INACTIVE(0), ACTIVE(1);
 
         private int value;
 

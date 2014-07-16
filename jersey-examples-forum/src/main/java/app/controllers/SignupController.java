@@ -2,7 +2,6 @@ package app.controllers;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -16,8 +15,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,8 +32,13 @@ import app.models.SignupForm;
 
 import static app.core.Util.params;
 
+import java.util.logging.Logger;
+
 @Path("/signup")
 public class SignupController {
+    private static final Logger LOGGER = Logger.getLogger(
+            SignupController.class.getName());
+
     private final Validator validator;
     private final Storage signupStorage;
     private final UserDao userDao;
@@ -62,14 +68,13 @@ public class SignupController {
         if (!errors.isEmpty()) {
             View view = new View("signup/entry", params(
                     "form", new FormHelper<SignupForm>(form, errors)));
-
             return Response.status(Response.Status.FORBIDDEN).entity(view)
                     .build();
         }
-
         if (userDao.findByEmail(form.getEmail()).isPresent()) {
+            List<String> messages = ImmutableList.of("The email has already been used.");
             View view = new View("signup/entry", params(
-                    "form", new FormHelper<SignupForm>(form, errors)));
+                    "form", new FormHelper<SignupForm>(form, messages)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
                     .build();
         }
@@ -79,36 +84,51 @@ public class SignupController {
                 "password", form.getPassword());
         String serialized = Jackson.newObjectMapper().writeValueAsString(params);
         String code = signupStorage.create(serialized);
+        LOGGER.info(code);
 
-        return Response.seeOther(
-                uinfo.getBaseUriBuilder().path("/signup/verify")
-                        .queryParam("code", code).build()).build();
+        return Response.seeOther(uinfo.getBaseUriBuilder()
+                .path("/signup/verify").build()).build();
     }
 
     @GET
     @Path("verify")
-    public Response verify(@QueryParam("code") String code) throws
+    public Response verify() {
+        return Response.ok(new View("signup/verify")).build();
+    }
+
+    @GET
+    @Path("activate")
+    public Response activate(@Context UriInfo uinfo, @QueryParam("code") String code) throws
             JsonParseException,
             JsonMappingException,
             IOException {
         Optional<String> ser = signupStorage.read(code);
+        signupStorage.delete(code);
         if (!ser.isPresent()) {
-            return Response.status(Response.Status.FORBIDDEN).build();
+            return Response.seeOther(uinfo.getBaseUriBuilder()
+                    .path("/signup/errors/session").build()).build();
         }
 
         @SuppressWarnings("unchecked")
         Map<String, String> params = Jackson.newObjectMapper().readValue(ser.get(), Map.class);
-
         if (userDao.findByEmail(params.get("email")).isPresent()) {
-            return Response.status(Response.Status.FORBIDDEN).entity("The email is already used")
-                    .build();
+            return Response.seeOther(uinfo.getBaseUriBuilder()
+                    .path("/signup/errors/email").build()).build();
         }
+
         User user = new User();
         user.setEmail(params.get("email"));
-        user.setStatus(User.Status.ACTIVATED);
-        user.updatePassword(params.get("password"));
+        user.setStatus(User.Status.ACTIVE);
+        user.refreshPassword(params.get("password"));
         User savedUser = userDao.save(user);
+        return Response.ok(new View("signup/activate", params("user", savedUser))).build();
+    }
 
-        return Response.ok(savedUser.getPasswordHash()).type(MediaType.TEXT_PLAIN).build();
+    @GET
+    @Path("errors/{name}")
+    public Response errors(@PathParam("name") String name) {
+        return Response.status(Response.Status.FORBIDDEN)
+                .entity(new View("signup/errors/" + name))
+                .build();
     }
 }

@@ -9,7 +9,7 @@ CREATE TABLE `signup_storage` (
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
 	`id` BIGINT NOT NULL AUTO_INCREMENT,
-	`email` VARCHAR(255) NOT NULL default '',
+	`email` VARCHAR(255) NOT NULL default '' UNIQUE,
 	`password_salt` CHAR(4) NOT NULL default '',
 	`password_hash` CHAR(40) NOT NULL default '',
 	`status` TINYINT(1) NOT NULL default 0,

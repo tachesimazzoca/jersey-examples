@@ -11,7 +11,11 @@
 <body>
 <div id="wrapper">
   <div id="header">
-    <h1>${title?html}</h1>
+	<#if pageTitle?has_content>
+    <h1>${pageTitle?html}</h1>
+	<#else>
+    <h1>${((config.html.title)!"")?html}</h1>
+	</#if>
   </div>
   <div id="content">
     <#nested/>

@@ -14,6 +14,7 @@ public class UserDaoImpl implements UserDao {
         this.ef = ef;
     }
 
+    @Override
     public Optional<User> find(long id) {
         EntityManager em = ef.createEntityManager();
         User user = em.find(User.class, id);
@@ -21,6 +22,7 @@ public class UserDaoImpl implements UserDao {
         return Optional.<User> of(user);
     }
 
+    @Override
     public Optional<User> findByEmail(String email) {
         EntityManager em = ef.createEntityManager();
         List<User> rows = em.createQuery(
@@ -35,6 +37,7 @@ public class UserDaoImpl implements UserDao {
             return Optional.<User> of(rows.get(0));
     }
 
+    @Override
     public User save(User user) {
         if (user.getId() == null && user.getPasswordHash().isEmpty())
             throw new IllegalArgumentException();
@@ -42,8 +45,6 @@ public class UserDaoImpl implements UserDao {
         em.getTransaction().begin();
         em.persist(user);
         em.getTransaction().commit();
-        em.refresh(user);
-        em.close();
         return user;
     }
 }
