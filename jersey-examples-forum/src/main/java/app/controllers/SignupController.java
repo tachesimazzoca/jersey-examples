@@ -25,14 +25,8 @@ import java.util.Set;
 
 import org.apache.commons.mail.EmailException;
 
-import app.core.FormHelper;
-import app.core.Jackson;
-import app.core.Storage;
-import app.core.View;
-import app.models.User;
-import app.models.UserDao;
-import app.models.SignupForm;
-import app.models.SignupMailerFactory;
+import app.core.*;
+import app.models.*;
 
 import static app.core.Util.params;
 
@@ -66,7 +60,9 @@ public class SignupController {
     @POST
     @Path("entry")
     @Consumes("application/x-www-form-urlencoded")
-    public Response confirm(@Context UriInfo uinfo, MultivaluedMap<String, String> formParams)
+    public Response confirm(
+            @Context UriInfo uinfo,
+            MultivaluedMap<String, String> formParams)
             throws JsonProcessingException, EmailException {
         SignupForm form = SignupForm.bindFrom(formParams);
         Set<ConstraintViolation<SignupForm>> errors = validator.validate(form);

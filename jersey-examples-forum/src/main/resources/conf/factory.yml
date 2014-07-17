@@ -2,5 +2,5 @@ signupMailerFactory:
     fake: true
     hostName: "localhost"
     smtpPort: 2525
-    subject: "Jersey Examples Forum - Account Registration"
-    from: { address: "support@example.net", personal: "Jersy Examples Team" }
+    subject: "Forum - Account Registration"
+    from: { address: "support@example.net", personal: "Forum Team" }
