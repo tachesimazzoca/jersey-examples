@@ -2,6 +2,15 @@ package app.core;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import java.util.Map;
 
 public class Util {
@@ -15,5 +24,43 @@ public class Util {
             builder.put((String) args[i], args[i + 1]);
         }
         return builder.build();
+    }
+
+    public static String objectToBase64(Object obj) {
+        String ser = null;
+        ByteArrayOutputStream os = null;
+        ObjectOutputStream oos = null;
+        try {
+            os = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(os);
+            oos.writeObject(obj);
+            ser = Base64.encodeBase64String(os.toByteArray());
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        } finally {
+            IOUtils.closeQuietly(oos);
+            IOUtils.closeQuietly(os);
+        }
+        return ser;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T base64ToObject(String ser, Class<T> type) {
+        T obj = null;
+        ByteArrayInputStream is = null;
+        ObjectInputStream ois = null;
+        try {
+            is = new ByteArrayInputStream(Base64.decodeBase64(ser));
+            ois = new ObjectInputStream(is);
+            obj = (T) ois.readObject();
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException(e);
+        } finally {
+            IOUtils.closeQuietly(ois);
+            IOUtils.closeQuietly(is);
+        }
+        return obj;
     }
 }
