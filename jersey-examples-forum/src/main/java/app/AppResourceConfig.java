@@ -2,8 +2,13 @@ package app;
 
 import com.sun.jersey.api.core.ScanningResourceConfig;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import javax.persistence.EntityManagerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 
 import app.core.*;
@@ -14,17 +19,23 @@ import app.renderer.*;
 import static app.core.Util.params;
 
 public class AppResourceConfig extends ScanningResourceConfig {
-    public AppResourceConfig() {
+    public AppResourceConfig() throws IOException {
+        // factory
+        JsonParser parser = new YAMLFactory().createParser(
+                this.getClass().getResourceAsStream("/conf/factory.yml"));
+        ObjectMapper mapper = Jackson.newObjectMapper();
+        AppFactoryConfig factoryConfig = mapper.readValue(parser, AppFactoryConfig.class);
+
         // config
-        Configuration config = TypesafeConfig.load();
+        Config config = Config.load("conf/application");
 
         // storage
         EntityManagerFactory ef = JPA.ef();
         Storage signupStorage = new JPAStorage(ef, "signup_storage");
-               
+
         // dao
         UserDao userDao = new UserDaoImpl(ef);
-        
+
         // renderer
         String templateDir = this.getClass()
                 .getResource("/views/freemarker").getPath();
@@ -36,6 +47,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // controllers
         getSingletons().add(new PagesController());
-        getSingletons().add(new SignupController(signupStorage, userDao));
+        getSingletons().add(new SignupController(
+                signupStorage, userDao, factoryConfig.getSignupMailerFactory()));
     }
 }

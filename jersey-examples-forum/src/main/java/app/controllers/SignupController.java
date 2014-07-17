@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.mail.EmailException;
+
 import app.core.FormHelper;
 import app.core.Jackson;
 import app.core.Storage;
@@ -30,28 +32,29 @@ import app.core.View;
 import app.models.User;
 import app.models.UserDao;
 import app.models.SignupForm;
+import app.models.SignupMailerFactory;
 
 import static app.core.Util.params;
-
-import java.util.logging.Logger;
 
 @Path("/signup")
 @Produces(MediaType.TEXT_HTML)
 public class SignupController {
-    private static final Logger LOGGER = Logger.getLogger(
-            SignupController.class.getName());
-
     private final Validator validator;
     private final Storage signupStorage;
     private final UserDao userDao;
+    private final SignupMailerFactory signupMailerFactory;
 
-    public SignupController(Storage signupStorage, UserDao userDao) {
+    public SignupController(
+            Storage signupStorage,
+            UserDao userDao,
+            SignupMailerFactory signupMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
 
         this.signupStorage = signupStorage;
         this.userDao = userDao;
+        this.signupMailerFactory = signupMailerFactory;
     }
-    
+
     @GET
     @Path("entry")
     public Response entry() {
@@ -64,7 +67,7 @@ public class SignupController {
     @Path("entry")
     @Consumes("application/x-www-form-urlencoded")
     public Response confirm(@Context UriInfo uinfo, MultivaluedMap<String, String> formParams)
-            throws JsonProcessingException {
+            throws JsonProcessingException, EmailException {
         SignupForm form = SignupForm.bindFrom(formParams);
         Set<ConstraintViolation<SignupForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
@@ -86,7 +89,12 @@ public class SignupController {
                 "password", form.getPassword());
         String serialized = Jackson.newObjectMapper().writeValueAsString(params);
         String code = signupStorage.create(serialized);
-        LOGGER.info(code);
+        String url = uinfo.getBaseUriBuilder()
+                .path("/signup/activate")
+                .queryParam("code", code)
+                .build()
+                .toString();
+        signupMailerFactory.create(form.getEmail(), url).send();
 
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/signup/verify").build()).build();

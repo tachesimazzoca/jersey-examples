@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
   "commons-lang" % "commons-lang" % "2.6",
   "commons-io" % "commons-io" % "2.4",
   "commons-codec" % "commons-codec" % "1.9",
+  "org.apache.commons" % "commons-email" % "1.3.3",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.4.1",
   "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.4.1",
   "com.typesafe" % "config" % "1.2.1",
