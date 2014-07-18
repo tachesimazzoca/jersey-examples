@@ -11,14 +11,9 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,10 +55,9 @@ public class SignupController {
     @POST
     @Path("entry")
     @Consumes("application/x-www-form-urlencoded")
-    public Response confirm(
-            @Context UriInfo uinfo,
+    public Response confirm( @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
-            throws JsonProcessingException, EmailException {
+            throws EmailException {
         SignupForm form = SignupForm.bindFrom(formParams);
         Set<ConstraintViolation<SignupForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
@@ -83,8 +77,7 @@ public class SignupController {
         Map<String, Object> params = params(
                 "email", form.getEmail(),
                 "password", form.getPassword());
-        String serialized = Jackson.newObjectMapper().writeValueAsString(params);
-        String code = signupStorage.create(serialized);
+        String code = signupStorage.create(params);
         String url = uinfo.getBaseUriBuilder()
                 .path("/signup/activate")
                 .queryParam("code", code)
@@ -104,19 +97,16 @@ public class SignupController {
 
     @GET
     @Path("activate")
-    public Response activate(@Context UriInfo uinfo, @QueryParam("code") String code) throws
-            JsonParseException,
-            JsonMappingException,
-            IOException {
-        Optional<String> ser = signupStorage.read(code);
+    public Response activate(@Context UriInfo uinfo, @QueryParam("code") String code) {
+        Optional<?> opt = signupStorage.read(code, Map.class);
         signupStorage.delete(code);
-        if (!ser.isPresent()) {
+        if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/signup/errors/session").build()).build();
         }
 
         @SuppressWarnings("unchecked")
-        Map<String, String> params = Jackson.newObjectMapper().readValue(ser.get(), Map.class);
+        Map<String, String> params = (Map<String, String>) opt.get();
         if (userDao.findByEmail(params.get("email")).isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/signup/errors/email").build()).build();

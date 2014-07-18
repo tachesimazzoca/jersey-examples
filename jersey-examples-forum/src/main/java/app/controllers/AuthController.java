@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import java.util.Set;
 
+import com.google.common.base.Optional;
+
 import app.core.*;
 import app.models.*;
 import static app.core.Util.params;
@@ -21,16 +23,24 @@ import static app.core.Util.params;
 @Path("/auth")
 @Produces(MediaType.TEXT_HTML)
 public class AuthController {
-    private final Config config;
     private final Validator validator;
+
+    private final Config config;
     private final CookieBakerFactory sessionFactory;
+    private final Storage sessionStorage;
+    private final UserDao userDao;
 
     public AuthController(
             Config config,
-            CookieBakerFactory sessionFactory) {
+            CookieBakerFactory sessionFactory,
+            Storage sessionStorage,
+            UserDao userDao) {
+        validator = Validation.buildDefaultValidatorFactory().getValidator();
+
         this.config = config;
         this.sessionFactory = sessionFactory;
-        validator = Validation.buildDefaultValidatorFactory().getValidator();
+        this.sessionStorage = sessionStorage;
+        this.userDao = userDao;
     }
 
     @GET
@@ -40,7 +50,11 @@ public class AuthController {
             @QueryParam("url") @DefaultValue("") String url) {
         AuthLoginForm form = AuthLoginForm.defaultForm();
         form.setUrl(url);
-        CookieBaker sess = sessionFactory.create(req).clear();
+        CookieBaker sess = sessionFactory.create(req);
+        if (sess.get("id").isPresent()) {
+            sessionStorage.delete(sess.get("id").get());
+        }
+        sess.clear();
         return Response.ok(new View("auth/login", params(
                 "form", new FormHelper<AuthLoginForm>(form))))
                 .cookie(sess.toCookie()).build();
@@ -59,12 +73,21 @@ public class AuthController {
         if (!errors.isEmpty()) {
             View view = new View("auth/login", params(
                     "form", new FormHelper<AuthLoginForm>(form, errors)));
-            return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .build();
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(view).build();
         }
 
-        // TODO: create login session
-        CookieBaker sess = sessionFactory.create(req).clear();
+        Optional<User> userOpt = userDao.findByEmail(form.getEmail());
+        if (!userOpt.isPresent() || !userOpt.get().isEqualPassword(form.getPassword())) {
+            View view = new View("auth/login", params(
+                    "form", new FormHelper<AuthLoginForm>(form, errors)));
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(view).build();
+        }
+        User user = userOpt.get();
+        
+        String sessId = sessionStorage.create(user.getId());
+        CookieBaker sess = sessionFactory.create(req).put("id", sessId);
 
         String url = form.getUrl();
         if (!url.startsWith("/") || url.isEmpty())
@@ -78,7 +101,11 @@ public class AuthController {
     public Response logout(
             @Context UriInfo uinfo,
             @Context HttpServletRequest req) {
-        CookieBaker sess = sessionFactory.create(req).clear();
+        CookieBaker sess = sessionFactory.create(req);
+        if (sess.get("id").isPresent()) {
+            sessionStorage.delete(sess.get("id").get());
+        }
+        sess.clear();
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/").build()).cookie(sess.toCookie()).build();
     }

@@ -121,6 +121,11 @@ public class CookieBaker {
         return this;
     }
 
+    public CookieBaker remove(String key) {
+        data.remove(key);
+        return this;
+    }
+
     public CookieBaker clear() {
         data.clear();
         return this;

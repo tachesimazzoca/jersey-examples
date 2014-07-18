@@ -12,6 +12,9 @@ import java.sql.Clob;
 
 import org.apache.commons.io.IOUtils;
 
+import static app.core.Util.objectToBase64;
+import static app.core.Util.base64ToObject;
+
 public class JPAStorage implements Storage {
     private final EntityManagerFactory ef;
     private final String INSERT_QUERY;
@@ -41,36 +44,46 @@ public class JPAStorage implements Storage {
     }
 
     @Override
-    public String create(String value) {
+    public String create(Object value) {
         String key = UUID.randomUUID().toString();
         write(key, value);
         return key;
     }
 
     @Override
+    public Optional<Object> read(String key) {
+        return read(key, Object.class);
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
-    public Optional<String> read(String key) {
+    public <T> Optional<T> read(String key, Class<T> type) {
         EntityManager em = ef.createEntityManager();
         List<Clob> rows = em.createNativeQuery(SELECT_QUERY)
                 .setParameter(1, key)
                 .getResultList();
         em.close();
 
-        Optional<String> v;
-        if (rows.isEmpty()) {
-            v = Optional.<String> absent();
-        } else {
+        T v = null;
+        if (!rows.isEmpty()) {
             try {
-                v = Optional.<String> of(IOUtils.toString(rows.get(0).getCharacterStream()));
+                String encoded = IOUtils.toString(rows.get(0).getCharacterStream());
+                v = base64ToObject(encoded, type);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                // fail gracefully if the storage value is corrupted or type
+                // mismatch.
+                v = null;
             }
         }
-        return v;
+        if (v != null)
+            return Optional.of(v);
+        else
+            return Optional.absent();
     }
 
     @Override
-    public void write(String key, String value) {
+    public void write(String key, Object value) {
+        String v = objectToBase64(value);
         EntityManager em = ef.createEntityManager();
         em.getTransaction().begin();
         List<?> rows = em.createNativeQuery(SELECT_FOR_UPDATE_QUERY)
@@ -79,11 +92,11 @@ public class JPAStorage implements Storage {
         if (rows.isEmpty()) {
             em.createNativeQuery(INSERT_QUERY)
                     .setParameter(1, key)
-                    .setParameter(2, value)
+                    .setParameter(2, v)
                     .executeUpdate();
         } else {
             em.createNativeQuery(UPDATE_QUERY)
-                    .setParameter(1, value)
+                    .setParameter(1, v)
                     .setParameter(2, key)
                     .executeUpdate();
         }

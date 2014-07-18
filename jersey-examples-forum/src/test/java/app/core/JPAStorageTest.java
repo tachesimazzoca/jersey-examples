@@ -26,34 +26,34 @@ public class JPAStorageTest {
         JPAStorage storage = new JPAStorage(ef, "signup_storage");
 
         Optional<String> vOpt;
-        vOpt = storage.read("deadbeef");
+        vOpt = storage.read("deadbeef", String.class);
         assertFalse(vOpt.isPresent());
 
         String key1 = storage.create("foo");
-        vOpt = storage.read(key1);
+        vOpt = storage.read(key1, String.class);
         assertTrue(vOpt.isPresent());
         assertEquals("foo", vOpt.get());
 
         storage.write(key1, "bar");
-        vOpt = storage.read(key1);
+        vOpt = storage.read(key1, String.class);
         assertTrue(vOpt.isPresent());
         assertEquals("bar", vOpt.get());
 
         String key2 = storage.create("baz");
-        vOpt = storage.read(key2);
+        vOpt = storage.read(key2, String.class);
         assertTrue(vOpt.isPresent());
         assertEquals("baz", vOpt.get());
 
-        vOpt = storage.read(key1);
+        vOpt = storage.read(key1, String.class);
         assertTrue(vOpt.isPresent());
         assertEquals("bar", vOpt.get());
         
         storage.delete(key1);
-        vOpt = storage.read(key1);
+        vOpt = storage.read(key1, String.class);
         assertFalse(vOpt.isPresent());
 
         storage.delete(key2);
-        vOpt = storage.read(key2);
+        vOpt = storage.read(key2, String.class);
         assertFalse(vOpt.isPresent());
 
         em.close();
