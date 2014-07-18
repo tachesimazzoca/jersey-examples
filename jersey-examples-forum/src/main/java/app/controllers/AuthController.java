@@ -23,11 +23,11 @@ import static app.core.Util.params;
 public class AuthController {
     private final Config config;
     private final Validator validator;
-    private final SessionFactory sessionFactory;
+    private final CookieBakerFactory sessionFactory;
 
     public AuthController(
             Config config,
-            SessionFactory sessionFactory) {
+            CookieBakerFactory sessionFactory) {
         this.config = config;
         this.sessionFactory = sessionFactory;
         validator = Validation.buildDefaultValidatorFactory().getValidator();
@@ -40,10 +40,10 @@ public class AuthController {
             @QueryParam("url") @DefaultValue("") String url) {
         AuthLoginForm form = AuthLoginForm.defaultForm();
         form.setUrl(url);
-        Session sess = sessionFactory.create(req).clear();
+        CookieBaker sess = sessionFactory.create(req).clear();
         return Response.ok(new View("auth/login", params(
                 "form", new FormHelper<AuthLoginForm>(form))))
-                .cookie(sess.getNewCookie()).build();
+                .cookie(sess.toCookie()).build();
     }
 
     @POST
@@ -65,13 +65,13 @@ public class AuthController {
 
         // TODO: create login session
         //Session sess = sessionFactory.create(req).put("id", 1234);
-        Session sess = sessionFactory.create(req).clear();
+        CookieBaker sess = sessionFactory.create(req).clear();
 
         String url = form.getUrl();
         if (!url.startsWith("/") || url.isEmpty())
             url = (String) config.get("url.home");
         return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path(url).build()).cookie(sess.getNewCookie()).build();
+                .path(url).build()).cookie(sess.toCookie()).build();
     }
 
     @GET
@@ -79,8 +79,8 @@ public class AuthController {
     public Response logout(
             @Context UriInfo uinfo,
             @Context HttpServletRequest req) {
-        Session sess = sessionFactory.create(req).clear();
+        CookieBaker sess = sessionFactory.create(req).clear();
         return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path("/").build()).cookie(sess.getNewCookie()).build();
+                .path("/").build()).cookie(sess.toCookie()).build();
     }
 }
