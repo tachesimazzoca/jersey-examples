@@ -63,4 +63,14 @@ public class Util {
         }
         return obj;
     }
+
+    public static boolean safeEquals(String a, String b) {
+        if (a.length() != b.length())
+            return false;
+        int diff = 0;
+        // O(N) compare for timing attack
+        for (int i = 0; i < a.length(); i++)
+            diff |= a.charAt(i) ^ b.charAt(i);
+        return diff == 0;
+    }
 }

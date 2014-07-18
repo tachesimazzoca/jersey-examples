@@ -64,7 +64,6 @@ public class AuthController {
         }
 
         // TODO: create login session
-        //Session sess = sessionFactory.create(req).put("id", 1234);
         CookieBaker sess = sessionFactory.create(req).clear();
 
         String url = form.getUrl();

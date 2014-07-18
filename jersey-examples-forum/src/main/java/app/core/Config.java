@@ -1,6 +1,9 @@
 package app.core;
 
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigException;
+
+import com.google.common.base.Optional;
 
 import java.io.File;
 
@@ -35,5 +38,28 @@ public class Config {
 
     public Object get(String key) {
         return typesafeConfig.getAnyRef(key);
+    }
+
+    public Optional<Object> maybe(String key) {
+        Optional<Object> o;
+        try {
+            Object obj = typesafeConfig.getAnyRef(key);
+            o = Optional.of(obj);
+        } catch (ConfigException.Missing e) {
+            o = Optional.absent();
+        }
+        return o;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> Optional<T> maybe(String key, Class<T> type) {
+        Optional<T> o;
+        try {
+            T obj = (T) typesafeConfig.getAnyRef(key);
+            o = Optional.of(obj);
+        } catch (ConfigException.Missing e) {
+            o = Optional.absent();
+        }
+        return o;
     }
 }

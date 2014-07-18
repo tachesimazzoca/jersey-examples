@@ -7,25 +7,31 @@ import com.google.common.base.Optional;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.net.URLDecoder;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import static app.core.Util.safeEquals;
+
 public class CookieBaker {
     private static final String ENCODING = "UTF-8";
     private static final int MAX_VALUE_LENGTH = 2048;
+
+    private Optional<String> secret;
     private NewCookie cookie;
     private Map<String, String> data;
 
-    public CookieBaker(NewCookie cookie) {
+    public CookieBaker(Optional<String> secret, NewCookie cookie) {
+        this.secret = secret;
         this.cookie = cookie;
         this.data = decode(cookie.getValue());
     }
 
     private String encode(Map<String, String> m) {
-        StringBuilder sb = new StringBuilder();
+        String encoded = null;
         try {
+            StringBuilder sb = new StringBuilder();
             for (Map.Entry<String, String> kv : m.entrySet()) {
                 sb.append(URLEncoder.encode(kv.getKey(), ENCODING));
                 sb.append("=");
@@ -34,21 +40,47 @@ public class CookieBaker {
             }
             if (sb.length() > 0)
                 sb.deleteCharAt(sb.length() - 1);
+            encoded = sb.toString();
+            if (secret.isPresent()) {
+                String sign = Crypto.sign(encoded, secret.get().getBytes(ENCODING));
+                encoded = sign + "-" + encoded;
+            }
         } catch (UnsupportedEncodingException e) {
             // Returns an empty string immediately if failed.
             return "";
         }
-        if (sb.length() > MAX_VALUE_LENGTH)
+
+        if (encoded.length() > MAX_VALUE_LENGTH)
             // Returns an empty string immediately if the length of the encoded
             // string is more then the capacity of the cookie value.
             return "";
 
-        return sb.toString();
+        return encoded;
     }
 
     private Map<String, String> decode(String value) {
-        Map<String, String> m = new HashMap<String, String>();
-        String[] pairs = StringUtils.splitPreserveAllTokens(value, "&");
+        Map<String, String> m = new LinkedHashMap<String, String>();
+        String msg;
+        if (secret.isPresent()) {
+            String[] tokens = StringUtils.splitPreserveAllTokens(value, "-", 2);
+            if (tokens.length != 2) {
+                return m;
+            }
+            String sign = "";
+            try {
+                sign = Crypto.sign(tokens[1], secret.get().getBytes(ENCODING));
+            } catch (UnsupportedEncodingException e) {
+                return m;
+            }
+            if (!safeEquals(sign, tokens[0])) {
+                return m;
+            }
+            msg = tokens[1];
+        } else {
+            msg = value;
+        }
+
+        String[] pairs = StringUtils.splitPreserveAllTokens(msg, "&");
         for (int i = 0; i < pairs.length; i++) {
             String[] kv = StringUtils.split(pairs[i], "=");
             if (kv.length != 2) {

@@ -34,8 +34,10 @@ public class AppResourceConfig extends ScanningResourceConfig {
         Storage signupStorage = new JPAStorage(ef, "signup_storage");
 
         // session
-        CookieBakerFactory sessionFactory = new CookieBakerFactory("APPSESSION");
-        
+        CookieBakerFactory sessionFactory = new CookieBakerFactory(
+                config.maybe("app.secret", String.class),
+                config.maybe("session.cookieName", String.class).or("APP_SESSION"));
+
         // dao
         UserDao userDao = new UserDaoImpl(ef);
 
