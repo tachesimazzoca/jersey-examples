@@ -32,12 +32,10 @@ public class AppResourceConfig extends ScanningResourceConfig {
         // storage
         EntityManagerFactory ef = JPA.ef();
         Storage signupStorage = new JPAStorage(ef, "signup_storage");
-        Storage sessionStorage = new JPAStorage(ef, "session_storage");
 
-        // session
-        CookieBakerFactory sessionFactory = new CookieBakerFactory(
-                config.maybe("app.secret", String.class),
-                config.maybe("session.cookieName", String.class).or("APP_SESSION"));
+        // cookie
+        CookieBakerFactory loginCookieFactory = new CookieBakerFactory(
+                config.maybe("app.secret", String.class), "APP_LOGIN");
 
         // dao
         UserDao userDao = new UserDaoImpl(ef);
@@ -55,7 +53,6 @@ public class AppResourceConfig extends ScanningResourceConfig {
         getSingletons().add(new PagesController());
         getSingletons().add(new SignupController(
                 signupStorage, userDao, factoryConfig.getSignupMailerFactory()));
-        getSingletons().add(new AuthController(
-                config, sessionFactory, sessionStorage, userDao));
+        getSingletons().add(new AuthController(config, loginCookieFactory, userDao));
     }
 }

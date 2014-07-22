@@ -26,20 +26,17 @@ public class AuthController {
     private final Validator validator;
 
     private final Config config;
-    private final CookieBakerFactory sessionFactory;
-    private final Storage sessionStorage;
+    private final CookieBakerFactory loginCookieFactory;
     private final UserDao userDao;
 
     public AuthController(
             Config config,
-            CookieBakerFactory sessionFactory,
-            Storage sessionStorage,
+            CookieBakerFactory loginCookieFactory,
             UserDao userDao) {
         validator = Validation.buildDefaultValidatorFactory().getValidator();
 
         this.config = config;
-        this.sessionFactory = sessionFactory;
-        this.sessionStorage = sessionStorage;
+        this.loginCookieFactory = loginCookieFactory;
         this.userDao = userDao;
     }
 
@@ -50,14 +47,10 @@ public class AuthController {
             @QueryParam("url") @DefaultValue("") String url) {
         AuthLoginForm form = AuthLoginForm.defaultForm();
         form.setUrl(url);
-        CookieBaker sess = sessionFactory.create(req);
-        if (sess.get("id").isPresent()) {
-            sessionStorage.delete(sess.get("id").get());
-        }
-        sess.clear();
+        CookieBaker login = loginCookieFactory.create();
         return Response.ok(new View("auth/login", params(
                 "form", new FormHelper<AuthLoginForm>(form))))
-                .cookie(sess.toCookie()).build();
+                .cookie(login.toDiscardingCookie()).build();
     }
 
     @POST
@@ -85,15 +78,15 @@ public class AuthController {
                     .entity(view).build();
         }
         User user = userOpt.get();
-        
-        String sessId = sessionStorage.create(user.getId());
-        CookieBaker sess = sessionFactory.create(req).put("id", sessId);
+
+        CookieBaker login = loginCookieFactory.create();
+        login.put("id", user.getId().toString());
 
         String url = form.getUrl();
         if (!url.startsWith("/") || url.isEmpty())
             url = (String) config.get("url.home");
         return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path(url).build()).cookie(sess.toCookie()).build();
+                .path(url).build()).cookie(login.toCookie()).build();
     }
 
     @GET
@@ -101,12 +94,10 @@ public class AuthController {
     public Response logout(
             @Context UriInfo uinfo,
             @Context HttpServletRequest req) {
-        CookieBaker sess = sessionFactory.create(req);
-        if (sess.get("id").isPresent()) {
-            sessionStorage.delete(sess.get("id").get());
-        }
-        sess.clear();
+        CookieBaker login = loginCookieFactory.create();
         return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path("/").build()).cookie(sess.toCookie()).build();
+                .path("/").build())
+                .cookie(login.toDiscardingCookie())
+                .build();
     }
 }

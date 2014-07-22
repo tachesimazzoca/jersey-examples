@@ -109,6 +109,13 @@ public class CookieBaker {
                 cookie.getMaxAge(), cookie.isSecure());
     }
 
+    public NewCookie toDiscardingCookie() {
+        return new NewCookie(cookie.getName(), "",
+                cookie.getPath(), cookie.getDomain(),
+                cookie.getVersion(), cookie.getComment(),
+                -86400, cookie.isSecure());
+    }
+
     public Optional<String> get(String key) {
         if (data.containsKey(key))
             return Optional.of(data.get(key));
