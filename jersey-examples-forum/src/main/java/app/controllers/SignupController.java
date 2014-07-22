@@ -29,16 +29,16 @@ import static app.core.Util.params;
 @Produces(MediaType.TEXT_HTML)
 public class SignupController {
     private final Validator validator;
-    private final Storage signupStorage;
+    private final Storage signupSession;
     private final AccountDao accountDao;
-    private final SignupMailerFactory signupMailerFactory;
+    private final TextMailerFactory signupMailerFactory;
 
     public SignupController(
-            Storage signupStorage,
             AccountDao accountDao,
-            SignupMailerFactory signupMailerFactory) {
+            Storage signupSession,
+            TextMailerFactory signupMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
-        this.signupStorage = signupStorage;
+        this.signupSession = signupSession;
         this.accountDao = accountDao;
         this.signupMailerFactory = signupMailerFactory;
     }
@@ -76,7 +76,7 @@ public class SignupController {
         Map<String, Object> params = params(
                 "email", form.getEmail(),
                 "password", form.getPassword());
-        String code = signupStorage.create(params);
+        String code = signupSession.create(params);
         String url = uinfo.getBaseUriBuilder()
                 .path("/signup/activate")
                 .queryParam("code", code)
@@ -97,8 +97,8 @@ public class SignupController {
     @GET
     @Path("activate")
     public Response activate(@Context UriInfo uinfo, @QueryParam("code") String code) {
-        Optional<?> opt = signupStorage.read(code, Map.class);
-        signupStorage.delete(code);
+        Optional<?> opt = signupSession.read(code, Map.class);
+        signupSession.delete(code);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/signup/errors/session").build()).build();

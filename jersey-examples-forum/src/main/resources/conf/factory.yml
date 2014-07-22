@@ -4,3 +4,10 @@ signupMailerFactory:
     smtpPort: 2525
     subject: "Forum - Account Registration"
     from: { address: "support@example.net", personal: "Forum Team" }
+
+profileMailerFactory:
+    fake: true
+    hostName: "localhost"
+    smtpPort: 2525
+    subject: "Forum - Email Verification"
+    from: { address: "support@example.net", personal: "Forum Team" }

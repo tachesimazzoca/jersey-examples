@@ -1,15 +1,24 @@
 package app;
 
-import app.models.SignupMailerFactory;
+import app.models.TextMailerFactory;
 
 public class AppFactoryConfig {
-    private SignupMailerFactory signupMailerFactory;
+    private TextMailerFactory signupMailerFactory;
+    private TextMailerFactory profileMailerFactory;
 
-    public SignupMailerFactory getSignupMailerFactory() {
+    public TextMailerFactory getSignupMailerFactory() {
         return signupMailerFactory;
     }
 
-    public void setSignupMailerFactory(SignupMailerFactory signupMailerFactory) {
+    public void setSignupMailerFactory(TextMailerFactory signupMailerFactory) {
         this.signupMailerFactory = signupMailerFactory;
+    }
+
+    public TextMailerFactory getProfileMailerFactory() {
+        return profileMailerFactory;
+    }
+
+    public void setProfileMailerFactory(TextMailerFactory profileMailerFactory) {
+        this.profileMailerFactory = profileMailerFactory;
     }
 }

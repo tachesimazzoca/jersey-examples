@@ -1,20 +1,21 @@
 package app.models;
 
+import org.apache.commons.mail.SimpleEmail;
+
 import javax.mail.internet.InternetAddress;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.apache.commons.mail.SimpleEmail;
 
 import app.mail.CommonsMailer;
 import app.mail.FakeSimpleEmail;
 import app.mail.Mailer;
 
-public class SignupMailerFactory {
+public class TextMailerFactory {
     private boolean fake = true;
     private String hostName = "localhost";
     private int smtpPort = 25;
-    private String subject = "Jersey Examples Forum";
+    private String subject = "";
     private InternetAddress from;
 
     public boolean isFake() {
@@ -57,7 +58,7 @@ public class SignupMailerFactory {
         this.from = from;
     }
 
-    public Mailer create(String to, String url) {
+    public Mailer create(Set<InternetAddress> to, String msg) {
         try {
             SimpleEmail email;
             if (fake)
@@ -69,9 +70,17 @@ public class SignupMailerFactory {
             email.setCharset("ISO-2022-JP");
             email.setSubject(subject);
             email.setFrom(from.getAddress(), from.getPersonal());
-            email.setTo(ImmutableSet.of(new InternetAddress(to)));
-            email.setMsg(url);
+            email.setTo(to);
+            email.setMsg(msg);
             return new CommonsMailer(email);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public Mailer create(String to, String msg) {
+        try {
+            return create(ImmutableSet.of(new InternetAddress(to)), msg);
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }

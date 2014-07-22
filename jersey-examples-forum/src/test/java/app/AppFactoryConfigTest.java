@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import app.core.Jackson;
-import app.models.SignupMailerFactory;
+import app.models.TextMailerFactory;
 
 public class AppFactoryConfigTest {
     @Test
@@ -20,7 +20,7 @@ public class AppFactoryConfigTest {
         ObjectMapper mapper = Jackson.newObjectMapper();
         AppFactoryConfig appConfig = mapper.readValue(parser, AppFactoryConfig.class);
 
-        SignupMailerFactory signupMailerFactory = appConfig.getSignupMailerFactory();
+        TextMailerFactory signupMailerFactory = appConfig.getSignupMailerFactory();
         assertEquals("localhost", signupMailerFactory.getHostName());
         assertEquals(2525, signupMailerFactory.getSmtpPort());
     }

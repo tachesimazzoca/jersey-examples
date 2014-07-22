@@ -32,6 +32,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
         // storage
         EntityManagerFactory ef = JPA.ef();
         Storage signupStorage = new JPAStorage(ef, "session_storage", "signup-");
+        Storage profileStorage = new JPAStorage(ef, "session_storage", "profile-");
 
         // cookie
         CookieBakerFactory loginCookieFactory = new CookieBakerFactory(
@@ -40,6 +41,10 @@ public class AppResourceConfig extends ScanningResourceConfig {
         // dao
         AccountDao accountDao = new AccountDaoImpl(ef);
 
+        // mailer
+        TextMailerFactory signupMailerFactory = factoryConfig.getSignupMailerFactory();
+        TextMailerFactory profileMailerFactory = factoryConfig.getProfileMailerFactory();
+                
         // renderer
         String templateDir = this.getClass()
                 .getResource("/views/freemarker").getPath();
@@ -52,8 +57,9 @@ public class AppResourceConfig extends ScanningResourceConfig {
         // controllers
         getSingletons().add(new PagesController());
         getSingletons().add(new SignupController(
-                signupStorage, accountDao, factoryConfig.getSignupMailerFactory()));
+                accountDao, signupStorage, signupMailerFactory));
         getSingletons().add(new AuthController(loginCookieFactory, accountDao));
-        getSingletons().add(new ProfileController(loginCookieFactory, accountDao));
+        getSingletons().add(new ProfileController(
+                loginCookieFactory, accountDao, profileStorage, profileMailerFactory));
     }
 }
