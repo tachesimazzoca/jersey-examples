@@ -38,7 +38,6 @@ public class SignupController {
             UserDao userDao,
             SignupMailerFactory signupMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
-
         this.signupStorage = signupStorage;
         this.userDao = userDao;
         this.signupMailerFactory = signupMailerFactory;
@@ -55,7 +54,7 @@ public class SignupController {
     @POST
     @Path("entry")
     @Consumes("application/x-www-form-urlencoded")
-    public Response confirm( @Context UriInfo uinfo,
+    public Response confirm(@Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
             throws EmailException {
         SignupForm form = SignupForm.bindFrom(formParams);

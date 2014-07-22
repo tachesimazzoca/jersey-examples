@@ -12,9 +12,11 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.servlet.http.HttpServletRequest;
 
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import app.core.*;
 import app.models.*;
@@ -24,18 +26,13 @@ import static app.core.Util.params;
 @Produces(MediaType.TEXT_HTML)
 public class AuthController {
     private final Validator validator;
-
-    private final Config config;
     private final CookieBakerFactory loginCookieFactory;
     private final UserDao userDao;
 
     public AuthController(
-            Config config,
             CookieBakerFactory loginCookieFactory,
             UserDao userDao) {
-        validator = Validation.buildDefaultValidatorFactory().getValidator();
-
-        this.config = config;
+        this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.loginCookieFactory = loginCookieFactory;
         this.userDao = userDao;
     }
@@ -72,8 +69,9 @@ public class AuthController {
 
         Optional<User> userOpt = userDao.findByEmail(form.getEmail());
         if (!userOpt.isPresent() || !userOpt.get().isEqualPassword(form.getPassword())) {
+            List<String> messages = ImmutableList.of("Invalid password or e-mail");
             View view = new View("auth/login", params(
-                    "form", new FormHelper<AuthLoginForm>(form, errors)));
+                    "form", new FormHelper<AuthLoginForm>(form, messages)));
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(view).build();
         }
@@ -84,7 +82,7 @@ public class AuthController {
 
         String url = form.getUrl();
         if (!url.startsWith("/") || url.isEmpty())
-            url = (String) config.get("url.home");
+            url = "/";
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path(url).build()).cookie(login.toCookie()).build();
     }

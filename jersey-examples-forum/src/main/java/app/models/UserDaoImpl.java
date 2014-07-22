@@ -19,7 +19,7 @@ public class UserDaoImpl implements UserDao {
         EntityManager em = ef.createEntityManager();
         User user = em.find(User.class, id);
         em.close();
-        return Optional.<User> of(user);
+        return Optional.fromNullable(user);
     }
 
     @Override
@@ -43,8 +43,12 @@ public class UserDaoImpl implements UserDao {
             throw new IllegalArgumentException();
         EntityManager em = ef.createEntityManager();
         em.getTransaction().begin();
-        em.persist(user);
+        if (user.getId() == null)
+            em.persist(user);
+        else
+            em.merge(user);
         em.getTransaction().commit();
+        em.close();
         return user;
     }
 }
