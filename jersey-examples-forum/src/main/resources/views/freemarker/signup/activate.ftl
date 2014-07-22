@@ -3,6 +3,6 @@
 <p>Your account has been created successfully.</p>
 <p>Your email address is <code>${account.email?html}</code>.</p>
 <ul>
-  <li><a href="${config.url.base}auth/login">Log In</a></li>
+  <li><a href="${config.url.base}auth/login">Sign In</a></li>
 </ul>
 </@layout.defaultLayout>

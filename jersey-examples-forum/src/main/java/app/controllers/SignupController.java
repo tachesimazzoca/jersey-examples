@@ -47,7 +47,7 @@ public class SignupController {
     @Path("entry")
     public Response entry() {
         View view = new View("signup/entry", params(
-                "form", new FormHelper<SignupForm>(SignupForm.defaultForm())));
+                "form", new FormHelper<SignupEntryForm>(SignupEntryForm.defaultForm())));
         return Response.ok(view).build();
     }
 
@@ -57,18 +57,18 @@ public class SignupController {
     public Response confirm(@Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
             throws EmailException {
-        SignupForm form = SignupForm.bindFrom(formParams);
-        Set<ConstraintViolation<SignupForm>> errors = validator.validate(form);
+        SignupEntryForm form = SignupEntryForm.bindFrom(formParams);
+        Set<ConstraintViolation<SignupEntryForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
             View view = new View("signup/entry", params(
-                    "form", new FormHelper<SignupForm>(form, errors)));
+                    "form", new FormHelper<SignupEntryForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
                     .build();
         }
         if (accountDao.findByEmail(form.getEmail()).isPresent()) {
             List<String> messages = ImmutableList.of("The email has already been used.");
             View view = new View("signup/entry", params(
-                    "form", new FormHelper<SignupForm>(form, messages)));
+                    "form", new FormHelper<SignupEntryForm>(form, messages)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
                     .build();
         }

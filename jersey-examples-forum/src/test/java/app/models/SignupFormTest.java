@@ -27,8 +27,8 @@ public class SignupFormTest {
 
     @Test
     public void testConstraints() {
-        SignupForm form = new SignupForm();
-        Set<ConstraintViolation<SignupForm>> results;
+        SignupEntryForm form = new SignupEntryForm();
+        Set<ConstraintViolation<SignupEntryForm>> results;
 
         form.setEmail("");
         form.setPassword("1234");
