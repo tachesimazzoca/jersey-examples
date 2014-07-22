@@ -47,7 +47,7 @@ public class JPAStorageTest {
         vOpt = storage.read(key1, String.class);
         assertTrue(vOpt.isPresent());
         assertEquals("bar", vOpt.get());
-        
+
         storage.delete(key1);
         vOpt = storage.read(key1, String.class);
         assertFalse(vOpt.isPresent());

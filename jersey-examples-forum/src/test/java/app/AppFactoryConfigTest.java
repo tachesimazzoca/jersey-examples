@@ -18,7 +18,7 @@ public class AppFactoryConfigTest {
         JsonParser parser = new YAMLFactory().createParser(
                 this.getClass().getResourceAsStream("/conf/factory.yml"));
         ObjectMapper mapper = Jackson.newObjectMapper();
-        AppFactoryConfig appConfig = mapper.readValue(parser, AppFactoryConfig.class); 
+        AppFactoryConfig appConfig = mapper.readValue(parser, AppFactoryConfig.class);
 
         SignupMailerFactory signupMailerFactory = appConfig.getSignupMailerFactory();
         assertEquals("localhost", signupMailerFactory.getHostName());

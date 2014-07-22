@@ -91,7 +91,7 @@ public class User {
     private String hashPassword(String password, String salt) {
         return DigestUtils.sha1Hex(salt + password);
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
