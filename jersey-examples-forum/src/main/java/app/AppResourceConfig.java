@@ -38,7 +38,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
                 config.maybe("app.secret", String.class), "APP_LOGIN");
 
         // dao
-        UserDao userDao = new UserDaoImpl(ef);
+        AccountDao accountDao = new AccountDaoImpl(ef);
 
         // renderer
         String templateDir = this.getClass()
@@ -52,8 +52,8 @@ public class AppResourceConfig extends ScanningResourceConfig {
         // controllers
         getSingletons().add(new PagesController());
         getSingletons().add(new SignupController(
-                signupStorage, userDao, factoryConfig.getSignupMailerFactory()));
-        getSingletons().add(new AuthController(loginCookieFactory, userDao));
-        getSingletons().add(new ProfileController(loginCookieFactory, userDao));
+                signupStorage, accountDao, factoryConfig.getSignupMailerFactory()));
+        getSingletons().add(new AuthController(loginCookieFactory, accountDao));
+        getSingletons().add(new ProfileController(loginCookieFactory, accountDao));
     }
 }

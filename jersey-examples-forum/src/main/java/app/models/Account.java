@@ -12,8 +12,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.RandomStringUtils;
 
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "accounts")
+public class Account {
     private static final int PASSWORD_SALT_LENGTH = 4;
 
     @Id
@@ -28,7 +28,7 @@ public class User {
     @Column(name = "password_hash")
     private String passwordHash = "";
 
-    @Convert(converter = User.StatusConverter.class)
+    @Convert(converter = Account.StatusConverter.class)
     private Status status = Status.ACTIVE;
 
     public Long getId() {
@@ -112,7 +112,7 @@ public class User {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        User other = (User) obj;
+        Account other = (Account) obj;
         if (email == null) {
             if (other.email != null)
                 return false;

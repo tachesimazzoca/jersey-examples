@@ -28,14 +28,14 @@ import static app.core.Util.params;
 public class ProfileController {
     private final Validator validator;
     private final CookieBakerFactory loginCookieFactory;
-    private final UserDao userDao;
+    private final AccountDao accountDao;
 
     public ProfileController(
             CookieBakerFactory loginCookieFactory,
-            UserDao userDao) {
+            AccountDao accountDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.loginCookieFactory = loginCookieFactory;
-        this.userDao = userDao;
+        this.accountDao = accountDao;
     }
 
     @GET
@@ -49,14 +49,14 @@ public class ProfileController {
         if (!login.get("id").isPresent()) {
             return redirect;
         }
-        Optional<User> userOpt = userDao.find(Long.parseLong(login.get("id").get()));
-        if (!userOpt.isPresent()) {
+        Optional<Account> accountOpt = accountDao.find(Long.parseLong(login.get("id").get()));
+        if (!accountOpt.isPresent()) {
             return redirect;
         }
 
-        User user = userOpt.get();
+        Account account = accountOpt.get();
         ProfileEditForm form = ProfileEditForm.defaultForm();
-        form.setEmail(user.getEmail());
+        form.setEmail(account.getEmail());
 
         View view = new View("profile/edit", params(
                 "form", new FormHelper<ProfileEditForm>(form)));
@@ -77,11 +77,11 @@ public class ProfileController {
         if (!login.get("id").isPresent()) {
             return redirect;
         }
-        Optional<User> userOpt = userDao.find(Long.parseLong(login.get("id").get()));
-        if (!userOpt.isPresent()) {
+        Optional<Account> accountOpt = accountDao.find(Long.parseLong(login.get("id").get()));
+        if (!accountOpt.isPresent()) {
             return redirect;
         }
-        User user = userOpt.get();
+        Account account = accountOpt.get();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(formParams);
         Set<ConstraintViolation<ProfileEditForm>> errors = validator.validate(form);
@@ -93,7 +93,7 @@ public class ProfileController {
         }
 
         if (!form.getCurrentPassword().isEmpty()) {
-            if (!user.isEqualPassword(form.getCurrentPassword())) {
+            if (!account.isEqualPassword(form.getCurrentPassword())) {
                 List<String> messages = ImmutableList.<String> of("Invalid password");
                 View view = new View("profile/edit", params(
                         "form", new FormHelper<ProfileEditForm>(form, messages)));
@@ -102,8 +102,8 @@ public class ProfileController {
             }
         }
 
-        if (!form.getEmail().equals(user.getEmail())) {
-            if (userDao.findByEmail(form.getEmail()).isPresent()) {
+        if (!form.getEmail().equals(account.getEmail())) {
+            if (accountDao.findByEmail(form.getEmail()).isPresent()) {
                 List<String> messages = ImmutableList.of("The email has already been used.");
                 View view = new View("profile/edit", params(
                         "form", new FormHelper<ProfileEditForm>(form, messages)));
@@ -112,11 +112,11 @@ public class ProfileController {
             }
         }
 
-        user.setEmail(form.getEmail());
+        account.setEmail(form.getEmail());
         if (!form.getPassword().isEmpty()) {
-            user.refreshPassword(form.getPassword());
+            account.refreshPassword(form.getPassword());
         }
-        userDao.save(user);
+        accountDao.save(account);
 
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/").build()).build();

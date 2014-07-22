@@ -30,16 +30,16 @@ import static app.core.Util.params;
 public class SignupController {
     private final Validator validator;
     private final Storage signupStorage;
-    private final UserDao userDao;
+    private final AccountDao accountDao;
     private final SignupMailerFactory signupMailerFactory;
 
     public SignupController(
             Storage signupStorage,
-            UserDao userDao,
+            AccountDao accountDao,
             SignupMailerFactory signupMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.signupStorage = signupStorage;
-        this.userDao = userDao;
+        this.accountDao = accountDao;
         this.signupMailerFactory = signupMailerFactory;
     }
 
@@ -65,7 +65,7 @@ public class SignupController {
             return Response.status(Response.Status.FORBIDDEN).entity(view)
                     .build();
         }
-        if (userDao.findByEmail(form.getEmail()).isPresent()) {
+        if (accountDao.findByEmail(form.getEmail()).isPresent()) {
             List<String> messages = ImmutableList.of("The email has already been used.");
             View view = new View("signup/entry", params(
                     "form", new FormHelper<SignupForm>(form, messages)));
@@ -106,17 +106,17 @@ public class SignupController {
 
         @SuppressWarnings("unchecked")
         Map<String, String> params = (Map<String, String>) opt.get();
-        if (userDao.findByEmail(params.get("email")).isPresent()) {
+        if (accountDao.findByEmail(params.get("email")).isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/signup/errors/email").build()).build();
         }
 
-        User user = new User();
-        user.setEmail(params.get("email"));
-        user.setStatus(User.Status.ACTIVE);
-        user.refreshPassword(params.get("password"));
-        User savedUser = userDao.save(user);
-        return Response.ok(new View("signup/activate", params("user", savedUser))).build();
+        Account account = new Account();
+        account.setEmail(params.get("email"));
+        account.setStatus(Account.Status.ACTIVE);
+        account.refreshPassword(params.get("password"));
+        Account savedAccount = accountDao.save(account);
+        return Response.ok(new View("signup/activate", params("account", savedAccount))).build();
     }
 
     @GET

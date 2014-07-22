@@ -27,14 +27,14 @@ import static app.core.Util.params;
 public class AuthController {
     private final Validator validator;
     private final CookieBakerFactory loginCookieFactory;
-    private final UserDao userDao;
+    private final AccountDao accountDao;
 
     public AuthController(
             CookieBakerFactory loginCookieFactory,
-            UserDao userDao) {
+            AccountDao accountDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.loginCookieFactory = loginCookieFactory;
-        this.userDao = userDao;
+        this.accountDao = accountDao;
     }
 
     @GET
@@ -67,18 +67,18 @@ public class AuthController {
                     .entity(view).build();
         }
 
-        Optional<User> userOpt = userDao.findByEmail(form.getEmail());
-        if (!userOpt.isPresent() || !userOpt.get().isEqualPassword(form.getPassword())) {
+        Optional<Account> accountOpt = accountDao.findByEmail(form.getEmail());
+        if (!accountOpt.isPresent() || !accountOpt.get().isEqualPassword(form.getPassword())) {
             List<String> messages = ImmutableList.of("Invalid password or e-mail");
             View view = new View("auth/login", params(
                     "form", new FormHelper<AuthLoginForm>(form, messages)));
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(view).build();
         }
-        User user = userOpt.get();
+        Account account = accountOpt.get();
 
         CookieBaker login = loginCookieFactory.create();
-        login.put("id", user.getId().toString());
+        login.put("id", account.getId().toString());
 
         String url = form.getUrl();
         if (!url.startsWith("/") || url.isEmpty())

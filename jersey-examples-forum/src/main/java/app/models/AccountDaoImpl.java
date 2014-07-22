@@ -7,48 +7,48 @@ import com.google.common.base.Optional;
 
 import java.util.List;
 
-public class UserDaoImpl implements UserDao {
+public class AccountDaoImpl implements AccountDao {
     private final EntityManagerFactory ef;
 
-    public UserDaoImpl(EntityManagerFactory ef) {
+    public AccountDaoImpl(EntityManagerFactory ef) {
         this.ef = ef;
     }
 
     @Override
-    public Optional<User> find(long id) {
+    public Optional<Account> find(long id) {
         EntityManager em = ef.createEntityManager();
-        User user = em.find(User.class, id);
+        Account account = em.find(Account.class, id);
         em.close();
-        return Optional.fromNullable(user);
+        return Optional.fromNullable(account);
     }
 
     @Override
-    public Optional<User> findByEmail(String email) {
+    public Optional<Account> findByEmail(String email) {
         EntityManager em = ef.createEntityManager();
-        List<User> rows = em.createQuery(
-                "SELECT a FROM User a WHERE a.email = :email", User.class)
+        List<Account> rows = em.createQuery(
+                "SELECT a FROM Account a WHERE a.email = :email", Account.class)
                 .setParameter("email", email)
                 .setMaxResults(1)
                 .getResultList();
         em.close();
         if (rows.isEmpty())
-            return Optional.<User> absent();
+            return Optional.<Account> absent();
         else
-            return Optional.<User> of(rows.get(0));
+            return Optional.<Account> of(rows.get(0));
     }
 
     @Override
-    public User save(User user) {
-        if (user.getId() == null && user.getPasswordHash().isEmpty())
+    public Account save(Account account) {
+        if (account.getId() == null && account.getPasswordHash().isEmpty())
             throw new IllegalArgumentException();
         EntityManager em = ef.createEntityManager();
         em.getTransaction().begin();
-        if (user.getId() == null)
-            em.persist(user);
+        if (account.getId() == null)
+            em.persist(account);
         else
-            em.merge(user);
+            em.merge(account);
         em.getTransaction().commit();
         em.close();
-        return user;
+        return account;
     }
 }
