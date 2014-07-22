@@ -20,10 +20,10 @@ public class JPAStorageTest {
         EntityManager em = ef.createEntityManager();
 
         em.getTransaction().begin();
-        em.createNativeQuery("TRUNCATE TABLE signup_storage").executeUpdate();
+        em.createNativeQuery("TRUNCATE TABLE session_storage").executeUpdate();
         em.getTransaction().commit();
 
-        JPAStorage storage = new JPAStorage(ef, "signup_storage");
+        JPAStorage storage = new JPAStorage(ef, "session_storage");
 
         Optional<String> vOpt;
         vOpt = storage.read("deadbeef", String.class);
@@ -57,5 +57,20 @@ public class JPAStorageTest {
         assertFalse(vOpt.isPresent());
 
         em.close();
+    }
+
+    @Test
+    public void testPrefix() {
+        EntityManagerFactory ef = ef();
+        EntityManager em = ef.createEntityManager();
+
+        em.getTransaction().begin();
+        em.createNativeQuery("TRUNCATE TABLE session_storage").executeUpdate();
+        em.getTransaction().commit();
+        em.close();
+
+        JPAStorage storage = new JPAStorage(ef, "session_storage", "signup-");
+        String key1 = storage.create("foo");
+        assertTrue(key1.startsWith("signup-"));
     }
 }

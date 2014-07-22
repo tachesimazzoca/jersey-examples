@@ -31,7 +31,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // storage
         EntityManagerFactory ef = JPA.ef();
-        Storage signupStorage = new JPAStorage(ef, "signup_storage");
+        Storage signupStorage = new JPAStorage(ef, "session_storage", "signup-");
 
         // cookie
         CookieBakerFactory loginCookieFactory = new CookieBakerFactory(

@@ -22,10 +22,16 @@ public class JPAStorage implements Storage {
     private final String DELETE_QUERY;
     private final String SELECT_QUERY;
     private final String SELECT_FOR_UPDATE_QUERY;
-
+    private final String prefix;
+    
     public JPAStorage(EntityManagerFactory ef, String table) {
-        this.ef = ef;
+        this(ef, table, "");
+    }
 
+    public JPAStorage(EntityManagerFactory ef, String table, String prefix) {
+        this.ef = ef;
+        this.prefix = prefix;
+        
         INSERT_QUERY = "INSERT INTO " + table
                 + " (storage_key, storage_value, storage_timestamp)"
                 + " VALUES (?1, ?2, NOW())";
@@ -45,7 +51,7 @@ public class JPAStorage implements Storage {
 
     @Override
     public String create(Object value) {
-        String key = UUID.randomUUID().toString();
+        String key = prefix + UUID.randomUUID().toString();
         write(key, value);
         return key;
     }
