@@ -42,7 +42,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
                 config.maybe("app.secret", String.class), "APP_LOGIN");
 
         // dao
-        AccountDao accountDao = new AccountDaoImpl(ef);
+        AccountDao accountDao = new AccountDao(ef);
 
         // mailer
         TextMailerFactory signupMailerFactory = factoryConfig.getSignupMailerFactory();

@@ -7,7 +7,7 @@ import javax.persistence.EntityManagerFactory;
 
 import app.core.JPA;
 
-public class AccountDaoImplTest {
+public class AccountDaoTest {
     private static EntityManagerFactory ef() {
         return JPA.ef();
     }
@@ -15,14 +15,14 @@ public class AccountDaoImplTest {
     @Test(expected = IllegalArgumentException.class)
     public void testSaveEmptyAccount() {
         EntityManagerFactory ef = ef();
-        AccountDao dao = new AccountDaoImpl(ef);
+        AccountDao dao = new AccountDao(ef);
         dao.save(new Account());
     }
 
     @Test
     public void testValidAccount() {
         EntityManagerFactory ef = ef();
-        AccountDao dao = new AccountDaoImpl(ef);
+        AccountDao dao = new AccountDao(ef);
         Account account1 = new Account();
         account1.setEmail("account1@example.net");
         account1.refreshPassword("1111", "xxxx");
@@ -47,7 +47,7 @@ public class AccountDaoImplTest {
     @Test(expected = javax.persistence.PersistenceException.class)
     public void testEmailConflict() {
         EntityManagerFactory ef = ef();
-        AccountDao dao = new AccountDaoImpl(ef);
+        AccountDao dao = new AccountDao(ef);
         Account account1 = new Account();
         account1.setEmail("account1@example.net");
         account1.refreshPassword("1111", "xxxx");
