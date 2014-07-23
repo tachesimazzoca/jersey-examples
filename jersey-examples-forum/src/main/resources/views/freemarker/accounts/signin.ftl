@@ -3,14 +3,14 @@
 <#if form.hasErrors()>
 <ul>
 <#list form.errors as err>
-<li>${(err.propertyPath)?html}: ${(err.message)?html}</li>
+  <li>${(err.propertyPath)?html}: ${(err.message)?html}</li>
 </#list>
 </ul>
 </#if>
 <#if form.hasMessages()>
 <ul>
 <#list form.messages as msg>
-<li>${msg?html}</li>
+  <li>${msg?html}</li>
 </#list>
 </ul>
 </#if>
@@ -18,9 +18,9 @@
 ${form.toHTMLInput("hidden", "url")}
 <dl>
   <dt>E-mail</dt>
-  ${form.toHTMLInput("text", "email")}
+  <dd>${form.toHTMLInput("text", "email")}</dd>
   <dt>Password</dt>
-  ${form.toHTMLInput("password", "password")}
+  <dd>${form.toHTMLInput("password", "password")}</dd>
 </dl>
 <div>
   <input type="submit" value="Sign In">
