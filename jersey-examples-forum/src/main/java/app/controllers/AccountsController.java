@@ -5,6 +5,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import javax.validation.ConstraintViolation;
@@ -14,6 +15,8 @@ import javax.validation.Validator;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -167,8 +170,14 @@ public class AccountsController {
         String url = form.getUrl();
         if (!url.startsWith("/") || url.isEmpty())
             url = "/";
-        return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path(url).build()).cookie(login.toCookie()).build();
+        try {
+            return Response.seeOther(uinfo.getBaseUriBuilder()
+                    .uri(new URI(url)).build()).cookie(login.toCookie()).build();
+        } catch (UriBuilderException e) {
+            throw new IllegalArgumentException(e);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     @GET
