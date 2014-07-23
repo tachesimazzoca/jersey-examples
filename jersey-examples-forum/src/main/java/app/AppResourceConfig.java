@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import app.core.*;
+import app.providers.*;
 import app.models.*;
 import app.controllers.*;
 import app.renderer.*;
@@ -44,7 +45,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
         // mailer
         TextMailerFactory signupMailerFactory = factoryConfig.getSignupMailerFactory();
         TextMailerFactory profileMailerFactory = factoryConfig.getProfileMailerFactory();
-                
+
         // renderer
         String templateDir = this.getClass()
                 .getResource("/views/freemarker").getPath();
@@ -53,6 +54,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // providers
         getSingletons().add(new ViewMessageBodyWriter(renderer));
+        getSingletons().add(new UserProvider(loginCookieFactory, accountDao));
 
         // controllers
         getSingletons().add(new PagesController());
@@ -60,6 +62,6 @@ public class AppResourceConfig extends ScanningResourceConfig {
                 accountDao, signupStorage, signupMailerFactory));
         getSingletons().add(new AuthController(loginCookieFactory, accountDao));
         getSingletons().add(new ProfileController(
-                loginCookieFactory, accountDao, profileStorage, profileMailerFactory));
+                accountDao, profileStorage, profileMailerFactory));
     }
 }

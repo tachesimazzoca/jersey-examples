@@ -6,7 +6,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import javax.servlet.http.HttpServletRequest;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -28,18 +27,15 @@ import static app.core.Util.params;
 @Produces(MediaType.TEXT_HTML)
 public class ProfileController {
     private final Validator validator;
-    private final CookieBakerFactory loginCookieFactory;
     private final AccountDao accountDao;
     private final Storage profileSession;
     private final TextMailerFactory profileMailerFactory;
 
     public ProfileController(
-            CookieBakerFactory loginCookieFactory,
             AccountDao accountDao,
             Storage profileSession,
             TextMailerFactory profileMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
-        this.loginCookieFactory = loginCookieFactory;
         this.accountDao = accountDao;
         this.profileSession = profileSession;
         this.profileMailerFactory = profileMailerFactory;
@@ -48,20 +44,15 @@ public class ProfileController {
     @GET
     @Path("edit")
     public Response edit(
-            @Context UriInfo uinfo,
-            @Context HttpServletRequest req) {
+            @Context User user,
+            @Context UriInfo uinfo) {
         final Response redirect = redirectToLogin(uinfo);
 
-        CookieBaker login = loginCookieFactory.create(req);
-        if (!login.get("id").isPresent()) {
+        if (!user.getAccount().isPresent()) {
             return redirect;
         }
-        Optional<Account> accountOpt = accountDao.find(Long.parseLong(login.get("id").get()));
-        if (!accountOpt.isPresent()) {
-            return redirect;
-        }
+        Account account = user.getAccount().get();
 
-        Account account = accountOpt.get();
         ProfileEditForm form = ProfileEditForm.defaultForm();
         form.setEmail(account.getEmail());
 
@@ -74,21 +65,16 @@ public class ProfileController {
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response confirm(
+            @Context User user,
             @Context UriInfo uinfo,
-            @Context HttpServletRequest req,
             MultivaluedMap<String, String> formParams) {
 
         final Response redirect = redirectToLogin(uinfo);
 
-        CookieBaker login = loginCookieFactory.create(req);
-        if (!login.get("id").isPresent()) {
+        if (!user.getAccount().isPresent()) {
             return redirect;
         }
-        Optional<Account> accountOpt = accountDao.find(Long.parseLong(login.get("id").get()));
-        if (!accountOpt.isPresent()) {
-            return redirect;
-        }
-        Account account = accountOpt.get();
+        Account account = user.getAccount().get();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(formParams);
         Set<ConstraintViolation<ProfileEditForm>> errors = validator.validate(form);
@@ -154,10 +140,9 @@ public class ProfileController {
     @GET
     @Path("activate")
     public Response activate(
+            @Context User user,
             @Context UriInfo uinfo,
-            @Context HttpServletRequest req,
             @QueryParam("code") String code) {
-        final CookieBaker login = loginCookieFactory.create(req);
 
         final Optional<?> opt = profileSession.read(code, Map.class);
         profileSession.delete(code);
@@ -171,8 +156,9 @@ public class ProfileController {
         final Long id = (Long) params.get("id");
         final String email = (String) params.get("email");
 
-        if (login.get("id").isPresent()) {
-            if (id != Long.parseLong(login.get("id").get())) {
+        if (user.getAccount().isPresent()) {
+            Account account = user.getAccount().get();
+            if (id != account.getId()) {
                 // The current user is not a verified user.
                 return Response.seeOther(uinfo.getBaseUriBuilder()
                         .path("/profile/errors/session").build()).build();

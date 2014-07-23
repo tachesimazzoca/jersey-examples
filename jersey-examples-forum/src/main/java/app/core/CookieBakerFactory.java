@@ -1,7 +1,10 @@
 package app.core;
 
+import java.util.Map;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
-import javax.servlet.http.HttpServletRequest;
 
 import com.google.common.base.Optional;
 
@@ -62,21 +65,14 @@ public class CookieBakerFactory {
                 version, comment, maxAge, secure));
     }
 
-    public CookieBaker create(HttpServletRequest req) {
-        if (cookieName.isEmpty())
-            throw new IllegalArgumentException(
-                    "The field cookieName must be not empty");
-
-        javax.servlet.http.Cookie[] cookies = req.getCookies();
-        if (cookies != null) {
-            for (int i = 0; i < cookies.length; i++) {
-                if (cookies[i].getName().equals(cookieName)) {
-                    return new CookieBaker(secret, new NewCookie(
-                            cookieName, cookies[i].getValue(),
-                            path, domain, version, comment, maxAge, secure));
-                }
-            }
+    public CookieBaker create(HttpHeaders headers) {
+        Map<String, Cookie> cookies = headers.getCookies();
+        if (cookies.containsKey(cookieName)) {
+            return new CookieBaker(secret, new NewCookie(
+                    cookieName, cookies.get(cookieName).getValue(),
+                    path, domain, version, comment, maxAge, secure));
+        } else {
+            return create();
         }
-        return create();
     }
 }

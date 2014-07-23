@@ -10,7 +10,6 @@ import javax.ws.rs.core.UriInfo;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-import javax.servlet.http.HttpServletRequest;
 
 import java.util.List;
 import java.util.Set;
@@ -39,9 +38,7 @@ public class AuthController {
 
     @GET
     @Path("login")
-    public Response login(
-            @Context HttpServletRequest req,
-            @QueryParam("url") @DefaultValue("") String url) {
+    public Response login(@QueryParam("url") @DefaultValue("") String url) {
         AuthLoginForm form = AuthLoginForm.defaultForm();
         form.setUrl(url);
         CookieBaker login = loginCookieFactory.create();
@@ -55,7 +52,6 @@ public class AuthController {
     @Consumes("application/x-www-form-urlencoded")
     public Response authenticate(
             @Context UriInfo uinfo,
-            @Context HttpServletRequest req,
             MultivaluedMap<String, String> formParams) {
 
         AuthLoginForm form = AuthLoginForm.bindFrom(formParams);
@@ -89,9 +85,7 @@ public class AuthController {
 
     @GET
     @Path("logout")
-    public Response logout(
-            @Context UriInfo uinfo,
-            @Context HttpServletRequest req) {
+    public Response logout(@Context UriInfo uinfo) {
         CookieBaker login = loginCookieFactory.create();
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/").build())
