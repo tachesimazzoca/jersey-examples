@@ -39,7 +39,7 @@ public class UserProvider implements InjectableProvider<Context, Type> {
             public User getValue(HttpContext ctx) {
                 CookieBaker login = loginCookieFactory.create(ctx.getRequest());
                 if (!login.get("id").isPresent())
-                    return null;
+                    return new User();
                 Optional<Account> accountOpt =
                         accountDao.find(Long.parseLong(login.get("id").get()));
                 if (!accountOpt.isPresent())
