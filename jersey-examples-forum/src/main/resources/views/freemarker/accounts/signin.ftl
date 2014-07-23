@@ -1,5 +1,5 @@
 <#import "/_layouts/default.ftl" as layout>
-<@layout.defaultLayout "Account Registration">
+<@layout.defaultLayout "Sign In">
 <#if form.hasErrors()>
 <ul>
 <#list form.errors as err>
@@ -14,17 +14,16 @@
 </#list>
 </ul>
 </#if>
-<form action="entry" method="POST">
+<form action="signin" method="POST">
+${form.toHTMLInput("hidden", "url")}
 <dl>
   <dt>E-mail</dt>
   ${form.toHTMLInput("text", "email")}
   <dt>Password</dt>
   ${form.toHTMLInput("password", "password")}
-  <dt>Re-type Password</dt>
-  ${form.toHTMLInput("password", "retypedPassword")}
 </dl>
 <div>
-  <input type="submit" value="Submit">
+  <input type="submit" value="Sign In">
 </div>
 </form>
 </@layout.defaultLayout>

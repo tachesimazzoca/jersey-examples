@@ -12,7 +12,7 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 
-public class SignupFormTest {
+public class AccountsSignupFormTest {
     private final Validator validator = Validation
             .buildDefaultValidatorFactory().getValidator();
 
@@ -27,8 +27,8 @@ public class SignupFormTest {
 
     @Test
     public void testConstraints() {
-        SignupEntryForm form = new SignupEntryForm();
-        Set<ConstraintViolation<SignupEntryForm>> results;
+        AccountsSignupForm form = new AccountsSignupForm();
+        Set<ConstraintViolation<AccountsSignupForm>> results;
 
         form.setEmail("");
         form.setPassword("1234");

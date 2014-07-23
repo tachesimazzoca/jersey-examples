@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 import app.core.*;
+import app.mail.TextMailerFactory;
 import app.models.*;
 
 import static app.core.Util.params;
@@ -28,16 +29,16 @@ import static app.core.Util.params;
 public class ProfileController {
     private final Validator validator;
     private final AccountDao accountDao;
-    private final Storage profileSession;
+    private final Storage profileStorage;
     private final TextMailerFactory profileMailerFactory;
 
     public ProfileController(
             AccountDao accountDao,
-            Storage profileSession,
+            Storage profileStorage,
             TextMailerFactory profileMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.accountDao = accountDao;
-        this.profileSession = profileSession;
+        this.profileStorage = profileStorage;
         this.profileMailerFactory = profileMailerFactory;
     }
 
@@ -119,7 +120,7 @@ public class ProfileController {
                 "id", account.getId(),
                 "email", form.getEmail()
                 );
-        String code = profileSession.create(params);
+        String code = profileStorage.create(params);
         String url = uinfo.getBaseUriBuilder()
                 .path("/profile/activate")
                 .queryParam("code", code)
@@ -144,8 +145,8 @@ public class ProfileController {
             @Context UriInfo uinfo,
             @QueryParam("code") String code) {
 
-        final Optional<?> opt = profileSession.read(code, Map.class);
-        profileSession.delete(code);
+        final Optional<?> opt = profileStorage.read(code, Map.class);
+        profileStorage.delete(code);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/profile/errors/session").build()).build();

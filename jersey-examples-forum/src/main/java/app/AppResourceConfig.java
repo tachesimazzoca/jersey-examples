@@ -13,6 +13,7 @@ import java.util.Map;
 
 import app.core.*;
 import app.providers.*;
+import app.mail.TextMailerFactory;
 import app.models.*;
 import app.controllers.*;
 import app.renderer.*;
@@ -58,9 +59,8 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // controllers
         getSingletons().add(new PagesController());
-        getSingletons().add(new SignupController(
-                accountDao, signupStorage, signupMailerFactory));
-        getSingletons().add(new AuthController(loginCookieFactory, accountDao));
+        getSingletons().add(new AccountsController(
+                loginCookieFactory, accountDao, signupStorage, signupMailerFactory));
         getSingletons().add(new ProfileController(
                 accountDao, profileStorage, profileMailerFactory));
     }

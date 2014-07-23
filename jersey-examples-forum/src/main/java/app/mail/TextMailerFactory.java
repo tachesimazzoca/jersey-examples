@@ -1,4 +1,4 @@
-package app.models;
+package app.mail;
 
 import org.apache.commons.mail.SimpleEmail;
 
@@ -7,9 +7,6 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 
-import app.mail.CommonsMailer;
-import app.mail.FakeSimpleEmail;
-import app.mail.Mailer;
 
 public class TextMailerFactory {
     private boolean fake = true;

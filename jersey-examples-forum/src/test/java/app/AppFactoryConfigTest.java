@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import app.core.Jackson;
-import app.models.TextMailerFactory;
+import app.mail.TextMailerFactory;
 
 public class AppFactoryConfigTest {
     @Test

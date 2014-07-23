@@ -5,7 +5,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Email;
 
-public class AuthLoginForm {
+public class AccountsSigninForm {
     @NotEmpty
     @Email
     private String email = "";
@@ -39,16 +39,16 @@ public class AuthLoginForm {
         this.url = url;
     }
 
-    public static AuthLoginForm emptyForm() {
-        return new AuthLoginForm();
+    public static AccountsSigninForm emptyForm() {
+        return new AccountsSigninForm();
     }
 
-    public static AuthLoginForm defaultForm() {
-        return new AuthLoginForm();
+    public static AccountsSigninForm defaultForm() {
+        return new AccountsSigninForm();
     }
 
-    public static AuthLoginForm bindFrom(MultivaluedMap<String, String> params) {
-        AuthLoginForm form = AuthLoginForm.emptyForm();
+    public static AccountsSigninForm bindFrom(MultivaluedMap<String, String> params) {
+        AccountsSigninForm form = AccountsSigninForm.emptyForm();
         if (params.containsKey("email"))
             form.setEmail(params.getFirst("email"));
         if (params.containsKey("password"))

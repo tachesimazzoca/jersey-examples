@@ -2,6 +2,6 @@
 <@layout.defaultLayout "Account Registration">
 <p>The verification code has been expired. Sorry, try again.</p>
 <ul>
-  <li><a href="../entry">Sign Up</a></li>
+  <li><a href="../signup">Sign Up</a></li>
 </ul>
 </@layout.defaultLayout>

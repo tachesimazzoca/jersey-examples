@@ -1,6 +1,6 @@
 package app;
 
-import app.models.TextMailerFactory;
+import app.mail.TextMailerFactory;
 
 public class AppFactoryConfig {
     private TextMailerFactory signupMailerFactory;

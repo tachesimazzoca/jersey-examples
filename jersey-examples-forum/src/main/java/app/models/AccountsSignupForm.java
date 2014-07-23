@@ -8,7 +8,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Email;
 
-public class SignupEntryForm {
+public class AccountsSignupForm {
     @NotEmpty
     @Email
     private String email = "";
@@ -44,16 +44,16 @@ public class SignupEntryForm {
         this.retypedPassword = v;
     }
 
-    public static SignupEntryForm emptyForm() {
-        return new SignupEntryForm();
+    public static AccountsSignupForm emptyForm() {
+        return new AccountsSignupForm();
     }
 
-    public static SignupEntryForm defaultForm() {
-        return new SignupEntryForm();
+    public static AccountsSignupForm defaultForm() {
+        return new AccountsSignupForm();
     }
 
-    public static SignupEntryForm bindFrom(MultivaluedMap<String, String> params) {
-        SignupEntryForm form = SignupEntryForm.emptyForm();
+    public static AccountsSignupForm bindFrom(MultivaluedMap<String, String> params) {
+        AccountsSignupForm form = AccountsSignupForm.emptyForm();
         if (params.containsKey("email"))
             form.setEmail(params.getFirst("email"));
         if (params.containsKey("password"))
