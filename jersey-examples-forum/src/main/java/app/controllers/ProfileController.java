@@ -193,7 +193,7 @@ public class ProfileController {
 
     private Response redirectToLogin(UriInfo uinfo) {
         return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path("/auth/login")
+                .path("/accounts/signin")
                 .queryParam("url", "/profile/edit")
                 .build()).build();
     }

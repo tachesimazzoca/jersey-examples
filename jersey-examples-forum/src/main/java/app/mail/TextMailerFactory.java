@@ -7,7 +7,6 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 
-
 public class TextMailerFactory {
     private boolean fake = true;
     private String hostName = "localhost";

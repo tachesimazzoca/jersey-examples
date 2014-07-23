@@ -48,7 +48,7 @@ public class AccountsSigninForm {
     }
 
     public static AccountsSigninForm bindFrom(MultivaluedMap<String, String> params) {
-        AccountsSigninForm form = AccountsSigninForm.emptyForm();
+        AccountsSigninForm form = emptyForm();
         if (params.containsKey("email"))
             form.setEmail(params.getFirst("email"));
         if (params.containsKey("password"))

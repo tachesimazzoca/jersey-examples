@@ -67,7 +67,7 @@ public class ProfileEditForm {
     }
 
     public static ProfileEditForm bindFrom(MultivaluedMap<String, String> params) {
-        ProfileEditForm form = ProfileEditForm.emptyForm();
+        ProfileEditForm form = emptyForm();
         try {
             for (String key : params.keySet()) {
                 String methodName = "set" + StringUtils.capitalize(key);

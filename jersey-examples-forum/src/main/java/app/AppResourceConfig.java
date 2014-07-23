@@ -34,6 +34,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
         // storage
         EntityManagerFactory ef = JPA.ef();
         Storage signupStorage = new JPAStorage(ef, "session_storage", "signup-");
+        Storage recoveryStorage = new JPAStorage(ef, "session_storage", "recovery-");
         Storage profileStorage = new JPAStorage(ef, "session_storage", "profile-");
 
         // cookie
@@ -45,6 +46,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // mailer
         TextMailerFactory signupMailerFactory = factoryConfig.getSignupMailerFactory();
+        TextMailerFactory recoveryMailerFactory = factoryConfig.getRecoveryMailerFactory();
         TextMailerFactory profileMailerFactory = factoryConfig.getProfileMailerFactory();
 
         // renderer
@@ -61,6 +63,8 @@ public class AppResourceConfig extends ScanningResourceConfig {
         getSingletons().add(new PagesController());
         getSingletons().add(new AccountsController(
                 loginCookieFactory, accountDao, signupStorage, signupMailerFactory));
+        getSingletons().add(new RecoveryController(
+                accountDao, recoveryStorage, recoveryMailerFactory));
         getSingletons().add(new ProfileController(
                 accountDao, profileStorage, profileMailerFactory));
     }

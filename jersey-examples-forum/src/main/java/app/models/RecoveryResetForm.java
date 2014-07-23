@@ -6,12 +6,9 @@ import javax.validation.constraints.AssertTrue;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import org.hibernate.validator.constraints.Email;
 
-public class AccountsSignupForm {
-    @NotEmpty
-    @Email
-    private String email = "";
+public class RecoveryResetForm {
+    private String code;
 
     @NotEmpty
     @Pattern(regexp = "^(|\\p{Graph}+)$")
@@ -20,12 +17,12 @@ public class AccountsSignupForm {
     @NotEmpty
     private String retypedPassword = "";
 
-    public String getEmail() {
-        return email;
+    public String getCode() {
+        return code;
     }
 
-    public void setEmail(String v) {
-        this.email = v;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getPassword() {
@@ -44,18 +41,18 @@ public class AccountsSignupForm {
         this.retypedPassword = v;
     }
 
-    public static AccountsSignupForm emptyForm() {
-        return new AccountsSignupForm();
+    public static RecoveryResetForm emptyForm() {
+        return new RecoveryResetForm();
     }
 
-    public static AccountsSignupForm defaultForm() {
-        return new AccountsSignupForm();
+    public static RecoveryResetForm defaultForm() {
+        return new RecoveryResetForm();
     }
 
-    public static AccountsSignupForm bindFrom(MultivaluedMap<String, String> params) {
-        AccountsSignupForm form = emptyForm();
-        if (params.containsKey("email"))
-            form.setEmail(params.getFirst("email"));
+    public static RecoveryResetForm bindFrom(MultivaluedMap<String, String> params) {
+        RecoveryResetForm form = emptyForm();
+        if (params.containsKey("code"))
+            form.setCode(params.getFirst("code"));
         if (params.containsKey("password"))
             form.setPassword(params.getFirst("password"));
         if (params.containsKey("retypedPassword"))

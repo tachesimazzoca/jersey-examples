@@ -23,7 +23,7 @@ public class JPAStorage implements Storage {
     private final String SELECT_QUERY;
     private final String SELECT_FOR_UPDATE_QUERY;
     private final String prefix;
-    
+
     public JPAStorage(EntityManagerFactory ef, String table) {
         this(ef, table, "");
     }
@@ -31,7 +31,7 @@ public class JPAStorage implements Storage {
     public JPAStorage(EntityManagerFactory ef, String table, String prefix) {
         this.ef = ef;
         this.prefix = prefix;
-        
+
         INSERT_QUERY = "INSERT INTO " + table
                 + " (storage_key, storage_value, storage_timestamp)"
                 + " VALUES (?1, ?2, NOW())";
