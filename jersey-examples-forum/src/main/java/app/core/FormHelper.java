@@ -63,25 +63,48 @@ public class FormHelper<T> {
         return messages;
     }
 
-    public String toHTMLInput(String type, String name) throws
-            NoSuchMethodException,
-            IllegalAccessException,
-            InvocationTargetException {
+    public String toHTMLInput(String type, String name) {
         return toHTMLInput(type, name, "");
     }
 
-    public String toHTMLInput(String type, String name, String attr) throws
-            NoSuchMethodException,
-            IllegalAccessException,
-            InvocationTargetException {
-        String v = (String) MethodUtils.invokeMethod(
-                form, "get" + StringUtils.capitalize(name), null);
+    public String toHTMLInput(String type, String name, String attr) {
+        String v = property(name);
         String attrStr = "";
         if (!attr.isEmpty()) {
             attrStr = " " + attr;
         }
-        return String.format(
-                "<input type=\"%s\" name=\"%s\" value=\"%s\"%s>", type, name,
-                StringEscapeUtils.escapeHtml(v), attrStr);
+        return String.format("<input type=\"%s\" name=\"%s\" value=\"%s\"%s>",
+                type, name, StringEscapeUtils.escapeHtml(v), attrStr);
+    }
+
+    public String toHTMLTextarea(String name) {
+        return toHTMLTextarea(name, "");
+    }
+
+    public String toHTMLTextarea(String name, String attr) {
+        String v = property(name);
+        String attrStr = "";
+        if (!attr.isEmpty()) {
+            attrStr = " " + attr;
+        }
+        return String.format("<textarea name=\"%s\"%s>%s</textarea>",
+                name, attrStr, StringEscapeUtils.escapeHtml(v));
+    }
+    
+    private String property(String name) {
+        String v = null;
+        try {
+            v = (String) MethodUtils.invokeMethod(
+                    form, "get" + StringUtils.capitalize(name), null);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException(e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException(e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalArgumentException(e);
+        }
+        if (v == null)
+            v = "";
+        return v;
     }
 }
