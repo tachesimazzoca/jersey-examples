@@ -1,9 +1,11 @@
 <#import "/_layouts/default.ftl" as layout>
+<#import "/_elements/pagination.ftl" as p>
 <@layout.defaultLayout "Listing Questions">
 <ul>
    <li><a href="questions/edit">New Question</a></li>
 </ul>
 <#if pagination.results?has_content>
+<@p.defaultPagination pagination></@p.defaultPagination>
 <table>
 <tr>
   <th>Subject</th>
