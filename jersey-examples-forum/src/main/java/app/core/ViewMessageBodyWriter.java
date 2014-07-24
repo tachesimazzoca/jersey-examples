@@ -13,8 +13,6 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import java.util.List;
-import java.util.Locale;
 import java.util.logging.Logger;
 
 import app.renderer.Renderer;
@@ -22,9 +20,6 @@ import app.renderer.Renderer;
 @Provider
 @Produces(MediaType.WILDCARD)
 public class ViewMessageBodyWriter implements MessageBodyWriter<View> {
-    @Context
-    private HttpHeaders headers;
-
     private static final Logger LOGGER = Logger
             .getLogger(ViewMessageBodyWriter.class.getName());
 
@@ -63,21 +58,10 @@ public class ViewMessageBodyWriter implements MessageBodyWriter<View> {
             OutputStream entityStream) throws IOException,
             WebApplicationException {
         try {
-            renderer.render(t.getTemplate(), t.getAttributes(),
-                    detectLocale(headers), entityStream);
+            renderer.render(t.getTemplate(), t.getAttributes(), entityStream);
         } catch (Exception e) {
             LOGGER.severe(e.getMessage());
             throw new WebApplicationException(Response.serverError().build());
         }
-    }
-
-    private Locale detectLocale(HttpHeaders headers) {
-        final List<Locale> languages = headers.getAcceptableLanguages();
-        for (Locale locale : languages) {
-            if (!locale.toString().contains("*")) {
-                return locale;
-            }
-        }
-        return Locale.getDefault();
     }
 }

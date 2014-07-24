@@ -7,7 +7,6 @@ import org.junit.Test;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Locale;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -20,18 +19,14 @@ public class FreemarkerRendererTest {
     public void testNoTemplate() throws Exception {
         Renderer renderer = new FreemarkerRenderer(getResourcePath());
         OutputStream os = new ByteArrayOutputStream();
-        renderer.render("notemplate.ftl",
-                ImmutableMap.<String, Object> of(),
-                Locale.US, os);
+        renderer.render("notemplate.ftl", ImmutableMap.<String, Object> of(), os);
     }
 
     @Test
     public void testRelativeTemplatePath() throws Exception {
         Renderer renderer = new FreemarkerRenderer(getResourcePath());
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        renderer.render("index.ftl",
-                ImmutableMap.<String, Object> of("name", "World!"),
-                Locale.US, os);
+        renderer.render("index.ftl", ImmutableMap.<String, Object> of("name", "World!"), os);
         assertEquals("Hello World!", new String(os.toByteArray(), "UTF-8"));
     }
 }

@@ -15,8 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
-import java.util.Locale;
 
 import java.util.Map;
 
@@ -62,20 +60,16 @@ public class FreemarkerRenderer implements Renderer {
     }
 
     @Override
-    public void render(String path, Object attr, Locale locale,
-            OutputStream output) throws IOException, TemplateException {
+    public void render(String path, Object attr, OutputStream output) throws
+            IOException, TemplateException {
         String realpath = path;
         if (!realpath.endsWith(".ftl")) {
             realpath += ".ftl";
         }
         final Configuration configuration =
                 configurationCache.getUnchecked(realpath);
-        final Charset charset = Charset.forName(
-                configuration.getEncoding(locale));
-
         final Template template = configuration.getTemplate(
-                realpath, charset.name());
-        template.process(attr,
-                new OutputStreamWriter(output, template.getEncoding()));
+                realpath, Charsets.UTF_8.name());
+        template.process(attr, new OutputStreamWriter(output, template.getEncoding()));
     }
 }
