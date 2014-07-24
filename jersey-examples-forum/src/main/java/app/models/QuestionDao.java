@@ -5,29 +5,29 @@ import javax.persistence.EntityManagerFactory;
 
 import com.google.common.base.Optional;
 
-public class ArticleDao {
+public class QuestionDao {
     private final EntityManagerFactory ef;
 
-    public ArticleDao(EntityManagerFactory ef) {
+    public QuestionDao(EntityManagerFactory ef) {
         this.ef = ef;
     }
 
-    public Optional<Article> find(long id) {
+    public Optional<Question> find(long id) {
         EntityManager em = ef.createEntityManager();
-        Article article = em.find(Article.class, id);
+        Question question = em.find(Question.class, id);
         em.close();
-        return Optional.fromNullable(article);
+        return Optional.fromNullable(question);
     }
 
-    public Article save(Article article) {
+    public Question save(Question question) {
         EntityManager em = ef.createEntityManager();
         em.getTransaction().begin();
-        if (article.getId() == null)
-            em.persist(article);
+        if (question.getId() == null)
+            em.persist(question);
         else
-            em.merge(article);
+            em.merge(question);
         em.getTransaction().commit();
         em.close();
-        return article;
+        return question;
     }
 }

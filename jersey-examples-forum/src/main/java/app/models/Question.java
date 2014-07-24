@@ -7,14 +7,11 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "articles")
-public class Article {
+@Table(name = "questions")
+public class Question {
     @Id
     @GeneratedValue
     private Long id;
-
-    @Column(name = "parent_id")
-    private Long parentId = 0L;
 
     @Column(name = "author_id")
     private Long authorId = 0L;
@@ -32,14 +29,6 @@ public class Article {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Long getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
     }
 
     public Long getAuthorId() {

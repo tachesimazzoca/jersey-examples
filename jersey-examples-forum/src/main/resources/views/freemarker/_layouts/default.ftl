@@ -5,6 +5,7 @@
   <#assign title="${(config.html.title)!'Untitled'}">
 </#if>
 <html>
+<meta charset="utf-8">
 <head>
   <title>${title?html}</title>
 </head>

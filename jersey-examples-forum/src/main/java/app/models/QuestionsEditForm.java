@@ -9,12 +9,8 @@ import org.apache.commons.lang.StringUtils;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
-public class ArticlesEditForm {
+public class QuestionsEditForm {
     private String id = "";
-
-    private String authorId = "";
-
-    private String parentId = "";
 
     @NotEmpty
     private String subject = "";
@@ -28,22 +24,6 @@ public class ArticlesEditForm {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getAuthorId() {
-        return authorId;
-    }
-
-    public void setAuthorId(String authorId) {
-        this.authorId = authorId;
-    }
-
-    public String getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(String parentId) {
-        this.parentId = parentId;
     }
 
     public String getSubject() {
@@ -62,16 +42,16 @@ public class ArticlesEditForm {
         this.body = body;
     }
 
-    public static ArticlesEditForm emptyForm() {
-        return new ArticlesEditForm();
+    public static QuestionsEditForm emptyForm() {
+        return new QuestionsEditForm();
     }
 
-    public static ArticlesEditForm defaultForm() {
-        return new ArticlesEditForm();
+    public static QuestionsEditForm defaultForm() {
+        return new QuestionsEditForm();
     }
 
-    public static ArticlesEditForm bindFrom(MultivaluedMap<String, String> params) {
-        ArticlesEditForm form = emptyForm();
+    public static QuestionsEditForm bindFrom(MultivaluedMap<String, String> params) {
+        QuestionsEditForm form = emptyForm();
         try {
             for (String key : params.keySet()) {
                 String methodName = "set" + StringUtils.capitalize(key);
@@ -89,19 +69,13 @@ public class ArticlesEditForm {
         return form;
     }
 
-    public static ArticlesEditForm bindFrom(Article article) {
-        ArticlesEditForm form = emptyForm();
-        if (article.getId() != null) {
-            form.setId(article.getId().toString());
+    public static QuestionsEditForm bindFrom(Question question) {
+        QuestionsEditForm form = emptyForm();
+        if (question.getId() != null) {
+            form.setId(question.getId().toString());
         }
-        if (article.getParentId() != 0) {
-            form.setParentId(article.getParentId().toString());
-        }
-        if (article.getAuthorId() != 0) {
-            form.setAuthorId(article.getAuthorId().toString());
-        }
-        form.setSubject(article.getSubject());
-        form.setBody(article.getBody());
+        form.setSubject(question.getSubject());
+        form.setBody(question.getBody());
         return form;
     }
 }
