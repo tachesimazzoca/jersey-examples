@@ -34,8 +34,12 @@ public class QuestionsController {
     }
 
     @GET
-    public Response index() {
-        return Response.ok(new View("questions/index")).build();
+    public Response index(
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("limit") @DefaultValue("20") int limit) {
+        Pagination<Question> pagination = questionDao.select(offset, limit);
+        return Response.ok(new View("questions/index", params(
+                "pagination", pagination))).build();
     }
 
     @GET
