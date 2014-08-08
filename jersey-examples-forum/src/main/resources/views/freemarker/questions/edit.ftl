@@ -1,5 +1,5 @@
 <#import "/_layouts/default.ftl" as layout>
-<@layout.defaultLayout "Editing Article">
+<@layout.defaultLayout "Editing Question">
 <#if form.hasErrors()>
 <ul>
 <#list form.errors as err>

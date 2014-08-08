@@ -20,14 +20,25 @@ CREATE INDEX `accounts_email` ON `accounts` (`email`);
 INSERT INTO `accounts` (`email`, `password_salt`, `password_hash`, `nickname`, `status`)
     VALUES ('user1@example.net', '0000', '70352f41061eda4ff3c322094af068ba70c3b38b', 'user1', 1);
 
-DROP TABLE IF EXISTS `articles`;
-CREATE TABLE `articles` (
+DROP TABLE IF EXISTS `questions`;
+CREATE TABLE `questions` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
-    `parent_id` BIGINT NOT NULL default 0,
     `author_id` BIGINT NOT NULL default 0,
     `subject` TEXT,
     `body` TEXT,
     `posted_at` TIMESTAMP,
     PRIMARY KEY (`id`)
 );
-CREATE INDEX `articles_author_id` ON `articles` (`author_id`);
+CREATE INDEX `questions_author_id` ON `questions` (`author_id`);
+
+DROP TABLE IF EXISTS `answers`;
+CREATE TABLE `answers` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `question_id` BIGINT NOT NULL default 0,
+    `author_id` BIGINT NOT NULL default 0,
+    `body` TEXT,
+    `posted_at` TIMESTAMP,
+    PRIMARY KEY (`id`)
+);
+CREATE INDEX `answers_question_id` ON `answers` (`question_id`);
+CREATE INDEX `answers_author_id` ON `answers` (`author_id`);

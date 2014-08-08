@@ -9,7 +9,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
-public class ArticleEditForm {
+public class QuestionEditForm {
     private String id = "";
 
     private String parentId = "";
@@ -52,16 +52,16 @@ public class ArticleEditForm {
         this.body = body;
     }
 
-    public static ArticleEditForm emptyForm() {
-        return new ArticleEditForm();
+    public static QuestionEditForm emptyForm() {
+        return new QuestionEditForm();
     }
 
-    public static ArticleEditForm defaultForm() {
-        return new ArticleEditForm();
+    public static QuestionEditForm defaultForm() {
+        return new QuestionEditForm();
     }
 
-    public static ArticleEditForm bindFrom(MultivaluedMap<String, String> params) {
-        ArticleEditForm form = emptyForm();
+    public static QuestionEditForm bindFrom(MultivaluedMap<String, String> params) {
+        QuestionEditForm form = emptyForm();
         try {
             for (String key : params.keySet()) {
                 String methodName = "set" + StringUtils.capitalize(key);
@@ -79,13 +79,13 @@ public class ArticleEditForm {
         return form;
     }
 
-    public static ArticleEditForm bindFrom(Article article) {
-        ArticleEditForm form = emptyForm();
-        if (article.getId() != null) {
-            form.setId(article.getId().toString());
+    public static QuestionEditForm bindFrom(Question question) {
+        QuestionEditForm form = emptyForm();
+        if (question.getId() != null) {
+            form.setId(question.getId().toString());
         }
-        form.setSubject(article.getSubject());
-        form.setBody(article.getBody());
+        form.setSubject(question.getSubject());
+        form.setBody(question.getBody());
         return form;
     }
 }

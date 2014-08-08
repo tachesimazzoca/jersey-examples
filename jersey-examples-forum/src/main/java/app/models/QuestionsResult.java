@@ -14,21 +14,24 @@ import java.sql.SQLException;
 import org.apache.commons.io.IOUtils;
 
 @Entity
-@SqlResultSetMapping(name = "ArticlesResult", classes = {
+@SqlResultSetMapping(name = "QuestionsResult", classes = {
         @ConstructorResult(
-                targetClass = ArticlesResult.class,
+                targetClass = QuestionsResult.class,
                 columns = {
-                        @ColumnResult(name = "articles_id"),
-                        @ColumnResult(name = "articles_subject"),
-                        @ColumnResult(name = "articles_posted_at"),
-                        @ColumnResult(name = "accounts_id"),
-                        @ColumnResult(name = "accounts_nickname") })
+                        @ColumnResult(name = "questions.id"),
+                        @ColumnResult(name = "questions.subject"),
+                        @ColumnResult(name = "questions.body"),
+                        @ColumnResult(name = "questions.posted_at"),
+                        @ColumnResult(name = "accounts.id"),
+                        @ColumnResult(name = "accounts.nickname") })
 })
-public class ArticlesResult {
+public class QuestionsResult {
     @Id
     private Long id;
 
     private String subject;
+
+    private String body;
 
     private java.util.Date postedAt;
 
@@ -36,9 +39,10 @@ public class ArticlesResult {
 
     private String nickname;
 
-    public ArticlesResult(
+    public QuestionsResult(
             BigInteger id,
             Clob subject,
+            Clob body,
             java.util.Date postedAt,
             BigInteger authorId,
             String nickname) {
@@ -46,6 +50,7 @@ public class ArticlesResult {
             this.id = id.longValue();
         try {
             this.subject = IOUtils.toString(subject.getCharacterStream());
+            this.body = IOUtils.toString(body.getCharacterStream());
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         } catch (SQLException e) {
@@ -63,6 +68,10 @@ public class ArticlesResult {
 
     public String getSubject() {
         return subject;
+    }
+
+    public String getBody() {
+        return body;
     }
 
     public java.util.Date getPostedAt() {
