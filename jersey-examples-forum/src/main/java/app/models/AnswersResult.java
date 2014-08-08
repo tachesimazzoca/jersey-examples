@@ -14,22 +14,22 @@ import java.sql.SQLException;
 import org.apache.commons.io.IOUtils;
 
 @Entity
-@SqlResultSetMapping(name = "QuestionsResult", classes = {
+@SqlResultSetMapping(name = "AnswersResult", classes = {
         @ConstructorResult(
-                targetClass = QuestionsResult.class,
+                targetClass = AnswersResult.class,
                 columns = {
-                        @ColumnResult(name = "questions.id"),
-                        @ColumnResult(name = "questions.subject"),
-                        @ColumnResult(name = "questions.body"),
-                        @ColumnResult(name = "questions.posted_at"),
+                        @ColumnResult(name = "answers.id"),
+                        @ColumnResult(name = "answers.question_id"),
+                        @ColumnResult(name = "answers.body"),
+                        @ColumnResult(name = "answers.posted_at"),
                         @ColumnResult(name = "accounts.id"),
                         @ColumnResult(name = "accounts.nickname") })
 })
-public class QuestionsResult {
+public class AnswersResult {
     @Id
     private Long id;
 
-    private String subject;
+    private Long questionId;
 
     private String body;
 
@@ -39,16 +39,16 @@ public class QuestionsResult {
 
     private String nickname;
 
-    public QuestionsResult(
+    public AnswersResult(
             BigInteger id,
-            Clob subject,
+            BigInteger questionId,
             Clob body,
             java.util.Date postedAt,
             BigInteger authorId,
             String nickname) {
         this.id = id.longValue();
+        this.questionId = questionId.longValue();
         try {
-            this.subject = IOUtils.toString(subject.getCharacterStream());
             this.body = IOUtils.toString(body.getCharacterStream());
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
@@ -64,8 +64,8 @@ public class QuestionsResult {
         return id;
     }
 
-    public String getSubject() {
-        return subject;
+    public Long getQuestionId() {
+        return questionId;
     }
 
     public String getBody() {

@@ -25,11 +25,16 @@ import static app.core.Util.params;
 public class QuestionsController {
     private final Validator validator;
     private final QuestionDao questionDao;
+    private final AnswerDao answerDao;
     private final AccountDao accountDao;
 
-    public QuestionsController(QuestionDao questionDao, AccountDao accountDao) {
+    public QuestionsController(
+            QuestionDao questionDao,
+            AnswerDao answerDao,
+            AccountDao accountDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.questionDao = questionDao;
+        this.answerDao = answerDao;
         this.accountDao = accountDao;
     }
 
@@ -51,18 +56,28 @@ public class QuestionsController {
             @PathParam("id") Long id,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("5") int limit) {
+
+        // question
         Optional<Question> questionOpt = questionDao.find(id);
         if (!questionOpt.isPresent())
             return redirectToIndex(uinfo);
         Question question = questionOpt.get();
+
+        // account
         Optional<Account> accountOpt = accountDao.find(question.getAuthorId());
         if (!accountOpt.isPresent())
             return redirectToIndex(uinfo);
         Account author = accountOpt.get();
 
+        // answers
+        PaginationHelper<AnswersResult> answers = new PaginationHelper<AnswersResult>(
+                answerDao.selectByQuestionId(id, offset, limit),
+                id + "?offset=%d&limit=%d");
+
         View view = new View("questions/detail", params(
                 "question", question,
-                "author", author));
+                "author", author,
+                "answers", answers));
         return Response.ok(view).build();
     }
 
@@ -76,12 +91,13 @@ public class QuestionsController {
             return redirectToLogin(uinfo, id);
         }
 
+        Question question = null;
         QuestionEditForm form;
         if (id != null) {
             Optional<Question> questionOpt = questionDao.find(id);
             if (!questionOpt.isPresent())
                 return redirectToIndex(uinfo);
-            Question question = questionOpt.get();
+            question = questionOpt.get();
             if (!isQuestionAuthor(user, question))
                 return redirectToIndex(uinfo);
             form = QuestionEditForm.bindFrom(question);
@@ -90,7 +106,8 @@ public class QuestionsController {
         }
 
         View view = new View("questions/edit", params(
-                "form", new FormHelper<QuestionEditForm>(form)));
+                "form", new FormHelper<QuestionEditForm>(form),
+                "question", question));
         return Response.ok(view).build();
     }
 
@@ -107,7 +124,7 @@ public class QuestionsController {
         }
         Account account = user.getAccount().get();
 
-        Question question;
+        Question question = null;
         QuestionEditForm form = QuestionEditForm.bindFrom(formParams);
 
         if (id != null) {
@@ -117,20 +134,21 @@ public class QuestionsController {
             question = questionOpt.get();
             if (!isQuestionAuthor(user, question))
                 return redirectToIndex(uinfo);
-        } else {
-            question = new Question();
-            question.setAuthorId(account.getId());
-            question.setPostedAt(new java.util.Date());
         }
 
         Set<ConstraintViolation<QuestionEditForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
             View view = new View("questions/edit", params(
-                    "form", new FormHelper<QuestionEditForm>(form, errors)));
+                    "form", new FormHelper<QuestionEditForm>(form, errors),
+                    "question", question));
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(view).build();
         }
-
+        if (id == null) {
+            question = new Question();
+            question.setAuthorId(account.getId());
+            question.setPostedAt(new java.util.Date());
+        }
         question.setSubject(form.getSubject());
         question.setBody(form.getBody());
         questionDao.save(question);

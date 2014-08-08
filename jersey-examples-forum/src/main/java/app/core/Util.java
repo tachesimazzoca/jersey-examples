@@ -21,7 +21,8 @@ public class Util {
             throw new IllegalArgumentException(
                     "The number of args must be even.");
         for (int i = 0; i < args.length; i += 2) {
-            builder.put((String) args[i], args[i + 1]);
+            if (args[i + 1] != null)
+                builder.put((String) args[i], args[i + 1]);
         }
         return builder.build();
     }

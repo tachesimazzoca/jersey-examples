@@ -9,11 +9,10 @@ import org.apache.commons.lang.StringUtils;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
-public class QuestionEditForm {
+public class AnswerEditForm {
     private String id = "";
 
-    @NotEmpty
-    private String subject = "";
+    private String questionId = "";
 
     @NotEmpty
     private String body = "";
@@ -26,12 +25,12 @@ public class QuestionEditForm {
         this.id = id;
     }
 
-    public String getSubject() {
-        return subject;
+    public String getQuestionId() {
+        return questionId;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public void setQuestionId(String questionId) {
+        this.questionId = questionId;
     }
 
     public String getBody() {
@@ -42,16 +41,16 @@ public class QuestionEditForm {
         this.body = body;
     }
 
-    public static QuestionEditForm emptyForm() {
-        return new QuestionEditForm();
+    public static AnswerEditForm emptyForm() {
+        return new AnswerEditForm();
     }
 
-    public static QuestionEditForm defaultForm() {
-        return new QuestionEditForm();
+    public static AnswerEditForm defaultForm() {
+        return new AnswerEditForm();
     }
 
-    public static QuestionEditForm bindFrom(MultivaluedMap<String, String> params) {
-        QuestionEditForm form = emptyForm();
+    public static AnswerEditForm bindFrom(MultivaluedMap<String, String> params) {
+        AnswerEditForm form = emptyForm();
         try {
             for (String key : params.keySet()) {
                 String methodName = "set" + StringUtils.capitalize(key);
@@ -69,13 +68,12 @@ public class QuestionEditForm {
         return form;
     }
 
-    public static QuestionEditForm bindFrom(Question question) {
-        QuestionEditForm form = emptyForm();
-        if (question.getId() != null) {
-            form.setId(question.getId().toString());
+    public static AnswerEditForm bindFrom(Answer answer) {
+        AnswerEditForm form = emptyForm();
+        if (answer.getId() != null) {
+            form.setId(answer.getId().toString());
         }
-        form.setSubject(question.getSubject());
-        form.setBody(question.getBody());
+        form.setBody(answer.getBody());
         return form;
     }
 }

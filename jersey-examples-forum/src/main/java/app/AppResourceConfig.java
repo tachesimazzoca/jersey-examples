@@ -43,7 +43,8 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // dao
         AccountDao accountDao = new AccountDao(ef);
-        QuestionDao articleDao = new QuestionDao(ef);
+        QuestionDao questionDao = new QuestionDao(ef);
+        AnswerDao answerDao = new AnswerDao(ef);
 
         // mailer
         TextMailerFactory signupMailerFactory = factoryConfig.getSignupMailerFactory();
@@ -68,6 +69,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
                 accountDao, recoveryStorage, recoveryMailerFactory));
         getSingletons().add(new ProfileController(
                 accountDao, profileStorage, profileMailerFactory));
-        getSingletons().add(new QuestionsController(articleDao, accountDao));
+        getSingletons().add(new QuestionsController(questionDao, answerDao, accountDao));
+        getSingletons().add(new AnswersController(answerDao, questionDao));
     }
 }
