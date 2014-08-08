@@ -14,17 +14,17 @@ import java.sql.SQLException;
 import org.apache.commons.io.IOUtils;
 
 @Entity
-@SqlResultSetMapping(name = "QuestionsResult", classes = {
+@SqlResultSetMapping(name = "ArticlesResult", classes = {
         @ConstructorResult(
-                targetClass = QuestionsResult.class,
+                targetClass = ArticlesResult.class,
                 columns = {
-                        @ColumnResult(name = "questions_id"),
-                        @ColumnResult(name = "questions_subject"),
-                        @ColumnResult(name = "questions_posted_at"),
+                        @ColumnResult(name = "articles_id"),
+                        @ColumnResult(name = "articles_subject"),
+                        @ColumnResult(name = "articles_posted_at"),
                         @ColumnResult(name = "accounts_id"),
-                        @ColumnResult(name = "accounts_email") })
+                        @ColumnResult(name = "accounts_nickname") })
 })
-public class QuestionsResult {
+public class ArticlesResult {
     @Id
     private Long id;
 
@@ -34,14 +34,14 @@ public class QuestionsResult {
 
     private Long authorId;
 
-    private String email;
+    private String nickname;
 
-    public QuestionsResult(
+    public ArticlesResult(
             BigInteger id,
             Clob subject,
             java.util.Date postedAt,
             BigInteger authorId,
-            String email) {
+            String nickname) {
         if (id != null)
             this.id = id.longValue();
         try {
@@ -54,7 +54,7 @@ public class QuestionsResult {
         this.postedAt = postedAt;
         if (authorId != null)
             this.authorId = authorId.longValue();
-        this.email = email;
+        this.nickname = nickname;
     }
 
     public Long getId() {
@@ -73,7 +73,7 @@ public class QuestionsResult {
         return authorId;
     }
 
-    public String getEmail() {
-        return email;
+    public String getNickname() {
+        return nickname;
     }
 }

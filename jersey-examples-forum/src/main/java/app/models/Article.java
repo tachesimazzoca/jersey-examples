@@ -7,11 +7,14 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "questions")
-public class Question {
+@Table(name = "articles")
+public class Article {
     @Id
     @GeneratedValue
     private Long id;
+
+    @Column(name = "parent_id")
+    private Long parentId = 0L;
 
     @Column(name = "author_id")
     private Long authorId = 0L;
@@ -29,6 +32,14 @@ public class Question {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
     }
 
     public Long getAuthorId() {
@@ -61,5 +72,9 @@ public class Question {
 
     public void setPostedAt(java.util.Date postedAt) {
         this.postedAt = postedAt;
+    }
+
+    public boolean isQuestion() {
+        return parentId == 0L;
     }
 }

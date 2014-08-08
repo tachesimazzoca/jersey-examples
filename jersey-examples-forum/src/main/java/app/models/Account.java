@@ -28,6 +28,8 @@ public class Account {
     @Column(name = "password_hash")
     private String passwordHash = "";
 
+    private String nickname = "";
+
     @Convert(converter = Account.StatusConverter.class)
     private Status status = Status.ACTIVE;
 
@@ -61,6 +63,14 @@ public class Account {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 
     public Status getStatus() {

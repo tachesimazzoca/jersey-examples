@@ -1,5 +1,5 @@
 <#import "/_layouts/default.ftl" as layout>
-<@layout.defaultLayout "Editing Question">
+<@layout.defaultLayout "Editing Article">
 <#if form.hasErrors()>
 <ul>
 <#list form.errors as err>
@@ -16,6 +16,7 @@
 </#if>
 <form action="edit" method="POST">
 ${form.toHTMLInput("hidden", "id")}
+${form.toHTMLInput("hidden", "parentId")}
 <dl>
   <dt>Subject</dt>
   <dd>${form.toHTMLInput("text", "subject")}</dd>

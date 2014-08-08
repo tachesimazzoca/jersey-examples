@@ -26,6 +26,8 @@ public class ProfileEditForm {
 
     private String retypedPassword = "";
 
+    private String nickname = "";
+
     public String getEmail() {
         return email;
     }
@@ -58,6 +60,14 @@ public class ProfileEditForm {
         this.retypedPassword = retypedPassword;
     }
 
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
     public static ProfileEditForm emptyForm() {
         return new ProfileEditForm();
     }
@@ -82,6 +92,13 @@ public class ProfileEditForm {
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e);
         }
+        return form;
+    }
+
+    public static ProfileEditForm bindFrom(Account account) {
+        ProfileEditForm form = emptyForm();
+        form.setEmail(account.getEmail());
+        form.setNickname(account.getNickname());
         return form;
     }
 

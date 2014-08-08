@@ -54,8 +54,7 @@ public class ProfileController {
         }
         Account account = user.getAccount().get();
 
-        ProfileEditForm form = ProfileEditForm.defaultForm();
-        form.setEmail(account.getEmail());
+        ProfileEditForm form = ProfileEditForm.bindFrom(account);
 
         View view = new View("profile/edit", params(
                 "form", new FormHelper<ProfileEditForm>(form)));
@@ -106,6 +105,7 @@ public class ProfileController {
             }
         }
 
+        account.setNickname(form.getNickname());
         if (!form.getPassword().isEmpty()) {
             account.refreshPassword(form.getPassword());
         }

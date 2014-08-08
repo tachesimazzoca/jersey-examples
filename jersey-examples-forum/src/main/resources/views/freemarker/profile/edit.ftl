@@ -24,6 +24,8 @@
   <dd>${form.toHTMLInput("password", "password")}</dd>
   <dt>Re-type Password</dt>
   <dd>${form.toHTMLInput("password", "retypedPassword")}</dd>
+  <dt>Nickname</dt>
+  <dd>${form.toHTMLInput("text", "nickname")}</dd>
 </dl>
 <div>
   <input type="submit" value="Submit">

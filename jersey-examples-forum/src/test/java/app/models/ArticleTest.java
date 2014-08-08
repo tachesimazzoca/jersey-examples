@@ -11,7 +11,7 @@ import java.math.BigInteger;
 
 import app.core.JPA;
 
-public class QuestionTest {
+public class ArticleTest {
     private static EntityManagerFactory ef() {
         return JPA.ef();
     }
@@ -20,7 +20,7 @@ public class QuestionTest {
     public void testPersistWithEmptyAssociation() {
         EntityManagerFactory ef = ef();
         EntityManager em = ef.createEntityManager();
-        Question question = new Question();
+        Article question = new Article();
         question.setSubject("test subject");
         question.setBody("test body");
         long t = System.currentTimeMillis();
@@ -29,10 +29,10 @@ public class QuestionTest {
         em.persist(question);
         em.getTransaction().commit();
         Long id = question.getId();
-        question = em.find(Question.class, id);
+        question = em.find(Article.class, id);
         assertEquals((Long) 0L, question.getAuthorId());
         BigInteger authorId = (BigInteger) em.createNativeQuery(
-                "SELECT author_id FROM questions WHERE id = ?1")
+                "SELECT author_id FROM articles WHERE id = ?1")
                 .setParameter(1, id)
                 .getSingleResult();
         assertEquals(BigInteger.valueOf(0L), authorId);
