@@ -41,12 +41,12 @@ public class AnswersController {
             @QueryParam("questionId") @DefaultValue("") Long questionId,
             @QueryParam("id") @DefaultValue("") Long id) {
         if (!user.getAccount().isPresent()) {
-            String url = "/answers/edit";
+            String returnTo = "/answers/edit";
             if (id != null)
-                url += "?id=" + id;
+                returnTo += "?id=" + id;
             else
-                url += "?questionId=" + questionId;
-            return redirectToLogin(uinfo, url);
+                returnTo += "?questionId=" + questionId;
+            return redirectToLogin(uinfo, returnTo);
         }
 
         AnswerEditForm form;
@@ -133,10 +133,10 @@ public class AnswersController {
                 .path(path).build()).build();
     }
 
-    private Response redirectToLogin(UriInfo uinfo, String url) {
+    private Response redirectToLogin(UriInfo uinfo, String returnTo) {
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/accounts/signin")
-                .queryParam("url", url)
+                .queryParam("url", returnTo)
                 .build()).build();
     }
 

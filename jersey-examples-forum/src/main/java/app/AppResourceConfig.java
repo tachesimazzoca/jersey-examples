@@ -67,6 +67,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
                 loginCookieFactory, accountDao, signupStorage, signupMailerFactory));
         getSingletons().add(new RecoveryController(
                 accountDao, recoveryStorage, recoveryMailerFactory));
+        getSingletons().add(new DashboardController(questionDao, answerDao));
         getSingletons().add(new ProfileController(
                 accountDao, profileStorage, profileMailerFactory));
         getSingletons().add(new QuestionsController(questionDao, answerDao, accountDao));

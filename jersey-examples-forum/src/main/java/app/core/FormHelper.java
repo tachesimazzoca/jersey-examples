@@ -9,10 +9,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.reflect.MethodUtils;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
+import java.util.Map;
 
 public class FormHelper<T> {
     private final T form;
@@ -68,7 +70,7 @@ public class FormHelper<T> {
     }
 
     public String toHTMLInput(String type, String name, String attr) {
-        String v = property(name);
+        String v = asString(name);
         String attrStr = "";
         if (!attr.isEmpty()) {
             attrStr = " " + attr;
@@ -82,7 +84,7 @@ public class FormHelper<T> {
     }
 
     public String toHTMLTextarea(String name, String attr) {
-        String v = property(name);
+        String v = asString(name);
         String attrStr = "";
         if (!attr.isEmpty()) {
             attrStr = " " + attr;
@@ -91,10 +93,43 @@ public class FormHelper<T> {
                 name, attrStr, StringEscapeUtils.escapeHtml(v));
     }
 
-    private String property(String name) {
-        String v = null;
+    public String toHTMLOptions(String name) {
+        String v = asString(name);
+        Map<String, String> m = asMap(name + "Map");
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> option : m.entrySet()) {
+            sb.append("<option value=\"");
+            sb.append(StringEscapeUtils.escapeHtml(option.getKey()));
+            sb.append("\"");
+            if (v.equals(option.getKey()))
+                sb.append(" selected=\"selected\"");
+            sb.append(">");
+            sb.append(StringEscapeUtils.escapeHtml(option.getValue()));
+            sb.append("</option>");
+        }
+        return sb.toString();
+    }
+
+    private String asString(String name) {
+        String v = property(name, String.class);
+        if (v == null)
+            v = "";
+        return v;
+    }
+
+    private Map<String, String> asMap(String name) {
+        @SuppressWarnings("unchecked")
+        Map<String, String> v = (Map<String, String>) property(name, Map.class);
+        if (v == null)
+            v = ImmutableMap.of();
+        return v;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <V> V property(String name, Class<V> type) {
+        V v = null;
         try {
-            v = (String) MethodUtils.invokeMethod(
+            v = (V) MethodUtils.invokeMethod(
                     form, "get" + StringUtils.capitalize(name), null);
         } catch (NoSuchMethodException e) {
             throw new IllegalArgumentException(e);
@@ -103,8 +138,6 @@ public class FormHelper<T> {
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e);
         }
-        if (v == null)
-            v = "";
         return v;
     }
 }

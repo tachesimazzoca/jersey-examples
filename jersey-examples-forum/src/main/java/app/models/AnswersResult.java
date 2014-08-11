@@ -22,6 +22,7 @@ import org.apache.commons.io.IOUtils;
                         @ColumnResult(name = "answers.question_id"),
                         @ColumnResult(name = "answers.body"),
                         @ColumnResult(name = "answers.posted_at"),
+                        @ColumnResult(name = "answers.status"),
                         @ColumnResult(name = "accounts.id"),
                         @ColumnResult(name = "accounts.nickname") })
 })
@@ -35,6 +36,8 @@ public class AnswersResult {
 
     private java.util.Date postedAt;
 
+    private Answer.Status status;
+
     private Long authorId;
 
     private String nickname;
@@ -44,6 +47,7 @@ public class AnswersResult {
             BigInteger questionId,
             Clob body,
             java.util.Date postedAt,
+            byte status,
             BigInteger authorId,
             String nickname) {
         this.id = id.longValue();
@@ -56,6 +60,7 @@ public class AnswersResult {
             throw new IllegalArgumentException(e);
         }
         this.postedAt = postedAt;
+        this.status = Answer.Status.fromValue((int) status);
         this.authorId = authorId.longValue();
         this.nickname = nickname;
     }
@@ -74,6 +79,10 @@ public class AnswersResult {
 
     public java.util.Date getPostedAt() {
         return postedAt;
+    }
+
+    public Answer.Status getStatus() {
+        return status;
     }
 
     public Long getAuthorId() {

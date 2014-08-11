@@ -7,6 +7,9 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.commons.lang.reflect.MethodUtils;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.Map;
+import com.google.common.collect.ImmutableMap;
+
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class QuestionEditForm {
@@ -17,6 +20,19 @@ public class QuestionEditForm {
 
     @NotEmpty
     private String body = "";
+
+    @NotEmpty
+    private String status = "";
+
+    private final Map<String, String> statusMap;
+
+    public QuestionEditForm() {
+        this.statusMap = ImmutableMap.of(
+                String.valueOf(Question.Status.PUBLISHED.getValue()),
+                Question.Status.PUBLISHED.getLabel(),
+                String.valueOf(Question.Status.DRAFT.getValue()),
+                Question.Status.DRAFT.getLabel());
+    }
 
     public String getId() {
         return id;
@@ -40,6 +56,18 @@ public class QuestionEditForm {
 
     public void setBody(String body) {
         this.body = body;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Map<String, String> getStatusMap() {
+        return statusMap;
     }
 
     public static QuestionEditForm emptyForm() {
@@ -76,6 +104,7 @@ public class QuestionEditForm {
         }
         form.setSubject(question.getSubject());
         form.setBody(question.getBody());
+        form.setStatus(String.valueOf(question.getStatus().getValue()));
         return form;
     }
 }

@@ -58,6 +58,7 @@ public class QuestionsResultTest {
                 + " questions.subject,"
                 + " questions.body,"
                 + " questions.posted_at,"
+                + " questions.status,"
                 + " accounts.id,"
                 + " accounts.nickname"
                 + " FROM questions"

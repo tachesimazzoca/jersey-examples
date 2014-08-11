@@ -29,6 +29,12 @@ ${form.toHTMLInput("hidden", "id")}
   <dd>${form.toHTMLInput("text", "subject")}</dd>
   <dt>Body</dt>
   <dd><textarea name="body">${(form.form.body)?html}</textarea></dd>
+  <dt>Status</dt>
+  <dd>
+    <select name="status">
+      ${form.toHTMLOptions("status")}
+    </select>
+  </dd>
 </dl>
 <div>
   <input type="submit" value="Submit">

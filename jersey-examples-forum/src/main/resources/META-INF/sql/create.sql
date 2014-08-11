@@ -27,6 +27,7 @@ CREATE TABLE `questions` (
     `subject` TEXT,
     `body` TEXT,
     `posted_at` TIMESTAMP,
+    `status` TINYINT(1) NOT NULL default 0,
     PRIMARY KEY (`id`)
 );
 CREATE INDEX `questions_author_id` ON `questions` (`author_id`);
@@ -38,7 +39,27 @@ CREATE TABLE `answers` (
     `author_id` BIGINT NOT NULL default 0,
     `body` TEXT,
     `posted_at` TIMESTAMP,
+    `status` TINYINT(1) NOT NULL default 0,
     PRIMARY KEY (`id`)
 );
 CREATE INDEX `answers_question_id` ON `answers` (`question_id`);
 CREATE INDEX `answers_author_id` ON `answers` (`author_id`);
+
+DROP TABLE IF EXISTS `favorite_questions`;
+CREATE TABLE `favorite_questions` (
+    `author_id` BIGINT NOT NULL default 0,
+    `question_id` BIGINT NOT NULL default 0,
+    `modified_at` TIMESTAMP
+);
+CREATE INDEX `favorite_questions_author_id` ON `favorite_questions` (`author_id`);
+CREATE INDEX `favorite_questions_question_id` ON `favorite_questions` (`question_id`);
+
+DROP TABLE IF EXISTS `answer_points`;
+CREATE TABLE `answer_points` (
+    `author_id` BIGINT NOT NULL default 0,
+    `answer_id` BIGINT NOT NULL default 0,
+    `point` INT NOT NULL default 0,
+    `modified_at` TIMESTAMP
+);
+CREATE INDEX `answer_points_author_id` ON `answer_points` (`author_id`);
+CREATE INDEX `answer_points_answer_id` ON `answer_points` (`answer_id`);

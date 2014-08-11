@@ -43,7 +43,7 @@ public class QuestionsController {
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
         PaginationHelper<QuestionsResult> pagination = new PaginationHelper<QuestionsResult>(
-                questionDao.select(offset, limit),
+                questionDao.selectPublicQuestions(offset, limit),
                 "questions?offset=%d&limit=%d");
         return Response.ok(new View("questions/index", params(
                 "pagination", pagination))).build();
@@ -151,10 +151,34 @@ public class QuestionsController {
         }
         question.setSubject(form.getSubject());
         question.setBody(form.getBody());
+        question.setStatus(Question.Status.fromValue(form.getStatus()));
         questionDao.save(question);
 
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/questions").build()).build();
+    }
+
+    @GET
+    @Path("delete")
+    public Response delete(
+            @Context User user,
+            @Context UriInfo uinfo,
+            @QueryParam("id") @DefaultValue("") Long id) {
+        if (!user.getAccount().isPresent()) {
+            return redirectToLogin(uinfo, id);
+        }
+        if (id == null)
+            return redirectToMine(uinfo);
+
+        Optional<Question> questionOpt = questionDao.find(id);
+        if (!questionOpt.isPresent())
+            return redirectToMine(uinfo);
+        Question question = questionOpt.get();
+        if (!isQuestionAuthor(user, question))
+            return redirectToIndex(uinfo);
+        questionDao.updateStatus(id, Question.Status.DELETED);
+
+        return redirectToMine(uinfo);
     }
 
     private Response redirectToIndex(UriInfo uinfo) {
@@ -163,14 +187,24 @@ public class QuestionsController {
                 .build()).build();
     }
 
+    private Response redirectToMine(UriInfo uinfo) {
+        return Response.seeOther(uinfo.getBaseUriBuilder()
+                .path("/questions/mine")
+                .build()).build();
+    }
+
+    private Response redirectToLogin(UriInfo uinfo, String returnTo) {
+        return Response.seeOther(uinfo.getBaseUriBuilder()
+                .path("/accounts/signin")
+                .queryParam("url", returnTo)
+                .build()).build();
+    }
+
     private Response redirectToLogin(UriInfo uinfo, Long id) {
         String url = "/questions/edit";
         if (id != null)
             url += "?id=" + id;
-        return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path("/accounts/signin")
-                .queryParam("url", url)
-                .build()).build();
+        return redirectToLogin(uinfo, url);
     }
 
     private boolean isQuestionAuthor(User user, Question question) {

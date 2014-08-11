@@ -14,6 +14,7 @@ public class QuestionDao {
             + " questions.subject,"
             + " questions.body,"
             + " questions.posted_at,"
+            + " questions.status,"
             + " accounts.id,"
             + " accounts.nickname"
             + " FROM questions"
@@ -47,13 +48,39 @@ public class QuestionDao {
         return question;
     }
 
-    public Pagination<QuestionsResult> select(int offset, int limit) {
+    public void updateStatus(Long id, Question.Status status) {
         EntityManager em = ef.createEntityManager();
+        em.getTransaction().begin();
+        em.createNativeQuery("UPDATE questions SET status = ?1 WHERE id = ?2")
+                .setParameter(1, status.getValue())
+                .setParameter(2, id).executeUpdate();
+        em.getTransaction().commit();
+        em.close();
+    }
+
+    public Pagination<QuestionsResult> selectPublicQuestions(int offset, int limit) {
+        EntityManager em = ef.createEntityManager();
+        String where = " WHERE questions.status = 0";
+        String countQuery = COUNT_QUESTIONS_RESULT + where;
+        String selectQuery = SELECT_QUESTIONS_RESULT + where
+                + " ORDER BY questions.posted_at DESC";
         Pagination<QuestionsResult> pagination = JPA.paginate(em, offset, limit,
-                em.createNativeQuery(COUNT_QUESTIONS_RESULT),
-                em.createNativeQuery(
-                        SELECT_QUESTIONS_RESULT + " ORDER BY questions.posted_at DESC",
-                        "QuestionsResult"),
+                em.createNativeQuery(countQuery),
+                em.createNativeQuery(selectQuery, "QuestionsResult"),
+                QuestionsResult.class);
+        em.close();
+        return pagination;
+    }
+
+    public Pagination<QuestionsResult> selectByAuthorId(Long authorId, int offset, int limit) {
+        EntityManager em = ef.createEntityManager();
+        String where = " WHERE questions.status IN (0, 2) AND questions.author_id = ?1";
+        String countQuery = COUNT_QUESTIONS_RESULT + where;
+        String selectQuery = SELECT_QUESTIONS_RESULT + where
+                + " ORDER BY questions.posted_at DESC";
+        Pagination<QuestionsResult> pagination = JPA.paginate(em, offset, limit,
+                em.createNativeQuery(countQuery).setParameter(1, authorId),
+                em.createNativeQuery(selectQuery, "QuestionsResult").setParameter(1, authorId),
                 QuestionsResult.class);
         em.close();
         return pagination;
