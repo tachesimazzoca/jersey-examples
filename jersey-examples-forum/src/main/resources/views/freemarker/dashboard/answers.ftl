@@ -1,6 +1,6 @@
 <#import "/_layouts/default.ftl" as layout>
 <#import "/_elements/pagination.ftl" as p>
-<@layout.defaultLayout "Listing Answers">
+<@layout.defaultLayout "Dashboard Answers">
 
 <#if pagination.results?has_content>
 <@p.defaultPagination pagination></@p.defaultPagination>
@@ -19,7 +19,7 @@
     <p>${(x.body)?html}</p>
     <ul>
       <li><a href="${config.url.base}answers/edit?id=${x.id}">Edit</a></li>
-      <li><a href="${config.url.base}answers/delete?id=${x.id}">Delete</a></li>
+      <li><a href="${config.url.base}answers/delete?id=${x.id}" onclick="return confirm('Are you sure to delete?')">Delete</a></li>
     </ul>
   </td>
   <td>${(x.postedAt)?html}</td>
