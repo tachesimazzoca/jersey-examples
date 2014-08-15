@@ -33,18 +33,18 @@ import static app.core.Util.params;
 @Produces(MediaType.TEXT_HTML)
 public class AccountsController {
     private final Validator validator;
-    private final CookieBakerFactory loginCookieFactory;
+    private final CookieBakerFactory sessionCookieFactory;
     private final AccountDao accountDao;
     private final Storage signupStorage;
     private final TextMailerFactory signupMailerFactory;
 
     public AccountsController(
-            CookieBakerFactory loginCookieFactory,
+            CookieBakerFactory sessionCookieFactory,
             AccountDao accountDao,
             Storage signupStorage,
             TextMailerFactory signupMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
-        this.loginCookieFactory = loginCookieFactory;
+        this.sessionCookieFactory = sessionCookieFactory;
         this.accountDao = accountDao;
         this.signupStorage = signupStorage;
         this.signupMailerFactory = signupMailerFactory;
@@ -132,10 +132,10 @@ public class AccountsController {
     public Response signin(@QueryParam("url") @DefaultValue("") String url) {
         AccountsSigninForm form = AccountsSigninForm.defaultForm();
         form.setUrl(url);
-        CookieBaker login = loginCookieFactory.create();
+        CookieBaker session = sessionCookieFactory.create();
         return Response.ok(new View("accounts/signin", params(
                 "form", new FormHelper<AccountsSigninForm>(form))))
-                .cookie(login.toDiscardingCookie()).build();
+                .cookie(session.toDiscardingCookie()).build();
     }
 
     @POST
@@ -164,15 +164,15 @@ public class AccountsController {
         }
         Account account = accountOpt.get();
 
-        CookieBaker login = loginCookieFactory.create();
-        login.put("id", account.getId().toString());
+        CookieBaker session = sessionCookieFactory.create();
+        session.put("id", account.getId().toString());
 
         String url = form.getUrl();
         if (!url.startsWith("/") || url.isEmpty())
             url = "/";
         try {
             return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .uri(new URI(url)).build()).cookie(login.toCookie()).build();
+                    .uri(new URI(url)).build()).cookie(session.toCookie()).build();
         } catch (UriBuilderException e) {
             throw new IllegalArgumentException(e);
         } catch (URISyntaxException e) {
@@ -183,10 +183,10 @@ public class AccountsController {
     @GET
     @Path("signout")
     public Response signout(@Context UriInfo uinfo) {
-        CookieBaker login = loginCookieFactory.create();
+        CookieBaker session = sessionCookieFactory.create();
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/").build())
-                .cookie(login.toDiscardingCookie())
+                .cookie(session.toDiscardingCookie())
                 .build();
     }
 }

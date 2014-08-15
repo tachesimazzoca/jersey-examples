@@ -38,8 +38,8 @@ public class AppResourceConfig extends ScanningResourceConfig {
         Storage profileStorage = new JPAStorage(ef, "session_storage", "profile-");
 
         // cookie
-        CookieBakerFactory loginCookieFactory = new CookieBakerFactory(
-                config.maybe("app.secret", String.class), "APP_LOGIN");
+        CookieBakerFactory sessionCookieFactory = new CookieBakerFactory(
+                config.maybe("app.secret", String.class), "APP_SESSION");
 
         // dao
         AccountDao accountDao = new AccountDao(ef);
@@ -59,12 +59,12 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // providers
         getSingletons().add(new ViewMessageBodyWriter(renderer));
-        getSingletons().add(new UserProvider(loginCookieFactory, accountDao));
+        getSingletons().add(new UserProvider(sessionCookieFactory, accountDao));
 
         // controllers
         getSingletons().add(new PagesController());
         getSingletons().add(new AccountsController(
-                loginCookieFactory, accountDao, signupStorage, signupMailerFactory));
+                sessionCookieFactory, accountDao, signupStorage, signupMailerFactory));
         getSingletons().add(new RecoveryController(
                 accountDao, recoveryStorage, recoveryMailerFactory));
         getSingletons().add(new DashboardController(questionDao, answerDao));

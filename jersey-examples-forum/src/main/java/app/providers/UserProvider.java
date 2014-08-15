@@ -19,13 +19,13 @@ import app.models.*;
 
 @Provider
 public class UserProvider implements InjectableProvider<Context, Type> {
-    private final CookieBakerFactory loginCookieFactory;
+    private final CookieBakerFactory sessionCookieFactory;
     private final AccountDao accountDao;
 
     public UserProvider(
-            CookieBakerFactory loginCookieFactory,
+            CookieBakerFactory sessionCookieFactory,
             AccountDao accountDao) {
-        this.loginCookieFactory = loginCookieFactory;
+        this.sessionCookieFactory = sessionCookieFactory;
         this.accountDao = accountDao;
     }
 
@@ -37,11 +37,11 @@ public class UserProvider implements InjectableProvider<Context, Type> {
         return new AbstractHttpContextInjectable<User>() {
             @Override
             public User getValue(HttpContext ctx) {
-                CookieBaker login = loginCookieFactory.create(ctx.getRequest());
-                if (!login.get("id").isPresent())
+                CookieBaker session = sessionCookieFactory.create(ctx.getRequest());
+                if (!session.get("id").isPresent())
                     return new User();
-                Optional<Account> accountOpt =
-                        accountDao.find(Long.parseLong(login.get("id").get()));
+                String accountId = session.get("id").get();
+                Optional<Account> accountOpt = accountDao.find(Long.parseLong(accountId));
                 if (!accountOpt.isPresent())
                     return new User();
                 else
