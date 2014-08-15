@@ -54,7 +54,10 @@ public class CookieBakerFactory {
         this.path = path;
         this.domain = domain;
         this.version = version;
-        this.comment = "HTTPOnly";
+        if (httpOnly)
+            this.comment = "HTTPOnly";
+        else
+            this.comment = "";
         this.maxAge = maxAge;
         this.secure = secure;
     }
