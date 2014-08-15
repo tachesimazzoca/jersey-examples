@@ -19,7 +19,7 @@
   <td>${(x.status.label)?html}</td>
   <td><a href="${config.url.base}questions/${x.id}">${(x.subject)?html}</a>
     <ul>
-      <li><a href="${config.url.base}questions/edit?id=${x.id}">Edit</a></li>
+      <li><a href="${config.url.base}questions/edit?id=${x.id}&return_to=%2fdashboard%2fquestions">Edit</a></li>
       <li><a href="${config.url.base}questions/delete?id=${x.id}" onclick="return confirm('Are you sure to delete?')">Delete</a></li>
     </ul>
   </td>

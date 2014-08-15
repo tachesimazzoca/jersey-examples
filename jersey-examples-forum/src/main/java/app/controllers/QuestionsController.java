@@ -63,6 +63,8 @@ public class QuestionsController {
         if (!questionOpt.isPresent())
             return redirectToIndex(uinfo);
         Question question = questionOpt.get();
+        if (question.getStatus() != Question.Status.PUBLISHED)
+            return redirectToIndex(uinfo);
 
         // account
         Optional<Account> accountOpt = accountDao.find(question.getAuthorId());
@@ -166,10 +168,15 @@ public class QuestionsController {
         questionDao.save(question);
 
         Optional<String> returnTo = session.remove("returnTo");
-        if (returnTo.isPresent())
+        if (returnTo.isPresent()) {
             return redirect(uinfo, returnTo.get());
-        else
-            return redirectToIndex(uinfo);
+        } else {
+            if (question.getStatus() == Question.Status.PUBLISHED) {
+                return redirect(uinfo, "/questions/" + question.getId());
+            } else {
+                return redirectToDashboard(uinfo);
+            }
+        }
     }
 
     @GET
