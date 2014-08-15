@@ -11,6 +11,12 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import javax.ws.rs.core.UriBuilderException;
+import javax.ws.rs.core.UriInfo;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import java.util.Map;
 
 public class Util {
@@ -73,5 +79,19 @@ public class Util {
         for (int i = 0; i < a.length(); i++)
             diff |= a.charAt(i) ^ b.charAt(i);
         return diff == 0;
+    }
+
+    public static URI safeURI(UriInfo uinfo, String path) {
+        if (!path.startsWith("/") || path.isEmpty())
+            throw new IllegalArgumentException("The parameter path must be an absolute path.");
+        URI uri = null;
+        try {
+            uri = new URI(path);
+        } catch (UriBuilderException e) {
+            throw new IllegalArgumentException(e);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
+        return uinfo.getBaseUriBuilder().uri(uri).build();
     }
 }
