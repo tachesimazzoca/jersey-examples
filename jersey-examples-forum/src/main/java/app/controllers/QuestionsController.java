@@ -19,23 +19,24 @@ import app.core.*;
 import app.models.*;
 
 import static app.core.Util.params;
+import static app.core.Util.safeURI;
 
 @Path("/questions")
 @Produces(MediaType.TEXT_HTML)
 public class QuestionsController {
     private final Validator validator;
+    private final AccountDao accountDao;
     private final QuestionDao questionDao;
     private final AnswerDao answerDao;
-    private final AccountDao accountDao;
 
     public QuestionsController(
+            AccountDao accountDao,
             QuestionDao questionDao,
-            AnswerDao answerDao,
-            AccountDao accountDao) {
+            AnswerDao answerDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
+        this.accountDao = accountDao;
         this.questionDao = questionDao;
         this.answerDao = answerDao;
-        this.accountDao = accountDao;
     }
 
     @GET
@@ -84,12 +85,15 @@ public class QuestionsController {
     @GET
     @Path("edit")
     public Response edit(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo,
-            @QueryParam("id") @DefaultValue("") Long id) {
-        if (!user.getAccount().isPresent()) {
+            @QueryParam("id") @DefaultValue("") Long id,
+            @QueryParam("return_to") @DefaultValue("") String returnTo) {
+
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, id);
-        }
+        Account account = accountOpt.get();
 
         Question question = null;
         QuestionEditForm form;
@@ -98,7 +102,7 @@ public class QuestionsController {
             if (!questionOpt.isPresent())
                 return redirectToIndex(uinfo);
             question = questionOpt.get();
-            if (!isQuestionAuthor(user, question))
+            if (!isAuthor(account, question))
                 return redirectToIndex(uinfo);
             form = QuestionEditForm.bindFrom(question);
         } else {
@@ -108,21 +112,28 @@ public class QuestionsController {
         View view = new View("questions/edit", params(
                 "form", new FormHelper<QuestionEditForm>(form),
                 "question", question));
-        return Response.ok(view).build();
+
+        if (returnTo != null && !returnTo.isEmpty()) {
+            session.put("returnTo", returnTo);
+        } else {
+            session.remove("returnTo");
+        }
+        return Response.ok(view).cookie(session.toCookie()).build();
     }
 
     @POST
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEdit(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo,
             @FormParam("id") Long id,
             MultivaluedMap<String, String> formParams) {
-        if (!user.getAccount().isPresent()) {
+
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, id);
-        }
-        Account account = user.getAccount().get();
+        Account account = accountOpt.get();
 
         Question question = null;
         QuestionEditForm form = QuestionEditForm.bindFrom(formParams);
@@ -132,7 +143,7 @@ public class QuestionsController {
             if (!questionOpt.isPresent())
                 return redirectToIndex(uinfo);
             question = questionOpt.get();
-            if (!isQuestionAuthor(user, question))
+            if (!isAuthor(account, question))
                 return redirectToIndex(uinfo);
         }
 
@@ -154,18 +165,25 @@ public class QuestionsController {
         question.setStatus(Question.Status.fromValue(form.getStatus()));
         questionDao.save(question);
 
-        return redirectToIndex(uinfo);
+        Optional<String> returnTo = session.remove("returnTo");
+        if (returnTo.isPresent())
+            return redirect(uinfo, returnTo.get());
+        else
+            return redirectToIndex(uinfo);
     }
 
     @GET
     @Path("delete")
     public Response delete(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo,
             @QueryParam("id") @DefaultValue("") Long id) {
-        if (!user.getAccount().isPresent()) {
+
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, id);
-        }
+        Account account = accountOpt.get();
+
         if (id == null)
             return redirectToDashboard(uinfo);
 
@@ -173,17 +191,22 @@ public class QuestionsController {
         if (!questionOpt.isPresent())
             return redirectToDashboard(uinfo);
         Question question = questionOpt.get();
-        if (!isQuestionAuthor(user, question))
+        if (!isAuthor(account, question))
             return redirectToIndex(uinfo);
 
         questionDao.updateStatus(id, Question.Status.DELETED);
         return redirectToDashboard(uinfo);
     }
 
+    private Optional<Account> getAccount(Session session) {
+        Optional<String> accountId = session.get("accountId");
+        if (!accountId.isPresent())
+            return Optional.absent();
+        return accountDao.find(Long.parseLong(accountId.get()));
+    }
+
     private Response redirect(UriInfo uinfo, String path) {
-        return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path(path)
-                .build()).build();
+        return Response.seeOther(safeURI(uinfo, path)).build();
     }
 
     private Response redirectToIndex(UriInfo uinfo) {
@@ -208,10 +231,7 @@ public class QuestionsController {
         return redirectToLogin(uinfo, url);
     }
 
-    private boolean isQuestionAuthor(User user, Question question) {
-        if (!user.getAccount().isPresent())
-            return false;
-        Account account = user.getAccount().get();
+    private boolean isAuthor(Account account, Question question) {
         if (question.getAuthorId() == 0)
             return false;
         if (question.getAuthorId() != account.getId())

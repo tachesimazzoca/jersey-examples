@@ -45,17 +45,14 @@ public class ProfileController {
     @GET
     @Path("edit")
     public Response edit(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo) {
-        final Response redirect = redirectToLogin(uinfo);
-
-        if (!user.getAccount().isPresent()) {
-            return redirect;
-        }
-        Account account = user.getAccount().get();
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent())
+            redirectToLogin(uinfo);
+        Account account = accountOpt.get();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(account);
-
         View view = new View("profile/edit", params(
                 "form", new FormHelper<ProfileEditForm>(form)));
         return Response.ok(view).build();
@@ -65,16 +62,13 @@ public class ProfileController {
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response confirm(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams) {
-
-        final Response redirect = redirectToLogin(uinfo);
-
-        if (!user.getAccount().isPresent()) {
-            return redirect;
-        }
-        Account account = user.getAccount().get();
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent())
+            redirectToLogin(uinfo);
+        Account account = accountOpt.get();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(formParams);
         Set<ConstraintViolation<ProfileEditForm>> errors = validator.validate(form);
@@ -141,11 +135,10 @@ public class ProfileController {
     @GET
     @Path("activate")
     public Response activate(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo,
             @QueryParam("code") String code) {
-
-        final Optional<?> opt = profileStorage.read(code, Map.class);
+        Optional<?> opt = profileStorage.read(code, Map.class);
         profileStorage.delete(code);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
@@ -153,12 +146,13 @@ public class ProfileController {
         }
 
         @SuppressWarnings("unchecked")
-        final Map<String, Object> params = (Map<String, Object>) opt.get();
-        final Long id = (Long) params.get("id");
-        final String email = (String) params.get("email");
+        Map<String, Object> params = (Map<String, Object>) opt.get();
+        Long id = (Long) params.get("id");
+        String email = (String) params.get("email");
 
-        if (user.getAccount().isPresent()) {
-            Account account = user.getAccount().get();
+        Optional<Account> accountOpt = getAccount(session);
+        if (accountOpt.isPresent()) {
+            Account account = accountOpt.get();
             if (id != account.getId()) {
                 // The current user is not a verified user.
                 return Response.seeOther(uinfo.getBaseUriBuilder()
@@ -166,7 +160,7 @@ public class ProfileController {
             }
         }
 
-        final Optional<Account> accountOpt = accountDao.find(id);
+        accountOpt = accountDao.find(id);
         if (!accountOpt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/profile/errors/session").build()).build();
@@ -176,9 +170,9 @@ public class ProfileController {
                     .path("/profile/errors/email").build()).build();
         }
 
-        final Account account = accountOpt.get();
+        Account account = accountOpt.get();
         account.setEmail(email);
-        final Account savedAccount = accountDao.save(account);
+        Account savedAccount = accountDao.save(account);
         return Response.ok(new View("profile/activate",
                 params("account", savedAccount))).build();
     }
@@ -189,6 +183,13 @@ public class ProfileController {
         return Response.status(Response.Status.FORBIDDEN)
                 .entity(new View("profile/errors/" + name))
                 .build();
+    }
+
+    private Optional<Account> getAccount(Session session) {
+        Optional<String> accountId = session.get("accountId");
+        if (!accountId.isPresent())
+            return Optional.absent();
+        return accountDao.find(Long.parseLong(accountId.get()));
     }
 
     private Response redirectToLogin(UriInfo uinfo) {

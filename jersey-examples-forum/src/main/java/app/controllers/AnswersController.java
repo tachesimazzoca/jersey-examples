@@ -24,11 +24,16 @@ import static app.core.Util.params;
 @Produces(MediaType.TEXT_HTML)
 public class AnswersController {
     private final Validator validator;
-    private final AnswerDao answerDao;
+    private final AccountDao accountDao;
     private final QuestionDao questionDao;
+    private final AnswerDao answerDao;
 
-    public AnswersController(AnswerDao answerDao, QuestionDao questionDao) {
+    public AnswersController(
+            AccountDao accountDao,
+            QuestionDao questionDao,
+            AnswerDao answerDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
+        this.accountDao = accountDao;
         this.answerDao = answerDao;
         this.questionDao = questionDao;
     }
@@ -36,11 +41,12 @@ public class AnswersController {
     @GET
     @Path("edit")
     public Response edit(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo,
             @QueryParam("questionId") @DefaultValue("") Long questionId,
             @QueryParam("id") @DefaultValue("") Long id) {
-        if (!user.getAccount().isPresent()) {
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent()) {
             String returnTo = "/answers/edit";
             if (id != null)
                 returnTo += "?id=" + id;
@@ -48,6 +54,7 @@ public class AnswersController {
                 returnTo += "?questionId=" + questionId;
             return redirectToLogin(uinfo, returnTo);
         }
+        Account account = accountOpt.get();
 
         AnswerEditForm form;
         if (id != null) {
@@ -55,7 +62,7 @@ public class AnswersController {
             if (!answerOpt.isPresent())
                 return redirectToIndex(uinfo, null);
             Answer answer = answerOpt.get();
-            if (!isAuthor(user, answer))
+            if (!isAuthor(account, answer))
                 return redirectToIndex(uinfo, answer.getQuestionId());
             form = AnswerEditForm.bindFrom(answer);
             questionId = answer.getQuestionId();
@@ -82,15 +89,17 @@ public class AnswersController {
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEdit(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo,
             @FormParam("questionId") Long questionId,
             @FormParam("id") Long id,
             MultivaluedMap<String, String> formParams) {
-        if (!user.getAccount().isPresent()) {
+
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent()) {
             return redirectToIndex(uinfo, null);
         }
-        Account account = user.getAccount().get();
+        Account account = accountOpt.get();
 
         Answer answer;
         AnswerEditForm form = AnswerEditForm.bindFrom(formParams);
@@ -100,7 +109,7 @@ public class AnswersController {
             if (!answerOpt.isPresent())
                 return redirectToIndex(uinfo, null);
             answer = answerOpt.get();
-            if (!isAuthor(user, answer))
+            if (!isAuthor(account, answer))
                 return redirectToIndex(uinfo, answer.getQuestionId());
         } else {
             answer = new Answer();
@@ -124,6 +133,13 @@ public class AnswersController {
                 .path("/questions/" + answer.getQuestionId()).build()).build();
     }
 
+    private Optional<Account> getAccount(Session session) {
+        Optional<String> accountId = session.get("accountId");
+        if (!accountId.isPresent())
+            return Optional.absent();
+        return accountDao.find(Long.parseLong(accountId.get()));
+    }
+
     private Response redirectToIndex(UriInfo uinfo, Long questionId) {
         String path = "/questions";
         if (questionId != null) {
@@ -140,10 +156,7 @@ public class AnswersController {
                 .build()).build();
     }
 
-    private boolean isAuthor(User user, Answer answer) {
-        if (!user.getAccount().isPresent())
-            return false;
-        Account account = user.getAccount().get();
+    private boolean isAuthor(Account account, Answer answer) {
         if (answer.getAuthorId() == 0)
             return false;
         if (answer.getAuthorId() != account.getId())

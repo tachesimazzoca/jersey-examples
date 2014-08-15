@@ -6,6 +6,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.common.base.Optional;
+
 import app.core.*;
 import app.models.*;
 
@@ -14,24 +16,27 @@ import static app.core.Util.params;
 @Path("/dashboard")
 @Produces(MediaType.TEXT_HTML)
 public class DashboardController {
+    private final AccountDao accountDao;
     private final QuestionDao questionDao;
     private final AnswerDao answerDao;
 
     public DashboardController(
+            AccountDao accountDao,
             QuestionDao questionDao,
             AnswerDao answerDao) {
+        this.accountDao = accountDao;
         this.questionDao = questionDao;
         this.answerDao = answerDao;
     }
 
     @GET
     public Response index(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo) {
-        if (!user.getAccount().isPresent()) {
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, "/dashboard");
-        }
-        Account account = user.getAccount().get();
+        Account account = accountOpt.get();
 
         return Response.ok(new View("dashboard/index", params(
                 "account", account))).build();
@@ -40,14 +45,14 @@ public class DashboardController {
     @GET
     @Path("questions")
     public Response questions(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
-        if (!user.getAccount().isPresent()) {
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, "/dashboard/questions");
-        }
-        Account account = user.getAccount().get();
+        Account account = accountOpt.get();
 
         PaginationHelper<QuestionsResult> pagination = new PaginationHelper<QuestionsResult>(
                 questionDao.selectByAuthorId(account.getId(), offset, limit),
@@ -59,20 +64,27 @@ public class DashboardController {
     @GET
     @Path("answers")
     public Response answers(
-            @Context User user,
+            @Context Session session,
             @Context UriInfo uinfo,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
-        if (!user.getAccount().isPresent()) {
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, "/dashboard/answers");
-        }
-        Account account = user.getAccount().get();
+        Account account = accountOpt.get();
 
         PaginationHelper<AnswersResult> pagination = new PaginationHelper<AnswersResult>(
                 answerDao.selectByAuthorId(account.getId(), offset, limit),
                 "answers?offset=%d&limit=%d");
         return Response.ok(new View("dashboard/answers", params(
                 "pagination", pagination))).build();
+    }
+
+    private Optional<Account> getAccount(Session session) {
+        Optional<String> accountId = session.get("accountId");
+        if (!accountId.isPresent())
+            return Optional.absent();
+        return accountDao.find(Long.parseLong(accountId.get()));
     }
 
     private Response redirectToLogin(UriInfo uinfo, String returnTo) {

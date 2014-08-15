@@ -33,13 +33,10 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // storage
         EntityManagerFactory ef = JPA.ef();
+        Storage userStorage = new JPAStorage(ef, "session_storage", "user-");
         Storage signupStorage = new JPAStorage(ef, "session_storage", "signup-");
         Storage recoveryStorage = new JPAStorage(ef, "session_storage", "recovery-");
         Storage profileStorage = new JPAStorage(ef, "session_storage", "profile-");
-
-        // cookie
-        CookieBakerFactory sessionCookieFactory = new CookieBakerFactory(
-                config.maybe("app.secret", String.class), "APP_SESSION");
 
         // dao
         AccountDao accountDao = new AccountDao(ef);
@@ -59,18 +56,19 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // providers
         getSingletons().add(new ViewMessageBodyWriter(renderer));
-        getSingletons().add(new UserProvider(sessionCookieFactory, accountDao));
+        getSingletons().add(new SessionProvider(userStorage, "APP_SESSION"));
 
         // controllers
         getSingletons().add(new PagesController());
         getSingletons().add(new AccountsController(
-                sessionCookieFactory, accountDao, signupStorage, signupMailerFactory));
+                accountDao, signupStorage, signupMailerFactory));
         getSingletons().add(new RecoveryController(
                 accountDao, recoveryStorage, recoveryMailerFactory));
-        getSingletons().add(new DashboardController(questionDao, answerDao));
+        getSingletons().add(new DashboardController(accountDao, questionDao, answerDao));
         getSingletons().add(new ProfileController(
                 accountDao, profileStorage, profileMailerFactory));
-        getSingletons().add(new QuestionsController(questionDao, answerDao, accountDao));
-        getSingletons().add(new AnswersController(answerDao, questionDao));
+        getSingletons().add(new QuestionsController(
+                accountDao, questionDao, answerDao));
+        getSingletons().add(new AnswersController(accountDao, questionDao, answerDao));
     }
 }

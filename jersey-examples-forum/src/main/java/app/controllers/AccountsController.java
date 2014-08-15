@@ -5,7 +5,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import javax.validation.ConstraintViolation;
@@ -15,8 +14,6 @@ import javax.validation.Validator;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,23 +25,21 @@ import app.mail.TextMailerFactory;
 import app.models.*;
 
 import static app.core.Util.params;
+import static app.core.Util.safeURI;
 
 @Path("/accounts")
 @Produces(MediaType.TEXT_HTML)
 public class AccountsController {
     private final Validator validator;
-    private final CookieBakerFactory sessionCookieFactory;
     private final AccountDao accountDao;
     private final Storage signupStorage;
     private final TextMailerFactory signupMailerFactory;
 
     public AccountsController(
-            CookieBakerFactory sessionCookieFactory,
             AccountDao accountDao,
             Storage signupStorage,
             TextMailerFactory signupMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
-        this.sessionCookieFactory = sessionCookieFactory;
         this.accountDao = accountDao;
         this.signupStorage = signupStorage;
         this.signupMailerFactory = signupMailerFactory;
@@ -129,19 +124,22 @@ public class AccountsController {
 
     @GET
     @Path("signin")
-    public Response signin(@QueryParam("url") @DefaultValue("") String url) {
+    public Response signin(
+            @Context Session session,
+            @QueryParam("url") @DefaultValue("") String url) {
+        session.remove("accountId");
         AccountsSigninForm form = AccountsSigninForm.defaultForm();
         form.setUrl(url);
-        CookieBaker session = sessionCookieFactory.create();
         return Response.ok(new View("accounts/signin", params(
                 "form", new FormHelper<AccountsSigninForm>(form))))
-                .cookie(session.toDiscardingCookie()).build();
+                .cookie(session.toCookie()).build();
     }
 
     @POST
     @Path("signin")
     @Consumes("application/x-www-form-urlencoded")
     public Response postSignin(
+            @Context Session session,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams) {
 
@@ -164,29 +162,23 @@ public class AccountsController {
         }
         Account account = accountOpt.get();
 
-        CookieBaker session = sessionCookieFactory.create();
-        session.put("id", account.getId().toString());
+        session.put("accountId", account.getId().toString());
 
-        String url = form.getUrl();
-        if (!url.startsWith("/") || url.isEmpty())
-            url = "/";
-        try {
-            return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .uri(new URI(url)).build()).cookie(session.toCookie()).build();
-        } catch (UriBuilderException e) {
-            throw new IllegalArgumentException(e);
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException(e);
-        }
+        String returnTo = form.getUrl();
+        if (!returnTo.startsWith("/") || returnTo.isEmpty())
+            returnTo = "/";
+        return Response.seeOther(safeURI(uinfo, returnTo)).cookie(session.toCookie()).build();
     }
 
     @GET
     @Path("signout")
-    public Response signout(@Context UriInfo uinfo) {
-        CookieBaker session = sessionCookieFactory.create();
+    public Response signout(
+            @Context Session session,
+            @Context UriInfo uinfo) {
+        session.remove("accountId");
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/").build())
-                .cookie(session.toDiscardingCookie())
+                .cookie(session.toCookie())
                 .build();
     }
 }
