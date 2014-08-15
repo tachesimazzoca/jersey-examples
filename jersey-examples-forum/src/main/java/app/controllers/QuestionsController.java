@@ -154,8 +154,7 @@ public class QuestionsController {
         question.setStatus(Question.Status.fromValue(form.getStatus()));
         questionDao.save(question);
 
-        return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path("/questions").build()).build();
+        return redirectToIndex(uinfo);
     }
 
     @GET
@@ -168,29 +167,31 @@ public class QuestionsController {
             return redirectToLogin(uinfo, id);
         }
         if (id == null)
-            return redirectToMine(uinfo);
+            return redirectToDashboard(uinfo);
 
         Optional<Question> questionOpt = questionDao.find(id);
         if (!questionOpt.isPresent())
-            return redirectToMine(uinfo);
+            return redirectToDashboard(uinfo);
         Question question = questionOpt.get();
         if (!isQuestionAuthor(user, question))
             return redirectToIndex(uinfo);
-        questionDao.updateStatus(id, Question.Status.DELETED);
 
-        return redirectToMine(uinfo);
+        questionDao.updateStatus(id, Question.Status.DELETED);
+        return redirectToDashboard(uinfo);
+    }
+
+    private Response redirect(UriInfo uinfo, String path) {
+        return Response.seeOther(uinfo.getBaseUriBuilder()
+                .path(path)
+                .build()).build();
     }
 
     private Response redirectToIndex(UriInfo uinfo) {
-        return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path("/questions")
-                .build()).build();
+        return redirect(uinfo, "/questions");
     }
 
-    private Response redirectToMine(UriInfo uinfo) {
-        return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path("/questions/mine")
-                .build()).build();
+    private Response redirectToDashboard(UriInfo uinfo) {
+        return redirect(uinfo, "/dashboard/questions");
     }
 
     private Response redirectToLogin(UriInfo uinfo, String returnTo) {
