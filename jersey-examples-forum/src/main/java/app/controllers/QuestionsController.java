@@ -85,6 +85,32 @@ public class QuestionsController {
     }
 
     @GET
+    @Path("cancel")
+    public Response cancel(
+            @Context Session session,
+            @Context UriInfo uinfo,
+            @QueryParam("id") @DefaultValue("") Long id) {
+
+        Optional<String> returnTo = session.remove("returnTo");
+        if (returnTo.isPresent()) {
+            return redirect(uinfo, returnTo.get());
+        }
+
+        Question question = null;
+        if (id != null) {
+            Optional<Question> questionOpt = questionDao.find(id);
+            if (questionOpt.isPresent())
+                question = questionOpt.get();
+        }
+
+        if (question != null && question.getStatus() == Question.Status.PUBLISHED) {
+            return redirect(uinfo, "/questions/" + question.getId());
+        } else {
+            return redirectToDashboard(uinfo);
+        }
+    }
+
+    @GET
     @Path("edit")
     public Response edit(
             @Context Session session,

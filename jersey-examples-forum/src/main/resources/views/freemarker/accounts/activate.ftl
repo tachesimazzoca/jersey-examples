@@ -1,8 +1,10 @@
 <#import "/_layouts/default.ftl" as layout>
 <@layout.defaultLayout "Account Registration">
-<p>Your account has been created successfully.</p>
-<p>Your email address is <code>${account.email?html}</code>.</p>
-<ul>
-  <li><a href="signin">Sign In</a></li>
-</ul>
+<div class="alert alert-success">
+  <p>Your account has been created successfully.</p>
+  <p>Your email address is <code>${account.email?html}</code>.</p>
+</div>
+<div>
+  <a href="${config.url.base}profile/edit" class="btn btn-default">Edit your profile</a>
+</div>
 </@layout.defaultLayout>

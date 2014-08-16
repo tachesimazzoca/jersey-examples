@@ -1,30 +1,33 @@
 <#import "/_layouts/default.ftl" as layout>
 <#import "/_elements/pagination.ftl" as p>
-<@layout.defaultLayout "Dashboard Answers">
-
+<#include "/_elements/functions.ftl">
+<@layout.defaultLayout "Answers">
 <#if pagination.results?has_content>
-<@p.defaultPagination pagination></@p.defaultPagination>
-<table>
+<table class="table">
+<thead>
 <tr>
-  <th>ID</th>
+  <th>#</th>
   <th>Status</th>
-  <th>Answer</th>
-  <th>Posted at</th>
+  <th colspan="2">Answer</th>
 </tr>
+</thead>
+<tbody>
 <#list pagination.results as x>
 <tr>
   <td>${(x.id)?html}</td>
   <td>${(x.status.label)?html}</td>
   <td>
-    <p>${(x.body)?html}</p>
-    <ul>
-      <li><a href="${config.url.base}answers/edit?id=${x.id}">Edit</a></li>
-      <li><a href="${config.url.base}answers/delete?id=${x.id}" onclick="return confirm('Are you sure to delete?')">Delete</a></li>
-    </ul>
+    <div>${(truncate(x.body, 20))?html}</div>
+    <div class="text-muted"><small>Posted at ${(x.postedAt)?string("yyyy-MM-dd HH:mm:ss")}</small></div>
   </td>
-  <td>${(x.postedAt)?html}</td>
+  <td class="text-right text-nowrap">
+    <a href="${config.url.base}answers/edit?id=${x.id}&return_to=%2fdashboard%2fanswers" class="btn btn-default">Edit</a></li>
+    <a href="${config.url.base}answers/delete?id=${x.id}" onclick="return confirm('Are you sure to delete?')" class="btn btn-danger">Delete</a>
+  </td>
 </tr>
 </#list>
+</tbody>
 </table>
+<@p.defaultPagination pagination></@p.defaultPagination>
 </#if>
 </@layout.defaultLayout>

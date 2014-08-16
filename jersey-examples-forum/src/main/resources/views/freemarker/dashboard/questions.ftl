@@ -1,31 +1,35 @@
 <#import "/_layouts/default.ftl" as layout>
 <#import "/_elements/pagination.ftl" as p>
-<@layout.defaultLayout "Dashboard Questions">
-<ul>
-   <li><a href="${config.url.base}questions/edit">New Question</a></li>
-</ul>
+<@layout.defaultLayout "Questions">
+<p>
+   <a href="${config.url.base}questions/edit" class="btn btn-default">New Question</a>
+</p>
 <#if pagination.results?has_content>
-<@p.defaultPagination pagination></@p.defaultPagination>
-<table>
+<table class="table">
+<thead>
 <tr>
-  <th>ID</th>
+  <th>#</th>
   <th>Status</th>
-  <th>Subject</th>
-  <th>Posted at</th>
+  <th colspan="2">Subject</th>
 </tr>
+</thead>
+<tbody>
 <#list pagination.results as x>
 <tr>
   <td>${(x.id)?html}</td>
   <td>${(x.status.label)?html}</td>
-  <td><a href="${config.url.base}questions/${x.id}">${(x.subject)?html}</a>
-    <ul>
-      <li><a href="${config.url.base}questions/edit?id=${x.id}&return_to=%2fdashboard%2fquestions">Edit</a></li>
-      <li><a href="${config.url.base}questions/delete?id=${x.id}" onclick="return confirm('Are you sure to delete?')">Delete</a></li>
-    </ul>
+  <td>
+    <div><a href="${config.url.base}questions/${x.id}">${(x.subject)?html}</a></div>
+    <div class="text-muted"><small>Posted at ${(x.postedAt)?string("yyyy-MM-dd HH:mm:ss")}</small></div>
   </td>
-  <td>${(x.postedAt)?html}</td>
+  <td class="text-right">
+    <a href="${config.url.base}questions/edit?id=${x.id}&return_to=%2fdashboard%2fquestions" class="btn btn-default">Edit</a></li>
+    <a href="${config.url.base}questions/delete?id=${x.id}" onclick="return confirm('Are you sure to delete?')" class="btn btn-danger">Delete</a>
+  </td>
 </tr>
 </#list>
+</tbody>
 </table>
+<@p.defaultPagination pagination></@p.defaultPagination>
 </#if>
 </@layout.defaultLayout>

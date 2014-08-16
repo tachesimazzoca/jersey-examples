@@ -1,18 +1,28 @@
 <#import "/_layouts/default.ftl" as layout>
 <@layout.defaultLayout "Dashboard">
 
-<h2>Profile</h2>
-<dl>
-  <dt>Email</dt>
-  <dd>${(account.email)?html}</dd>
-  <dt>Nickname</dt>
-  <dd>${(account.nickname)?html}</dd>
-</dl>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h2 class="panel-title">Profile</h2>
+  </div>
+  <div class="panel-body">
+    <dl class="dl-horizontal">
+      <dt>Email</dt>
+      <dd>${(account.email)?html}</dd>
+      <dt>Nickname</dt>
+      <dd>${(account.nickname)?html}</dd>
+    </dl>
+    <div class="text-right">
+      <a href="${config.url.base}profile/edit" class="btn btn-default">Edit</a>
+    </div>
+  </div>
+</div>
 
-<h2>Posts</h2>
-<ul>
-   <li><a href="dashboard/questions">Questions</a></li>
-   <li><a href="dashboard/answers">Answers</a></li>
+<div>
+<ul class="list-group">
+   <li class="list-group-item"><a href="dashboard/questions">Questions</a></li>
+   <li class="list-group-item"><a href="dashboard/answers">Answers</a></li>
 </ul>
+</div>
 
 </@layout.defaultLayout>

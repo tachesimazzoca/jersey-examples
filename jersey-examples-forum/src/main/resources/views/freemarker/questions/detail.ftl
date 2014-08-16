@@ -1,35 +1,42 @@
 <#import "/_layouts/default.ftl" as layout>
 <#import "/_elements/pagination.ftl" as p>
 <@layout.defaultLayout "${question.subject}">
-
-<ul>
-  <li><a href="../questions">Listing Questions</a></li>
-</ul>
-
-<div>
-<p>${question.body?html}</p>
-<ul>
-  <li>${author.nickname?html}</li>
-  <li>${question.postedAt?string("yyyy-MM-dd hh:mm:ss")}</li>
-  <li><a href="${config.url.base}questions/edit?id=${question.id}">Edit</a></li>
-</ul>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>Question #${question.id}: </strong>
+    <span>${author.nickname?html} posted at ${question.postedAt?string("yyyy-MM-dd HH:mm:ss")}</span>
+  </div>
+  <div class="panel-body clearfix">
+    <p>${question.body?html?replace("\n", "<br>")}</p>
+    <div class="pull-right">
+      <a href="${config.url.base}questions/edit?id=${question.id}&return_to=%2fquestions%2f${question.id}" class="btn btn-default">Edit</a>
+    </div>
+  </div>
 </div>
-
+<p>
+  <a href="${config.url.base}answers/edit?questionId=${question.id}" class="btn btn-primary">Post Your Answer</a>
+</p>
 <#if answers.results?has_content>
-<div>
-<@p.defaultPagination answers></@p.defaultPagination>
+<hr>
+<#if (answers.count > 1)>
+<p>${answers.count} Answers</p>
+</#if>
 <#list answers.results as x>
-<p>${(x.body)?html}</p>
-<ul>
-  <li>${(x.nickname)?html}</li>
-  <li>${(x.postedAt)?html}</li>
-  <li><a href="${config.url.base}answers/edit?id=${x.id}">Edit</a></li>
-</ul>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>Answer #${x.id}: </strong>
+    <span>${x.nickname?html} posted at ${x.postedAt?string("yyyy-MM-dd HH:mm:ss")}</span>
+  </div>
+  <div class="panel-body clearfix">
+    <p>${x.body?html?replace("\n", "<br>")}</p>
+    <div class="pull-right">
+      <a href="${config.url.base}answers/edit?id=${x.id}" class="btn btn-default">Edit</a>
+    </div>
+  </div>
+</div>
 </#list>
 </div>
+<@p.defaultPagination answers></@p.defaultPagination>
 </#if>
 
-<ul>
-  <li><a href="${config.url.base}answers/edit?questionId=${question.id}">Your Answer</a></li>
-</ul>
 </@layout.defaultLayout>

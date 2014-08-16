@@ -1,4 +1,6 @@
 <#import "/_layouts/default.ftl" as layout>
 <@layout.defaultLayout "Editing Profile">
-<p>Sent a verification e-mail. Check it to activate the new e-mail address.</p>
+<div class="alert alert-info">
+  <p>Sent a verification URL to your email address. Check your email and access the URL.</p>
+</div>
 </@layout.defaultLayout>

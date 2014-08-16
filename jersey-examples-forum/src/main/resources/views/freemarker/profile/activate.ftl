@@ -1,8 +1,10 @@
 <#import "/_layouts/default.ftl" as layout>
 <@layout.defaultLayout "Editing Profile">
-<p>Your new e-mail address has been updated successfully.</p>
-<p>Your email address is <code>${account.email?html}</code>.</p>
-<ul>
-  <li><a href="edit">Editing Profile</a></li>
-</ul>
+<div class="alert alert-success">
+  <p>Your account has been created successfully.</p>
+  <p>Your email address is <code>${account.email?html}</code>.</p>
+</div>
+<div>
+  <a href="${config.url.base}dashboard" class="btn btn-default">Dashboard</a>
+</div>
 </@layout.defaultLayout>
