@@ -49,7 +49,7 @@ public class ProfileController {
             @Context UriInfo uinfo) {
         Optional<Account> accountOpt = getAccount(session);
         if (!accountOpt.isPresent())
-            redirectToLogin(uinfo);
+            return redirectToLogin(uinfo);
         Account account = accountOpt.get();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(account);
@@ -67,7 +67,7 @@ public class ProfileController {
             MultivaluedMap<String, String> formParams) {
         Optional<Account> accountOpt = getAccount(session);
         if (!accountOpt.isPresent())
-            redirectToLogin(uinfo);
+            return redirectToLogin(uinfo);
         Account account = accountOpt.get();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(formParams);
@@ -107,7 +107,7 @@ public class ProfileController {
 
         if (form.getEmail().equals(account.getEmail())) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .path("/").build()).build();
+                    .path("/dashboard").build()).build();
         }
 
         Map<String, Object> params = params(
@@ -153,7 +153,7 @@ public class ProfileController {
         Optional<Account> accountOpt = getAccount(session);
         if (accountOpt.isPresent()) {
             Account account = accountOpt.get();
-            if (id != account.getId()) {
+            if (!id.equals(account.getId())) {
                 // The current user is not a verified user.
                 return Response.seeOther(uinfo.getBaseUriBuilder()
                         .path("/profile/errors/session").build()).build();
