@@ -128,7 +128,8 @@
             <port>9000</port>
             <host>0.0.0.0</host>
           </httpConnector>
-          <scanIntervalSeconds>10</scanIntervalSeconds>
+          <scanIntervalSeconds>0</scanIntervalSeconds>
+          <relaod>manual</relaod>
           <webApp>
             <contextPath>/</contextPath>
           </webApp>
