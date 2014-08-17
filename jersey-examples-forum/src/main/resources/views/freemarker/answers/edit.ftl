@@ -31,9 +31,19 @@ ${form.toHTMLInput("hidden", "questionId")}
     <label>Body</label>
     <textarea name="body" class="form-control">${(form.form.body)?html}</textarea>
   </div>
+  <div class="form-group">
+    <label>Status</label>
+    <select name="status" class="form-control" style="width: auto">
+      ${form.toHTMLOptions("status")}
+    </select>
+  </div>
   <div>
     <input type="submit" value="Submit" class="btn btn-success">
-    <a href="${config.url.base}questions/${question.id}" class="btn btn-default">Cancel</a>
+    <#if answer?has_content>
+    <a href="cancel?id=${answer.id!""}" class="btn btn-default">Cancel</a>
+    <#else>
+    <a href="cancel" class="btn btn-default">Cancel</a>
+    </#if>
   </div>
 </div>
 </form>

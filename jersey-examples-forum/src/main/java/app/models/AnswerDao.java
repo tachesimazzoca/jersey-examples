@@ -48,10 +48,20 @@ public class AnswerDao {
         return answer;
     }
 
+    public void updateStatus(Long id, Answer.Status status) {
+        EntityManager em = ef.createEntityManager();
+        em.getTransaction().begin();
+        em.createNativeQuery("UPDATE answers SET status = ?1 WHERE id = ?2")
+                .setParameter(1, status.getValue())
+                .setParameter(2, id).executeUpdate();
+        em.getTransaction().commit();
+        em.close();
+    }
+
     public Pagination<AnswersResult> selectByQuestionId(
             Long questionId, int offset, int limit) {
         EntityManager em = ef.createEntityManager();
-        String where = " WHERE answers.question_id = ?1";
+        String where = " WHERE answers.status = 0 AND answers.question_id = ?1";
         String countQuery = COUNT_ANSWER_RESULT + where;
         String selectQuery = SELECT_ANSWER_RESULT + where
                 + " ORDER BY answers.posted_at ASC";
@@ -66,7 +76,7 @@ public class AnswerDao {
     public Pagination<AnswersResult> selectByAuthorId(
             Long authorId, int offset, int limit) {
         EntityManager em = ef.createEntityManager();
-        String where = " WHERE answers.author_id = ?1";
+        String where = " WHERE answers.status IN (0, 2) AND answers.author_id = ?1";
         String countQuery = COUNT_ANSWER_RESULT + where;
         String selectQuery = SELECT_ANSWER_RESULT + where
                 + " ORDER BY answers.posted_at DESC";

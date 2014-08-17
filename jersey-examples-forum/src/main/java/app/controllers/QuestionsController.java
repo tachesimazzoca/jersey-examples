@@ -183,7 +183,8 @@ public class QuestionsController {
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(view).build();
         }
-        if (id == null) {
+
+        if (question == null) {
             question = new Question();
             question.setAuthorId(account.getId());
             question.setPostedAt(new java.util.Date());
