@@ -24,7 +24,9 @@ import org.apache.commons.io.IOUtils;
                         @ColumnResult(name = "questions.posted_at"),
                         @ColumnResult(name = "questions.status"),
                         @ColumnResult(name = "accounts.id"),
-                        @ColumnResult(name = "accounts.nickname") })
+                        @ColumnResult(name = "accounts.nickname"),
+                        @ColumnResult(name = "num_answers"),
+                        @ColumnResult(name = "num_points") })
 })
 public class QuestionsResult {
     @Id
@@ -42,6 +44,10 @@ public class QuestionsResult {
 
     private String nickname;
 
+    private Integer numAnswers;
+
+    private Integer numPoints;
+
     public QuestionsResult(
             BigInteger id,
             Clob subject,
@@ -49,7 +55,9 @@ public class QuestionsResult {
             java.util.Date postedAt,
             byte status,
             BigInteger authorId,
-            String nickname) {
+            String nickname,
+            BigInteger numAnswers,
+            BigInteger numPoints) {
         this.id = id.longValue();
         try {
             this.subject = IOUtils.toString(subject.getCharacterStream());
@@ -63,6 +71,16 @@ public class QuestionsResult {
         this.status = Question.Status.fromValue((int) status);
         this.authorId = authorId.longValue();
         this.nickname = nickname;
+
+        if (numAnswers != null)
+            this.numAnswers = numAnswers.intValue();
+        else
+            this.numAnswers = 0;
+
+        if (numPoints != null)
+            this.numPoints = numPoints.intValue();
+        else
+            this.numPoints = 0;
     }
 
     public Long getId() {
@@ -91,5 +109,13 @@ public class QuestionsResult {
 
     public String getNickname() {
         return nickname;
+    }
+
+    public Integer getNumAnswers() {
+        return numAnswers;
+    }
+
+    public Integer getNumPoints() {
+        return numPoints;
     }
 }

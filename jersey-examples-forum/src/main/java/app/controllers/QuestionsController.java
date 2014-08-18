@@ -66,11 +66,11 @@ public class QuestionsController {
         if (question.getStatus() != Question.Status.PUBLISHED)
             return redirectToIndex(uinfo);
 
-        // account
-        Optional<Account> accountOpt = accountDao.find(question.getAuthorId());
-        if (!accountOpt.isPresent())
+        // author
+        Optional<Account> authorOpt = accountDao.find(question.getAuthorId());
+        if (!authorOpt.isPresent())
             return redirectToIndex(uinfo);
-        Account author = accountOpt.get();
+        Account author = authorOpt.get();
 
         // answers
         PaginationHelper<AnswersResult> answers = new PaginationHelper<AnswersResult>(
