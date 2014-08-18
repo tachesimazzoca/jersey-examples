@@ -9,16 +9,20 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Email;
 
 public class AccountsSignupForm {
-    @NotEmpty
-    @Email
+    @NotEmpty(message = "{Account.email.NotEmpty}")
+    @Email(message = "{Account.email.Email}")
     private String email = "";
 
-    @NotEmpty
-    @Pattern(regexp = "^(|\\p{Graph}+)$")
+    @NotEmpty(message = "{Account.password.NotEmpty}")
+    @Pattern(
+            regexp = "^(|\\p{Graph}+)$",
+            message = "{Account.password.Pattern}")
     private String password = "";
 
-    @NotEmpty
     private String retypedPassword = "";
+
+    @AssertTrue(message = "{Account.uniqueEmail.AssertTrue}")
+    private boolean uniqueEmail = true;
 
     public String getEmail() {
         return email;
@@ -44,6 +48,22 @@ public class AccountsSignupForm {
         this.retypedPassword = v;
     }
 
+    public boolean isUniqueEmail() {
+        return uniqueEmail;
+    }
+
+    public void setUniqueEmail(boolean uniqueEmail) {
+        this.uniqueEmail = uniqueEmail;
+    }
+
+    @AssertTrue(message = "{Account.validRetypedPassword.AssertTrue}")
+    public boolean isValidRetypedPassword() {
+        if (password == null)
+            return retypedPassword == null;
+        else
+            return password.equals(retypedPassword);
+    }
+
     public static AccountsSignupForm emptyForm() {
         return new AccountsSignupForm();
     }
@@ -61,13 +81,5 @@ public class AccountsSignupForm {
         if (params.containsKey("retypedPassword"))
             form.setRetypedPassword(params.getFirst("retypedPassword"));
         return form;
-    }
-
-    @AssertTrue(message = "password should match retyped password")
-    public boolean isValidRetypedPassword() {
-        if (password == null)
-            return retypedPassword == null;
-        else
-            return password.equals(retypedPassword);
     }
 }

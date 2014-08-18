@@ -243,7 +243,7 @@ public class AnswersController {
     private Response redirectToLogin(UriInfo uinfo, String returnTo) {
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/accounts/signin")
-                .queryParam("url", returnTo)
+                .queryParam("returnTo", returnTo)
                 .build()).build();
     }
 

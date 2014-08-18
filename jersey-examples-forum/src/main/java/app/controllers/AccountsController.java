@@ -12,9 +12,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,17 +66,15 @@ public class AccountsController {
             MultivaluedMap<String, String> formParams)
             throws EmailException {
         AccountsSignupForm form = AccountsSignupForm.bindFrom(formParams);
+        if (!form.getEmail().isEmpty()) {
+            if (accountDao.findByEmail(form.getEmail()).isPresent()) {
+                form.setUniqueEmail(false);
+            }
+        }
         Set<ConstraintViolation<AccountsSignupForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
             View view = new View("accounts/signup", params(
                     "form", new FormHelper<AccountsSignupForm>(form, errors)));
-            return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .build();
-        }
-        if (accountDao.findByEmail(form.getEmail()).isPresent()) {
-            List<String> messages = ImmutableList.of("The email has already been used.");
-            View view = new View("accounts/signup", params(
-                    "form", new FormHelper<AccountsSignupForm>(form, messages)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
                     .build();
         }
@@ -126,10 +122,10 @@ public class AccountsController {
     @Path("signin")
     public Response signin(
             @Context Session session,
-            @QueryParam("url") @DefaultValue("") String url) {
+            @QueryParam("returnTo") @DefaultValue("") String returnTo) {
         session.remove("accountId");
         AccountsSigninForm form = AccountsSigninForm.defaultForm();
-        form.setUrl(url);
+        form.setReturnTo(returnTo);
         return Response.ok(new View("accounts/signin", params(
                 "form", new FormHelper<AccountsSigninForm>(form))))
                 .cookie(session.toCookie()).build();
@@ -144,27 +140,28 @@ public class AccountsController {
             MultivaluedMap<String, String> formParams) {
 
         AccountsSigninForm form = AccountsSigninForm.bindFrom(formParams);
+
         Set<ConstraintViolation<AccountsSigninForm>> errors = validator.validate(form);
-        if (!errors.isEmpty()) {
+        Account account = null;
+        if (errors.isEmpty()) {
+            Optional<Account> accountOpt = accountDao.findByEmail(form.getEmail());
+            if (accountOpt.isPresent() && accountOpt.get().isEqualPassword(form.getPassword())) {
+                account = accountOpt.get();
+            } else {
+                form.setAuthorized(false);
+                errors = validator.validate(form);
+            }
+        }
+        if (account == null) {
             View view = new View("accounts/signin", params(
                     "form", new FormHelper<AccountsSigninForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(view).build();
         }
 
-        Optional<Account> accountOpt = accountDao.findByEmail(form.getEmail());
-        if (!accountOpt.isPresent() || !accountOpt.get().isEqualPassword(form.getPassword())) {
-            List<String> messages = ImmutableList.of("Invalid password or e-mail");
-            View view = new View("accounts/signin", params(
-                    "form", new FormHelper<AccountsSigninForm>(form, messages)));
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity(view).build();
-        }
-        Account account = accountOpt.get();
-
         session.put("accountId", account.getId().toString());
 
-        String returnTo = form.getUrl();
+        String returnTo = form.getReturnTo();
         if (!returnTo.startsWith("/") || returnTo.isEmpty())
             returnTo = "/";
         return Response.seeOther(safeURI(uinfo, returnTo)).cookie(session.toCookie()).build();

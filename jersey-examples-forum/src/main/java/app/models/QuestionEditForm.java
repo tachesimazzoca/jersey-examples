@@ -1,27 +1,28 @@
 package app.models;
 
 import javax.ws.rs.core.MultivaluedMap;
+import javax.validation.constraints.Pattern;
+
+import org.hibernate.validator.constraints.NotEmpty;
+
+import java.util.Map;
+import com.google.common.collect.ImmutableMap;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import org.apache.commons.lang.reflect.MethodUtils;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.Map;
-import com.google.common.collect.ImmutableMap;
-
-import org.hibernate.validator.constraints.NotEmpty;
-
 public class QuestionEditForm {
     private String id = "";
 
-    @NotEmpty
+    @NotEmpty(message = "{Question.subject.NotEmpty}")
     private String subject = "";
 
-    @NotEmpty
+    @NotEmpty(message = "{Question.body.NotEmpty}")
     private String body = "";
 
-    @NotEmpty
+    @Pattern(regexp = "^(0|2)$", message = "{Question.status.Pattern}")
     private String status = "";
 
     private final Map<String, String> statusMap;

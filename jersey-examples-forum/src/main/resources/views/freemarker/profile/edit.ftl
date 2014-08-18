@@ -4,16 +4,7 @@
 <div class="alert alert-danger">
 <ul>
 <#list form.errors as err>
-  <li>${(err.propertyPath)?html}: ${(err.message)?html}</li>
-</#list>
-</ul>
-</div>
-</#if>
-<#if form.hasMessages()>
-<div class="alert alert-danger">
-<ul>
-<#list form.messages as msg>
-  <li>${msg?html}</li>
+  <li>${(err.message)?html}</li>
 </#list>
 </ul>
 </div>

@@ -12,9 +12,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -71,32 +69,23 @@ public class ProfileController {
         Account account = accountOpt.get();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(formParams);
+        if (!form.getCurrentPassword().isEmpty()) {
+            if (!account.isEqualPassword(form.getCurrentPassword())) {
+                form.setValidCurrentPassword(false);
+            }
+        }
+        if (!form.getEmail().equals(account.getEmail())) {
+            if (accountDao.findByEmail(form.getEmail()).isPresent()) {
+                form.setUniqueEmail(false);
+            }
+        }
+
         Set<ConstraintViolation<ProfileEditForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
             View view = new View("profile/edit", params(
                     "form", new FormHelper<ProfileEditForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(view).build();
-        }
-
-        if (!form.getCurrentPassword().isEmpty()) {
-            if (!account.isEqualPassword(form.getCurrentPassword())) {
-                List<String> messages = ImmutableList.<String> of("Invalid password");
-                View view = new View("profile/edit", params(
-                        "form", new FormHelper<ProfileEditForm>(form, messages)));
-                return Response.status(Response.Status.FORBIDDEN)
-                        .entity(view).build();
-            }
-        }
-
-        if (!form.getEmail().equals(account.getEmail())) {
-            if (accountDao.findByEmail(form.getEmail()).isPresent()) {
-                List<String> messages = ImmutableList.of("The email has already been used.");
-                View view = new View("profile/edit", params(
-                        "form", new FormHelper<ProfileEditForm>(form, messages)));
-                return Response.status(Response.Status.FORBIDDEN)
-                        .entity(view).build();
-            }
         }
 
         account.setNickname(form.getNickname());
@@ -112,8 +101,7 @@ public class ProfileController {
 
         Map<String, Object> params = params(
                 "id", account.getId(),
-                "email", form.getEmail()
-                );
+                "email", form.getEmail());
         String code = profileStorage.create(params);
         String url = uinfo.getBaseUriBuilder()
                 .path("/profile/activate")
@@ -195,7 +183,7 @@ public class ProfileController {
     private Response redirectToLogin(UriInfo uinfo) {
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/accounts/signin")
-                .queryParam("url", "/profile/edit")
+                .queryParam("returnTo", "/profile/edit")
                 .build()).build();
     }
 }

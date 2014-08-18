@@ -4,16 +4,7 @@
 <div class="alert alert-danger">
 <ul>
 <#list form.errors as err>
-  <li>${(err.propertyPath)?html}: ${(err.message)?html}</li>
-</#list>
-</ul>
-</div>
-</#if>
-<#if form.hasMessages()>
-<div class="alert alert-danger">
-<ul>
-<#list form.messages as msg>
-  <li>${msg?html}</li>
+  <li>${(err.message)?html}</li>
 </#list>
 </ul>
 </div>
@@ -21,7 +12,7 @@
 <div class="center-block" style="width: 400px">
 <form action="signin" method="POST">
 <div class="well">
-  ${form.toHTMLInput("hidden", "url")}
+  ${form.toHTMLInput("hidden", "returnTo")}
   <div class="form-group">
     <label>E-mail</label>
     ${form.toHTMLInput("text", "email", "class=\"form-control\"")}

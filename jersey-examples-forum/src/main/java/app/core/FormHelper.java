@@ -65,6 +65,10 @@ public class FormHelper<T> {
         return messages;
     }
 
+    public Object get(String name) {
+        return property(name, Object.class);
+    }
+
     public String toHTMLInput(String type, String name) {
         return toHTMLInput(type, name, "");
     }

@@ -9,7 +9,7 @@
   <div class="panel-body clearfix">
     <p>${question.body?html?replace("\n", "<br>")}</p>
     <div class="pull-right">
-      <a href="${config.url.base}questions/edit?id=${question.id}&return_to=%2fquestions%2f${question.id}" class="btn btn-default">Edit</a>
+      <a href="${config.url.base}questions/edit?id=${question.id}&returnTo=%2fquestions%2f${question.id}" class="btn btn-default">Edit</a>
     </div>
   </div>
 </div>

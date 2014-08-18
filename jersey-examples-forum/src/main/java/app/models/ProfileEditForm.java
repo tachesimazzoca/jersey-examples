@@ -14,19 +14,29 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Email;
 
 public class ProfileEditForm {
-    @NotEmpty
-    @Email
+    @NotEmpty(message = "{Account.email.NotEmpty}")
+    @Email(message = "{Account.email.Email}")
     private String email = "";
 
-    @Pattern(regexp = "^(|\\p{Graph}+)$")
+    @Pattern(
+            regexp = "^(|\\p{Graph}+)$",
+            message = "{Account.password.Pattern}")
     private String currentPassword = "";
 
-    @Pattern(regexp = "^(|\\p{Graph}+)$")
+    @Pattern(
+            regexp = "^(|\\p{Graph}+)$",
+            message = "{Account.password.Pattern}")
     private String password = "";
 
     private String retypedPassword = "";
 
     private String nickname = "";
+
+    @AssertTrue(message = "{Account.validCurrentPassword.AssertTrue}")
+    private boolean validCurrentPassword = true;
+
+    @AssertTrue(message = "{Account.uniqueEmail.AssertTrue}")
+    private boolean uniqueEmail = true;
 
     public String getEmail() {
         return email;
@@ -68,6 +78,36 @@ public class ProfileEditForm {
         this.nickname = nickname;
     }
 
+    public boolean isValidCurrentPassword() {
+        return validCurrentPassword;
+    }
+
+    public void setValidCurrentPassword(boolean validCurrentPassword) {
+        this.validCurrentPassword = validCurrentPassword;
+    }
+
+    public boolean isUniqueEmail() {
+        return uniqueEmail;
+    }
+
+    public void setUniqueEmail(boolean uniqueEmail) {
+        this.uniqueEmail = uniqueEmail;
+    }
+
+    @AssertTrue(message = "{Account.password.NotEmpty}")
+    public boolean hasCurrentPassword() {
+        return (password == null || password.isEmpty())
+                || (currentPassword != null && !currentPassword.isEmpty());
+    }
+
+    @AssertTrue(message = "{Account.validRetypedPassword.AssertTrue}")
+    public boolean isValidRetypedPassword() {
+        if (password == null)
+            return retypedPassword == null;
+        else
+            return password.equals(retypedPassword);
+    }
+
     public static ProfileEditForm emptyForm() {
         return new ProfileEditForm();
     }
@@ -100,19 +140,5 @@ public class ProfileEditForm {
         form.setEmail(account.getEmail());
         form.setNickname(account.getNickname());
         return form;
-    }
-
-    @AssertTrue(message = "current password is required")
-    public boolean hasCurrentPassword() {
-        return (password == null || password.isEmpty())
-                || (currentPassword != null && !currentPassword.isEmpty());
-    }
-
-    @AssertTrue(message = "password should match retyped password")
-    public boolean isValidRetypedPassword() {
-        if (password == null)
-            return retypedPassword == null;
-        else
-            return password.equals(retypedPassword);
     }
 }

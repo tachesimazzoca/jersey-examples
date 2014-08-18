@@ -23,7 +23,7 @@
     <div class="text-muted"><small>Posted at ${(x.postedAt)?string("yyyy-MM-dd HH:mm:ss")}</small></div>
   </td>
   <td class="text-right">
-    <a href="${config.url.base}questions/edit?id=${x.id}&return_to=%2fdashboard%2fquestions" class="btn btn-default">Edit</a></li>
+    <a href="${config.url.base}questions/edit?id=${x.id}&returnTo=%2fdashboard%2fquestions" class="btn btn-default">Edit</a></li>
     <a href="${config.url.base}questions/delete?id=${x.id}" onclick="return confirm('Are you sure to delete?')" class="btn btn-danger">Delete</a>
   </td>
 </tr>

@@ -116,7 +116,7 @@ public class QuestionsController {
             @Context Session session,
             @Context UriInfo uinfo,
             @QueryParam("id") @DefaultValue("") Long id,
-            @QueryParam("return_to") @DefaultValue("") String returnTo) {
+            @QueryParam("returnTo") @DefaultValue("") String returnTo) {
 
         Optional<Account> accountOpt = getAccount(session);
         if (!accountOpt.isPresent())
@@ -254,7 +254,7 @@ public class QuestionsController {
     private Response redirectToLogin(UriInfo uinfo, String returnTo) {
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/accounts/signin")
-                .queryParam("url", returnTo)
+                .queryParam("returnTo", returnTo)
                 .build()).build();
     }
 
