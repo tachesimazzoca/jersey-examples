@@ -59,7 +59,7 @@ public class ProfileController {
     @POST
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
-    public Response confirm(
+    public Response postEdit(
             @Context Session session,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams) {

@@ -130,7 +130,7 @@ public class QuestionsController {
             if (!questionOpt.isPresent())
                 return redirectToIndex(uinfo);
             question = questionOpt.get();
-            if (!isAuthor(account, question))
+            if (!question.isSameAuthor(account))
                 return redirectToIndex(uinfo);
             form = QuestionEditForm.bindFrom(question);
         } else {
@@ -171,7 +171,7 @@ public class QuestionsController {
             if (!questionOpt.isPresent())
                 return redirectToIndex(uinfo);
             question = questionOpt.get();
-            if (!isAuthor(account, question))
+            if (!question.isSameAuthor(account))
                 return redirectToIndex(uinfo);
         }
 
@@ -225,7 +225,7 @@ public class QuestionsController {
         if (!questionOpt.isPresent())
             return redirectToDashboard(uinfo);
         Question question = questionOpt.get();
-        if (!isAuthor(account, question))
+        if (!question.isSameAuthor(account))
             return redirectToIndex(uinfo);
 
         questionDao.updateStatus(id, Question.Status.DELETED);
@@ -263,13 +263,5 @@ public class QuestionsController {
         if (id != null)
             url += "?id=" + id;
         return redirectToLogin(uinfo, url);
-    }
-
-    private boolean isAuthor(Account account, Question question) {
-        if (question.getAuthorId() == 0)
-            return false;
-        if (question.getAuthorId() != account.getId())
-            return false;
-        return true;
     }
 }

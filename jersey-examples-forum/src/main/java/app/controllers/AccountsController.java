@@ -53,10 +53,11 @@ public class AccountsController {
 
     @GET
     @Path("signup")
-    public Response signup() {
+    public Response signup(@Context Session session) {
+        session.remove("accountId");
         View view = new View("accounts/signup", params(
                 "form", new FormHelper<AccountsSignupForm>(AccountsSignupForm.defaultForm())));
-        return Response.ok(view).build();
+        return Response.ok(view).cookie(session.toCookie()).build();
     }
 
     @POST
@@ -95,7 +96,9 @@ public class AccountsController {
 
     @GET
     @Path("activate")
-    public Response activate(@Context UriInfo uinfo, @QueryParam("code") String code) {
+    public Response activate(
+            @Context UriInfo uinfo,
+            @QueryParam("code") String code) {
         Optional<?> opt = signupStorage.read(code, Map.class);
         signupStorage.delete(code);
         if (!opt.isPresent()) {
@@ -115,7 +118,8 @@ public class AccountsController {
         account.setStatus(Account.Status.ACTIVE);
         account.refreshPassword(params.get("password"));
         Account savedAccount = accountDao.save(account);
-        return Response.ok(new View("accounts/activate", params("account", savedAccount))).build();
+        return Response.ok(new View("accounts/activate",
+                params("account", savedAccount))).build();
     }
 
     @GET

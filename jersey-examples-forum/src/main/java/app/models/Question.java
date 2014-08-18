@@ -121,4 +121,12 @@ public class Question {
             return Status.fromValue(value);
         }
     }
+
+    public boolean isSameAuthor(Account account) {
+        if (getAuthorId() == 0)
+            return false;
+        if (getAuthorId() != account.getId())
+            return false;
+        return true;
+    }
 }
