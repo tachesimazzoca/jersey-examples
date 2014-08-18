@@ -20,7 +20,7 @@ public class ProfileEditForm {
 
     @Pattern(
             regexp = "^(|\\p{Graph}+)$",
-            message = "{Account.password.Pattern}")
+            message = "{Account.currentPassword.Pattern}")
     private String currentPassword = "";
 
     @Pattern(
@@ -94,7 +94,7 @@ public class ProfileEditForm {
         this.uniqueEmail = uniqueEmail;
     }
 
-    @AssertTrue(message = "{Account.password.NotEmpty}")
+    @AssertTrue(message = "{Account.currentPassword.NotEmpty}")
     public boolean hasCurrentPassword() {
         return (password == null || password.isEmpty())
                 || (currentPassword != null && !currentPassword.isEmpty());

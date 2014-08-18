@@ -68,7 +68,7 @@ public class RecoveryController {
 
         RecoveryEntryForm form = RecoveryEntryForm.bindFrom(formParams);
         Account account = null;
-        if (!form.getEmail().isEmpty()) {
+        if (validator.validateProperty(form, "email").isEmpty()) {
             Optional<Account> accountOpt = accountDao.findByEmail(form.getEmail());
             if (accountOpt.isPresent()) {
                 account = accountOpt.get();

@@ -69,17 +69,19 @@ public class ProfileController {
         Account account = accountOpt.get();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(formParams);
-        if (!form.getCurrentPassword().isEmpty()) {
+        if (validator.validateProperty(form, "email").isEmpty()) {
+            if (!form.getEmail().equals(account.getEmail())) {
+                if (accountDao.findByEmail(form.getEmail()).isPresent()) {
+                    form.setUniqueEmail(false);
+                }
+            }
+        }
+        if (!form.getCurrentPassword().isEmpty()
+                && validator.validateProperty(form, "currentPassword").isEmpty()) {
             if (!account.isEqualPassword(form.getCurrentPassword())) {
                 form.setValidCurrentPassword(false);
             }
         }
-        if (!form.getEmail().equals(account.getEmail())) {
-            if (accountDao.findByEmail(form.getEmail()).isPresent()) {
-                form.setUniqueEmail(false);
-            }
-        }
-
         Set<ConstraintViolation<ProfileEditForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
             View view = new View("profile/edit", params(

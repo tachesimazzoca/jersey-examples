@@ -14,7 +14,7 @@ public class RecoveryEntryForm {
 
     @AssertTrue(message = "{Account.activeEmail.AssertTrue}")
     private boolean activeEmail = true;
-    
+
     public String getEmail() {
         return email;
     }

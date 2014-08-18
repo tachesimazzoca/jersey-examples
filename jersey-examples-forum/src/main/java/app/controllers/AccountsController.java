@@ -67,17 +67,18 @@ public class AccountsController {
             MultivaluedMap<String, String> formParams)
             throws EmailException {
         AccountsSignupForm form = AccountsSignupForm.bindFrom(formParams);
-        if (!form.getEmail().isEmpty()) {
-            if (accountDao.findByEmail(form.getEmail()).isPresent()) {
-                form.setUniqueEmail(false);
+        if (validator.validateProperty(form, "email").isEmpty()) {
+            if (!form.getEmail().isEmpty()) {
+                if (accountDao.findByEmail(form.getEmail()).isPresent()) {
+                    form.setUniqueEmail(false);
+                }
             }
         }
         Set<ConstraintViolation<AccountsSignupForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
             View view = new View("accounts/signup", params(
                     "form", new FormHelper<AccountsSignupForm>(form, errors)));
-            return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .build();
+            return Response.status(Response.Status.FORBIDDEN).entity(view).build();
         }
 
         Map<String, Object> params = params(
