@@ -1,21 +1,34 @@
 package app.models;
 
-import javax.ws.rs.core.MultivaluedMap;
+import javax.validation.constraints.AssertTrue;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Email;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 public class RecoveryEntryForm {
-    @NotEmpty
-    @Email
+    @NotEmpty(message = "{Account.email.NotEmpty}")
+    @Email(message = "{Account.email.Email}")
     private String email = "";
 
+    @AssertTrue(message = "{Account.activeEmail.AssertTrue}")
+    private boolean activeEmail = true;
+    
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String v) {
-        this.email = v;
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public boolean isActiveEmail() {
+        return activeEmail;
+    }
+
+    public void setActiveEmail(boolean activeEmail) {
+        this.activeEmail = activeEmail;
     }
 
     public static RecoveryEntryForm emptyForm() {

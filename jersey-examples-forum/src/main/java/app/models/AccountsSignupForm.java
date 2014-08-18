@@ -3,10 +3,10 @@ package app.models;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.AssertTrue;
 
-import javax.ws.rs.core.MultivaluedMap;
-
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Email;
+
+import javax.ws.rs.core.MultivaluedMap;
 
 public class AccountsSignupForm {
     @NotEmpty(message = "{Account.email.NotEmpty}")

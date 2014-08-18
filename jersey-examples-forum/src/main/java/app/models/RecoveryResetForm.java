@@ -3,18 +3,19 @@ package app.models;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.AssertTrue;
 
-import javax.ws.rs.core.MultivaluedMap;
-
 import org.hibernate.validator.constraints.NotEmpty;
+
+import javax.ws.rs.core.MultivaluedMap;
 
 public class RecoveryResetForm {
     private String code;
 
-    @NotEmpty
-    @Pattern(regexp = "^(|\\p{Graph}+)$")
+    @NotEmpty(message = "{Account.password.NotEmpty}")
+    @Pattern(
+            regexp = "^(|\\p{Graph}+)$",
+            message = "{Account.password.Pattern}")
     private String password = "";
 
-    @NotEmpty
     private String retypedPassword = "";
 
     public String getCode() {
@@ -29,16 +30,24 @@ public class RecoveryResetForm {
         return password;
     }
 
-    public void setPassword(String v) {
-        this.password = v;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getRetypedPassword() {
         return retypedPassword;
     }
 
-    public void setRetypedPassword(String v) {
-        this.retypedPassword = v;
+    public void setRetypedPassword(String retypedPassword) {
+        this.retypedPassword = retypedPassword;
+    }
+
+    @AssertTrue(message = "{Account.validRetypedPassword.AssertTrue}")
+    public boolean isValidRetypedPassword() {
+        if (password == null)
+            return retypedPassword == null;
+        else
+            return password.equals(retypedPassword);
     }
 
     public static RecoveryResetForm emptyForm() {
@@ -58,13 +67,5 @@ public class RecoveryResetForm {
         if (params.containsKey("retypedPassword"))
             form.setRetypedPassword(params.getFirst("retypedPassword"));
         return form;
-    }
-
-    @AssertTrue(message = "password should match retyped password")
-    public boolean isValidRetypedPassword() {
-        if (password == null)
-            return retypedPassword == null;
-        else
-            return password.equals(retypedPassword);
     }
 }

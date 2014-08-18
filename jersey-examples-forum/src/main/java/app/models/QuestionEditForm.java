@@ -1,9 +1,10 @@
 package app.models;
 
-import javax.ws.rs.core.MultivaluedMap;
 import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.NotEmpty;
+
+import javax.ws.rs.core.MultivaluedMap;
 
 import java.util.Map;
 import com.google.common.collect.ImmutableMap;

@@ -3,15 +3,15 @@ package app.models;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.AssertTrue;
 
+import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.Email;
+
 import javax.ws.rs.core.MultivaluedMap;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import org.apache.commons.lang.reflect.MethodUtils;
 import org.apache.commons.lang.StringUtils;
-
-import org.hibernate.validator.constraints.NotEmpty;
-import org.hibernate.validator.constraints.Email;
 
 public class ProfileEditForm {
     @NotEmpty(message = "{Account.email.NotEmpty}")

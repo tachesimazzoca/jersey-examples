@@ -12,9 +12,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -67,24 +65,26 @@ public class RecoveryController {
     public Response postEntry(@Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
             throws EmailException {
+
         RecoveryEntryForm form = RecoveryEntryForm.bindFrom(formParams);
+        Account account = null;
+        if (!form.getEmail().isEmpty()) {
+            Optional<Account> accountOpt = accountDao.findByEmail(form.getEmail());
+            if (accountOpt.isPresent()) {
+                account = accountOpt.get();
+            } else {
+                form.setActiveEmail(false);
+            }
+        }
         Set<ConstraintViolation<RecoveryEntryForm>> errors = validator.validate(form);
-        if (!errors.isEmpty()) {
+        if (account == null) {
             View view = new View("recovery/entry", params(
                     "form", new FormHelper<RecoveryEntryForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
                     .build();
         }
-        Optional<Account> accountOpt = accountDao.findByEmail(form.getEmail());
-        if (!accountOpt.isPresent()) {
-            List<String> messages = ImmutableList.of("The e-mail address does not exist.");
-            View view = new View("recovery/entry", params(
-                    "form", new FormHelper<RecoveryEntryForm>(form, messages)));
-            return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .build();
-        }
 
-        Map<String, Object> params = params("id", accountOpt.get().getId());
+        Map<String, Object> params = params("id", account.getId());
         String code = recoveryStorage.create(params);
         String url = uinfo.getBaseUriBuilder()
                 .path("/recovery/reset")
