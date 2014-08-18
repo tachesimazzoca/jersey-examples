@@ -129,7 +129,6 @@
             <host>0.0.0.0</host>
           </httpConnector>
           <scanIntervalSeconds>0</scanIntervalSeconds>
-          <relaod>manual</relaod>
           <webApp>
             <contextPath>/</contextPath>
           </webApp>
