@@ -10,8 +10,13 @@ build: bower_components
 
 .PHONY: clean
 clean:
-	@rm -rf src/main/webapp/assets/lib
 	@rm -rf bower_components/
+	@rm -rf src/main/webapp/assets/lib
+	@rm -rf src/main/resources/META-INF/persistence.xml
+
+.PHONY: init 
+init:
+	@cp skel/persistence.xml src/main/resources/META-INF/.
 
 bower_components:
 	@bower install

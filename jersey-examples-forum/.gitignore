@@ -4,6 +4,9 @@
 /.project
 /.settings
 /target
+
 /.bowerrc
 /bower_components
 /src/main/webapp/assets/lib
+
+/src/main/resources/META-INF/persistence.xml
