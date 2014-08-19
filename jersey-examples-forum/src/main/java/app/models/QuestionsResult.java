@@ -26,7 +26,8 @@ import org.apache.commons.io.IOUtils;
                         @ColumnResult(name = "accounts.id"),
                         @ColumnResult(name = "accounts.nickname"),
                         @ColumnResult(name = "num_answers"),
-                        @ColumnResult(name = "num_points") })
+                        @ColumnResult(name = "positive_points"),
+                        @ColumnResult(name = "negative_points") })
 })
 public class QuestionsResult {
     @Id
@@ -44,9 +45,11 @@ public class QuestionsResult {
 
     private String nickname;
 
-    private Integer numAnswers;
+    private Integer numAnswers = 0;
 
-    private Integer numPoints;
+    private Integer positivePoints = 0;
+
+    private Integer negativePoints = 0;
 
     public QuestionsResult(
             BigInteger id,
@@ -57,7 +60,8 @@ public class QuestionsResult {
             BigInteger authorId,
             String nickname,
             BigInteger numAnswers,
-            BigInteger numPoints) {
+            BigInteger positivePoints,
+            BigInteger negativePoints) {
         this.id = id.longValue();
         try {
             this.subject = IOUtils.toString(subject.getCharacterStream());
@@ -71,16 +75,12 @@ public class QuestionsResult {
         this.status = Question.Status.fromValue((int) status);
         this.authorId = authorId.longValue();
         this.nickname = nickname;
-
         if (numAnswers != null)
             this.numAnswers = numAnswers.intValue();
-        else
-            this.numAnswers = 0;
-
-        if (numPoints != null)
-            this.numPoints = numPoints.intValue();
-        else
-            this.numPoints = 0;
+        if (positivePoints != null)
+            this.positivePoints = positivePoints.intValue();
+        if (negativePoints != null)
+            this.negativePoints = negativePoints.intValue();
     }
 
     public Long getId() {
@@ -115,7 +115,11 @@ public class QuestionsResult {
         return numAnswers;
     }
 
-    public Integer getNumPoints() {
-        return numPoints;
+    public Integer getPositivePoints() {
+        return positivePoints;
+    }
+
+    public Integer getNegativePoints() {
+        return negativePoints;
     }
 }

@@ -15,7 +15,8 @@
   <th>#</th>
   <th>Subject</th>
   <th><span class="glyphicon glyphicon-pencil" title="answers"></span></th>
-  <th><span class="glyphicon glyphicon-star" title="points"></span></th>
+  <th><span class="glyphicon glyphicon-arrow-up" title="up"></span></th>
+  <th><span class="glyphicon glyphicon-arrow-down" title="down"></span></th>
 </tr>
 </thead>
 <tbody>
@@ -32,7 +33,8 @@
     <div>${author?html} posted at ${x.postedAt?string("yyyy-MM-dd HH:mm:ss")}</div>
   </td>
   <td>${x.numAnswers}</td>
-  <td>${x.numPoints}</td>
+  <td>${x.positivePoints}</td>
+  <td>${x.negativePoints}</td>
 </tr>
 </#list>
 </tbody>

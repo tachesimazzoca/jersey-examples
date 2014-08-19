@@ -21,8 +21,13 @@ public class QuestionDao {
             + " WHERE answers.question_id = questions.id AND answers.status = 0)"
             + " AS num_answers,"
             + " (SELECT SUM(account_questions.point) FROM account_questions"
-            + " WHERE account_questions.question_id = questions.id)"
-            + " AS num_points"
+            + " WHERE account_questions.question_id = questions.id"
+            + " AND account_questions.point > 0)"
+            + " AS positive_points,"
+            + " (SELECT SUM(account_questions.point) FROM account_questions"
+            + " WHERE account_questions.question_id = questions.id"
+            + " AND account_questions.point < 0)"
+            + " AS negative_points"
             + " FROM questions"
             + " LEFT JOIN accounts ON accounts.id = questions.author_id";
 
