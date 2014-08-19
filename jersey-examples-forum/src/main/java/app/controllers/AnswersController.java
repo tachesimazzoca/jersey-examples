@@ -40,48 +40,19 @@ public class AnswersController {
     }
 
     @GET
-    @Path("cancel")
-    public Response cancel(
-            @Context Session session,
-            @Context UriInfo uinfo,
-            @QueryParam("id") @DefaultValue("") Long id) {
-
-        Optional<String> returnTo = session.remove("returnTo");
-        if (returnTo.isPresent()) {
-            return redirect(uinfo, returnTo.get());
-        }
-
-        Answer answer = null;
-        if (id != null) {
-            Optional<Answer> answerOpt = answerDao.find(id);
-            if (answerOpt.isPresent())
-                answer = answerOpt.get();
-        }
-
-        if (answer != null && answer.getStatus() == Answer.Status.PUBLISHED) {
-            return redirect(uinfo, "/questions/" + answer.getQuestionId());
-        } else {
-            return redirectToDashboard(uinfo);
-        }
-    }
-
-    @GET
     @Path("edit")
     public Response edit(
             @Context Session session,
             @Context UriInfo uinfo,
             @QueryParam("questionId") @DefaultValue("") Long questionId,
-            @QueryParam("id") @DefaultValue("") Long id,
-            @QueryParam("returnTo") @DefaultValue("") String returnTo) {
+            @QueryParam("id") @DefaultValue("") Long id) {
         Optional<Account> accountOpt = getAccount(session);
         if (!accountOpt.isPresent()) {
-            if (returnTo == null) {
-                returnTo = "/answers/edit";
-                if (id != null)
-                    returnTo += "?id=" + id;
-                else
-                    returnTo += "?questionId=" + questionId;
-            }
+            String returnTo = "/answers/edit";
+            if (id != null)
+                returnTo += "?id=" + id;
+            else
+                returnTo += "?questionId=" + questionId;
             return redirectToLogin(uinfo, returnTo);
         }
         Account account = accountOpt.get();
@@ -111,15 +82,12 @@ public class AnswersController {
         Question question = questionOpt.get();
         form.setQuestionId(question.getId().toString());
 
-        if (returnTo != null && !returnTo.isEmpty()) {
-            session.put("returnTo", returnTo);
-        } else {
-            session.remove("returnTo");
-        }
+        String flash = session.remove("flash").orNull();
         View view = new View("answers/edit", params(
                 "form", new FormHelper<AnswerEditForm>(form),
                 "question", question,
-                "answer", answer));
+                "answer", answer,
+                "flash", flash));
         return Response.ok(view).cookie(session.toCookie()).build();
     }
 
@@ -174,16 +142,18 @@ public class AnswersController {
             answer.setQuestionId(questionId);
             answer.setAuthorId(account.getId());
             answer.setPostedAt(new java.util.Date());
+            session.put("flash", "created");
+        } else {
+            session.put("flash", "updated");
         }
         answer.setBody(form.getBody());
         answer.setStatus(Answer.Status.fromValue(form.getStatus()));
         answerDao.save(answer);
 
-        Optional<String> returnTo = session.remove("returnTo");
-        if (returnTo.isPresent())
-            return redirect(uinfo, returnTo.get());
-        else
-            return redirect(uinfo, "/questions/" + answer.getQuestionId());
+        return Response.seeOther(uinfo.getBaseUriBuilder()
+                .path("/answers/edit")
+                .queryParam("id", answer.getId())
+                .build()).cookie(session.toCookie()).build();
     }
 
     @GET

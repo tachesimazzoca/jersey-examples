@@ -13,6 +13,13 @@
   <link href="${config.url.assets}css/bootstrap-override.css" rel="stylesheet">
   <script src="${config.url.assets}lib/jquery/jquery.min.js"></script>
   <script src="${config.url.assets}lib/bootstrap/js/bootstrap.min.js"></script>
+  <script type="text/javascript">
+  (function ($) {
+    $(function() {
+      $('[data-role="flash"]').fadeOut(3000);
+    });
+  })(jQuery);
+  </script>
 </head>
 <body>
 <div id="wrapper">

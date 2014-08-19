@@ -1,5 +1,8 @@
 <#import "/_layouts/default.ftl" as layout>
 <@layout.defaultLayout "Editing Profile">
+<#if flash?has_content>
+<div class="alert alert-success" data-role="flash">Your profile has been saved successfully.</div>
+</#if>
 <#if form.hasErrors()>
 <div class="alert alert-danger">
 <ul>
@@ -34,7 +37,6 @@
 </div>
 <div>
   <input type="submit" value="Update" class="btn btn-success">
-  <a href="../dashboard" class="btn btn-default">Cancel</a>
 </div>
 </form>
 </@layout.defaultLayout>

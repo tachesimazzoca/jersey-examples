@@ -23,13 +23,13 @@
     <p>${question.body?html?replace("\n", "<br>")}</p>
     <#if (account?has_content && account.id == question.authorId)>
     <div class="pull-right">
-      <a href="${config.url.base}questions/edit?id=${question.id}&returnTo=%2fquestions%2f${question.id}" class="btn btn-default">Edit</a>
+      <a href="${config.url.base}questions/edit?id=${question.id}" class="btn btn-default">Edit</a>
     </div>
     </#if>
   </div>
 </div>
 <p>
-  <a href="${config.url.base}answers/edit?questionId=${question.id}&returnTo=%2fquestions%2f${question.id}" class="btn btn-primary">Post Your Answer</a>
+  <a href="${config.url.base}answers/edit?questionId=${question.id}" class="btn btn-primary">Post Your Answer</a>
 </p>
 <#if answers.results?has_content>
 <hr>

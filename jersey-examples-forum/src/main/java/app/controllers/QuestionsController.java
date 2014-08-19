@@ -142,38 +142,11 @@ public class QuestionsController {
     }
 
     @GET
-    @Path("cancel")
-    public Response cancel(
-            @Context Session session,
-            @Context UriInfo uinfo,
-            @QueryParam("id") @DefaultValue("") Long id) {
-
-        Optional<String> returnTo = session.remove("returnTo");
-        if (returnTo.isPresent()) {
-            return redirect(uinfo, returnTo.get());
-        }
-
-        Question question = null;
-        if (id != null) {
-            Optional<Question> questionOpt = questionDao.find(id);
-            if (questionOpt.isPresent())
-                question = questionOpt.get();
-        }
-
-        if (question != null && question.getStatus() == Question.Status.PUBLISHED) {
-            return redirect(uinfo, "/questions/" + question.getId());
-        } else {
-            return redirectToDashboard(uinfo);
-        }
-    }
-
-    @GET
     @Path("edit")
     public Response edit(
             @Context Session session,
             @Context UriInfo uinfo,
-            @QueryParam("id") @DefaultValue("") Long id,
-            @QueryParam("returnTo") @DefaultValue("") String returnTo) {
+            @QueryParam("id") @DefaultValue("") Long id) {
 
         Optional<Account> accountOpt = getAccount(session);
         if (!accountOpt.isPresent())
@@ -194,15 +167,11 @@ public class QuestionsController {
             form = QuestionEditForm.defaultForm();
         }
 
+        String flash = session.remove("flash").orNull();
         View view = new View("questions/edit", params(
                 "form", new FormHelper<QuestionEditForm>(form),
-                "question", question));
-
-        if (returnTo != null && !returnTo.isEmpty()) {
-            session.put("returnTo", returnTo);
-        } else {
-            session.remove("returnTo");
-        }
+                "question", question,
+                "flash", flash));
         return Response.ok(view).cookie(session.toCookie()).build();
     }
 
@@ -245,17 +214,19 @@ public class QuestionsController {
             question = new Question();
             question.setAuthorId(account.getId());
             question.setPostedAt(new java.util.Date());
+            session.put("flash", "created");
+        } else {
+            session.put("flash", "updated");
         }
         question.setSubject(form.getSubject());
         question.setBody(form.getBody());
         question.setStatus(Question.Status.fromValue(form.getStatus()));
         questionDao.save(question);
 
-        Optional<String> returnTo = session.remove("returnTo");
-        if (returnTo.isPresent())
-            return redirect(uinfo, returnTo.get());
-        else
-            return redirect(uinfo, "/questions/" + question.getId());
+        return Response.seeOther(uinfo.getBaseUriBuilder()
+                .path("/questions/edit")
+                .queryParam("id", question.getId())
+                .build()).cookie(session.toCookie()).build();
     }
 
     @GET

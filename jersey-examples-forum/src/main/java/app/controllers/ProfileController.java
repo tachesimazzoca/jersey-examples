@@ -44,7 +44,8 @@ public class ProfileController {
     @Path("edit")
     public Response edit(
             @Context Session session,
-            @Context UriInfo uinfo) {
+            @Context UriInfo uinfo,
+            @QueryParam("flash") @DefaultValue("") String flash) {
         Optional<Account> accountOpt = getAccount(session);
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo);
@@ -52,7 +53,8 @@ public class ProfileController {
 
         ProfileEditForm form = ProfileEditForm.bindFrom(account);
         View view = new View("profile/edit", params(
-                "form", new FormHelper<ProfileEditForm>(form)));
+                "form", new FormHelper<ProfileEditForm>(form),
+                "flash", flash));
         return Response.ok(view).build();
     }
 
@@ -98,7 +100,7 @@ public class ProfileController {
 
         if (form.getEmail().equals(account.getEmail())) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .path("/dashboard").build()).build();
+                    .path("/profile/edit").queryParam("flash", "saved").build()).build();
         }
 
         Map<String, Object> params = params(
