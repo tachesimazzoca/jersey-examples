@@ -12,6 +12,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 
 import java.util.Set;
+import java.util.Map;
 
 import com.google.common.base.Optional;
 
@@ -28,15 +29,18 @@ public class QuestionsController {
     private final AccountDao accountDao;
     private final QuestionDao questionDao;
     private final AnswerDao answerDao;
+    private final AccountQuestionDao accountQuestionDao;
 
     public QuestionsController(
             AccountDao accountDao,
             QuestionDao questionDao,
-            AnswerDao answerDao) {
+            AnswerDao answerDao,
+            AccountQuestionDao accountQuestionDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.accountDao = accountDao;
         this.questionDao = questionDao;
         this.answerDao = answerDao;
+        this.accountQuestionDao = accountQuestionDao;
     }
 
     @GET
@@ -53,10 +57,15 @@ public class QuestionsController {
     @GET
     @Path("{id}")
     public Response detail(
+            @Context Session session,
             @Context UriInfo uinfo,
             @PathParam("id") Long id,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("5") int limit) {
+
+        // account
+        Optional<Account> accountOpt = getAccount(session);
+        Account account = accountOpt.orNull();
 
         // question
         Optional<Question> questionOpt = questionDao.find(id);
@@ -72,16 +81,64 @@ public class QuestionsController {
             return redirectToIndex(uinfo);
         Account author = authorOpt.get();
 
+        // questionInfo
+        int numPoints = accountQuestionDao.sumPositivePoints(question.getId());
+        boolean starred = false;
+        if (account != null) {
+            starred = accountQuestionDao.getPoint(account.getId(), question.getId()) > 0;
+        }
+        Map<String, Object> questionInfo = params(
+                "numPoints", numPoints,
+                "starred", starred);
+
         // answers
         PaginationHelper<AnswersResult> answers = new PaginationHelper<AnswersResult>(
                 answerDao.selectByQuestionId(id, offset, limit),
                 id + "?offset=%d&limit=%d");
 
         View view = new View("questions/detail", params(
+                "account", account,
+                "questionInfo", questionInfo,
                 "question", question,
                 "author", author,
                 "answers", answers));
         return Response.ok(view).build();
+    }
+
+    private Response vote(Session session, UriInfo uinfo, Long id, int point) {
+        Optional<Question> questionOpt = questionDao.find(id);
+        if (!questionOpt.isPresent())
+            return redirectToIndex(uinfo);
+        Question question = questionOpt.get();
+        if (question.getStatus() != Question.Status.PUBLISHED)
+            return redirectToIndex(uinfo);
+
+        Optional<Account> accountOpt = getAccount(session);
+        if (!accountOpt.isPresent())
+            return redirect(uinfo, "/questions/" + id);
+        Account account = accountOpt.get();
+
+        accountQuestionDao.log(account.getId(), question.getId(), point);
+
+        return redirect(uinfo, "/questions/" + id);
+    }
+
+    @GET
+    @Path("star")
+    public Response star(
+            @Context Session session,
+            @Context UriInfo uinfo,
+            @QueryParam("id") Long id) {
+        return vote(session, uinfo, id, 1);
+    }
+
+    @GET
+    @Path("unstar")
+    public Response unstar(
+            @Context Session session,
+            @Context UriInfo uinfo,
+            @QueryParam("id") Long id) {
+        return vote(session, uinfo, id, 0);
     }
 
     @GET

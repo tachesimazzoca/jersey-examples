@@ -15,8 +15,7 @@
   <th>#</th>
   <th>Subject</th>
   <th><span class="glyphicon glyphicon-pencil" title="answers"></span></th>
-  <th><span class="glyphicon glyphicon-arrow-up" title="up"></span></th>
-  <th><span class="glyphicon glyphicon-arrow-down" title="down"></span></th>
+  <th><span class="glyphicon glyphicon-star" title="star"></span></th>
 </tr>
 </thead>
 <tbody>
@@ -34,7 +33,6 @@
   </td>
   <td>${x.numAnswers}</td>
   <td>${x.positivePoints}</td>
-  <td>${x.negativePoints}</td>
 </tr>
 </#list>
 </tbody>
