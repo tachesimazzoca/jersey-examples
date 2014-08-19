@@ -252,15 +252,10 @@ public class QuestionsController {
         questionDao.save(question);
 
         Optional<String> returnTo = session.remove("returnTo");
-        if (returnTo.isPresent()) {
+        if (returnTo.isPresent())
             return redirect(uinfo, returnTo.get());
-        } else {
-            if (question.getStatus() == Question.Status.PUBLISHED) {
-                return redirect(uinfo, "/questions/" + question.getId());
-            } else {
-                return redirectToDashboard(uinfo);
-            }
-        }
+        else
+            return redirect(uinfo, "/questions/" + question.getId());
     }
 
     @GET

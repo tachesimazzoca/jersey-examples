@@ -18,7 +18,15 @@ CREATE TABLE `accounts` (
 );
 CREATE INDEX `accounts_email` ON `accounts` (`email`);
 INSERT INTO `accounts` (`email`, `password_salt`, `password_hash`, `nickname`, `status`)
-    VALUES ('user1@example.net', '0000', '70352f41061eda4ff3c322094af068ba70c3b38b', 'user1', 1);
+    VALUES ('alice@example.net', '0000', '70352f41061eda4ff3c322094af068ba70c3b38b', 'Alice', 1);
+INSERT INTO `accounts` (`email`, `password_salt`, `password_hash`, `nickname`, `status`)
+    VALUES ('bob@example.net', '0000', '70352f41061eda4ff3c322094af068ba70c3b38b', 'Bob', 1);
+INSERT INTO `accounts` (`email`, `password_salt`, `password_hash`, `nickname`, `status`)
+    VALUES ('carol@example.net', '0000', '70352f41061eda4ff3c322094af068ba70c3b38b', 'Carol', 1);
+INSERT INTO `accounts` (`email`, `password_salt`, `password_hash`, `nickname`, `status`)
+    VALUES ('ellen@example.net', '0000', '70352f41061eda4ff3c322094af068ba70c3b38b', 'Ellen', 1);
+INSERT INTO `accounts` (`email`, `password_salt`, `password_hash`, `nickname`, `status`)
+    VALUES ('frank@example.net', '0000', '70352f41061eda4ff3c322094af068ba70c3b38b', 'Frank', 1);
 
 DROP TABLE IF EXISTS `questions`;
 CREATE TABLE `questions` (

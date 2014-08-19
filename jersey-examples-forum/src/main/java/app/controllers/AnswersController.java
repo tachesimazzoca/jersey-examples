@@ -72,7 +72,7 @@ public class AnswersController {
             @Context UriInfo uinfo,
             @QueryParam("questionId") @DefaultValue("") Long questionId,
             @QueryParam("id") @DefaultValue("") Long id,
-            @QueryParam("return_to") @DefaultValue("") String returnTo) {
+            @QueryParam("returnTo") @DefaultValue("") String returnTo) {
         Optional<Account> accountOpt = getAccount(session);
         if (!accountOpt.isPresent()) {
             if (returnTo == null) {
@@ -180,15 +180,10 @@ public class AnswersController {
         answerDao.save(answer);
 
         Optional<String> returnTo = session.remove("returnTo");
-        if (returnTo.isPresent()) {
+        if (returnTo.isPresent())
             return redirect(uinfo, returnTo.get());
-        } else {
-            if (answer.getStatus() == Answer.Status.PUBLISHED) {
-                return redirect(uinfo, "/questions/" + answer.getQuestionId());
-            } else {
-                return redirectToDashboard(uinfo);
-            }
-        }
+        else
+            return redirect(uinfo, "/questions/" + answer.getQuestionId());
     }
 
     @GET

@@ -29,7 +29,7 @@
   </div>
 </div>
 <p>
-  <a href="${config.url.base}answers/edit?questionId=${question.id}" class="btn btn-primary">Post Your Answer</a>
+  <a href="${config.url.base}answers/edit?questionId=${question.id}&returnTo=%2fquestions%2f${question.id}" class="btn btn-primary">Post Your Answer</a>
 </p>
 <#if answers.results?has_content>
 <hr>
