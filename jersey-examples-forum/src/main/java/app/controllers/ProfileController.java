@@ -16,9 +16,14 @@ import com.google.common.base.Optional;
 import java.util.Map;
 import java.util.Set;
 
-import app.core.*;
+import app.core.FormHelper;
+import app.core.Storage;
+import app.core.View;
 import app.mail.TextMailerFactory;
-import app.models.*;
+import app.models.Account;
+import app.models.AccountDao;
+import app.models.ProfileEditForm;
+import app.models.UserContext;
 
 import static app.core.Util.params;
 
@@ -43,18 +48,19 @@ public class ProfileController {
     @GET
     @Path("edit")
     public Response edit(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("flash") @DefaultValue("") String flash) {
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo);
         Account account = accountOpt.get();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(account);
         View view = new View("profile/edit", params(
+                "account", account,
                 "form", new FormHelper<ProfileEditForm>(form),
-                "flash", flash));
+                "flash", userContext.getFlash().orNull()));
         return Response.ok(view).build();
     }
 
@@ -62,10 +68,10 @@ public class ProfileController {
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEdit(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams) {
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo);
         Account account = accountOpt.get();
@@ -87,6 +93,7 @@ public class ProfileController {
         Set<ConstraintViolation<ProfileEditForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
             View view = new View("profile/edit", params(
+                    "account", account,
                     "form", new FormHelper<ProfileEditForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(view).build();
@@ -99,8 +106,10 @@ public class ProfileController {
         accountDao.save(account);
 
         if (form.getEmail().equals(account.getEmail())) {
+            userContext.setFlash("saved");
             return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .path("/profile/edit").queryParam("flash", "saved").build()).build();
+                    .path("/profile/edit").build())
+                    .cookie(userContext.toCookie()).build();
         }
 
         Map<String, Object> params = params(
@@ -120,14 +129,15 @@ public class ProfileController {
 
     @GET
     @Path("verify")
-    public Response verify() {
-        return Response.ok(new View("profile/verify")).build();
+    public Response verify(@Context UserContext userContext) {
+        return Response.ok(new View("profile/verify", params(
+                "account", userContext.getAccount().orNull()))).build();
     }
 
     @GET
     @Path("activate")
     public Response activate(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("code") String code) {
         Optional<?> opt = profileStorage.read(code, Map.class);
@@ -142,7 +152,7 @@ public class ProfileController {
         Long id = (Long) params.get("id");
         String email = (String) params.get("email");
 
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (accountOpt.isPresent()) {
             Account account = accountOpt.get();
             if (!id.equals(account.getId())) {
@@ -165,23 +175,18 @@ public class ProfileController {
         Account account = accountOpt.get();
         account.setEmail(email);
         Account savedAccount = accountDao.save(account);
-        return Response.ok(new View("profile/activate",
-                params("account", savedAccount))).build();
+        return Response.ok(new View("profile/activate", params(
+                "account", savedAccount))).build();
     }
 
     @GET
     @Path("errors/{name}")
-    public Response errors(@PathParam("name") String name) {
+    public Response errors(
+            @Context UserContext userContext,
+            @PathParam("name") String name) {
         return Response.status(Response.Status.FORBIDDEN)
-                .entity(new View("profile/errors/" + name))
-                .build();
-    }
-
-    private Optional<Account> getAccount(Session session) {
-        Optional<String> accountId = session.get("accountId");
-        if (!accountId.isPresent())
-            return Optional.absent();
-        return accountDao.find(Long.parseLong(accountId.get()));
+                .entity(new View("profile/errors/" + name, params(
+                        "account", userContext.getAccount().orNull()))).build();
     }
 
     private Response redirectToLogin(UriInfo uinfo) {

@@ -2,7 +2,7 @@
 <#import "/_elements/pagination.ftl" as p>
 <#include "/_elements/functions.ftl">
 <@layout.defaultLayout "Answers">
-<#if pagination.results?has_content>
+<#if answers.results?has_content>
 <table class="table">
 <thead>
 <tr>
@@ -12,7 +12,7 @@
 </tr>
 </thead>
 <tbody>
-<#list pagination.results as x>
+<#list answers.results as x>
 <tr>
   <td>${(x.id)?html}</td>
   <td>${(x.status.label)?html}</td>
@@ -28,6 +28,6 @@
 </#list>
 </tbody>
 </table>
-<@p.defaultPagination pagination></@p.defaultPagination>
+<@p.defaultPagination answers></@p.defaultPagination>
 </#if>
 </@layout.defaultLayout>

@@ -16,8 +16,19 @@ import java.util.Map;
 
 import com.google.common.base.Optional;
 
-import app.core.*;
-import app.models.*;
+import app.core.FormHelper;
+import app.core.PaginationHelper;
+import app.core.View;
+import app.models.Account;
+import app.models.AccountDao;
+import app.models.AccountQuestionDao;
+import app.models.AnswersResult;
+import app.models.AnswerDao;
+import app.models.UserContext;
+import app.models.Question;
+import app.models.QuestionsResult;
+import app.models.QuestionDao;
+import app.models.QuestionEditForm;
 
 import static app.core.Util.params;
 import static app.core.Util.safeURI;
@@ -26,45 +37,47 @@ import static app.core.Util.safeURI;
 @Produces(MediaType.TEXT_HTML)
 public class QuestionsController {
     private final Validator validator;
-    private final AccountDao accountDao;
     private final QuestionDao questionDao;
     private final AnswerDao answerDao;
+    private final AccountDao accountDao;
     private final AccountQuestionDao accountQuestionDao;
 
     public QuestionsController(
-            AccountDao accountDao,
             QuestionDao questionDao,
             AnswerDao answerDao,
+            AccountDao accountDao,
             AccountQuestionDao accountQuestionDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
-        this.accountDao = accountDao;
         this.questionDao = questionDao;
         this.answerDao = answerDao;
+        this.accountDao = accountDao;
         this.accountQuestionDao = accountQuestionDao;
     }
 
     @GET
     public Response index(
+            @Context UserContext userContext,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
-        PaginationHelper<QuestionsResult> pagination = new PaginationHelper<QuestionsResult>(
+        PaginationHelper<QuestionsResult> questions = new PaginationHelper<QuestionsResult>(
                 questionDao.selectPublicQuestions(offset, limit),
                 "questions?offset=%d&limit=%d");
         return Response.ok(new View("questions/index", params(
-                "pagination", pagination))).build();
+                "account", userContext.getAccount().orNull(),
+                "questions", questions))).build();
     }
 
     @GET
     @Path("{id}")
     public Response detail(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @PathParam("id") Long id,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("5") int limit) {
 
         // account
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         Account account = accountOpt.orNull();
 
         // question
@@ -105,7 +118,7 @@ public class QuestionsController {
         return Response.ok(view).build();
     }
 
-    private Response vote(Session session, UriInfo uinfo, Long id, int point) {
+    private Response vote(UserContext userContext, UriInfo uinfo, Long id, int point) {
         Optional<Question> questionOpt = questionDao.find(id);
         if (!questionOpt.isPresent())
             return redirectToIndex(uinfo);
@@ -113,7 +126,7 @@ public class QuestionsController {
         if (question.getStatus() != Question.Status.PUBLISHED)
             return redirectToIndex(uinfo);
 
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent())
             return redirect(uinfo, "/questions/" + id);
         Account account = accountOpt.get();
@@ -126,29 +139,30 @@ public class QuestionsController {
     @GET
     @Path("star")
     public Response star(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("id") Long id) {
-        return vote(session, uinfo, id, 1);
+        return vote(userContext, uinfo, id, 1);
     }
 
     @GET
     @Path("unstar")
     public Response unstar(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("id") Long id) {
-        return vote(session, uinfo, id, 0);
+
+        return vote(userContext, uinfo, id, 0);
     }
 
     @GET
     @Path("edit")
     public Response edit(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("id") @DefaultValue("") Long id) {
 
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, id);
         Account account = accountOpt.get();
@@ -167,24 +181,25 @@ public class QuestionsController {
             form = QuestionEditForm.defaultForm();
         }
 
-        String flash = session.remove("flash").orNull();
+        String flash = userContext.getFlash().orNull();
         View view = new View("questions/edit", params(
+                "account", account,
                 "form", new FormHelper<QuestionEditForm>(form),
                 "question", question,
                 "flash", flash));
-        return Response.ok(view).cookie(session.toCookie()).build();
+        return Response.ok(view).cookie(userContext.toCookie()).build();
     }
 
     @POST
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEdit(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @FormParam("id") Long id,
             MultivaluedMap<String, String> formParams) {
 
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, id);
         Account account = accountOpt.get();
@@ -204,6 +219,7 @@ public class QuestionsController {
         Set<ConstraintViolation<QuestionEditForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
             View view = new View("questions/edit", params(
+                    "account", account,
                     "form", new FormHelper<QuestionEditForm>(form, errors),
                     "question", question));
             return Response.status(Response.Status.FORBIDDEN)
@@ -214,9 +230,9 @@ public class QuestionsController {
             question = new Question();
             question.setAuthorId(account.getId());
             question.setPostedAt(new java.util.Date());
-            session.put("flash", "created");
+            userContext.setFlash("created");
         } else {
-            session.put("flash", "updated");
+            userContext.setFlash("updated");
         }
         question.setSubject(form.getSubject());
         question.setBody(form.getBody());
@@ -226,17 +242,17 @@ public class QuestionsController {
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/questions/edit")
                 .queryParam("id", question.getId())
-                .build()).cookie(session.toCookie()).build();
+                .build()).cookie(userContext.toCookie()).build();
     }
 
     @GET
     @Path("delete")
     public Response delete(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("id") @DefaultValue("") Long id) {
 
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, id);
         Account account = accountOpt.get();
@@ -253,13 +269,6 @@ public class QuestionsController {
 
         questionDao.updateStatus(id, Question.Status.DELETED);
         return redirectToDashboard(uinfo);
-    }
-
-    private Optional<Account> getAccount(Session session) {
-        Optional<String> accountId = session.get("accountId");
-        if (!accountId.isPresent())
-            return Optional.absent();
-        return accountDao.find(Long.parseLong(accountId.get()));
     }
 
     private Response redirect(UriInfo uinfo, String path) {

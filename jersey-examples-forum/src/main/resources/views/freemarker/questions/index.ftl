@@ -4,11 +4,11 @@
 <p>
    <a href="questions/edit" class="btn btn-default">New Question</a>
 </p>
-<#if pagination.results?has_content>
+<#if questions.results?has_content>
 <hr>
 <table class="table">
-<#if (pagination.count > 1)>
-<p>${pagination.count} Questions</p>
+<#if (questions.count > 1)>
+<p>${questions.count} Questions</p>
 </#if>
 <thead>
 <tr>
@@ -19,7 +19,7 @@
 </tr>
 </thead>
 <tbody>
-<#list pagination.results as x>
+<#list questions.results as x>
 <#if x.nickname?has_content>
 <#assign author="${x.nickname}">
 <#else>
@@ -37,6 +37,6 @@
 </#list>
 </tbody>
 </table>
-<@p.defaultPagination pagination></@p.defaultPagination>
+<@p.defaultPagination questions></@p.defaultPagination>
 </#if>
 </@layout.defaultLayout>

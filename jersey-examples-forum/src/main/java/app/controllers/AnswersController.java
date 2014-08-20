@@ -15,8 +15,15 @@ import java.util.Set;
 
 import com.google.common.base.Optional;
 
-import app.core.*;
-import app.models.*;
+import app.core.View;
+import app.core.FormHelper;
+import app.models.Account;
+import app.models.Answer;
+import app.models.AnswerDao;
+import app.models.AnswerEditForm;
+import app.models.Question;
+import app.models.QuestionDao;
+import app.models.UserContext;
 
 import static app.core.Util.params;
 import static app.core.Util.safeURI;
@@ -25,16 +32,13 @@ import static app.core.Util.safeURI;
 @Produces(MediaType.TEXT_HTML)
 public class AnswersController {
     private final Validator validator;
-    private final AccountDao accountDao;
     private final QuestionDao questionDao;
     private final AnswerDao answerDao;
 
     public AnswersController(
-            AccountDao accountDao,
             QuestionDao questionDao,
             AnswerDao answerDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
-        this.accountDao = accountDao;
         this.answerDao = answerDao;
         this.questionDao = questionDao;
     }
@@ -42,11 +46,11 @@ public class AnswersController {
     @GET
     @Path("edit")
     public Response edit(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("questionId") @DefaultValue("") Long questionId,
             @QueryParam("id") @DefaultValue("") Long id) {
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent()) {
             String returnTo = "/answers/edit";
             if (id != null)
@@ -82,26 +86,27 @@ public class AnswersController {
         Question question = questionOpt.get();
         form.setQuestionId(question.getId().toString());
 
-        String flash = session.remove("flash").orNull();
+        String flash = userContext.getFlash().orNull();
         View view = new View("answers/edit", params(
+                "account", account,
                 "form", new FormHelper<AnswerEditForm>(form),
                 "question", question,
                 "answer", answer,
                 "flash", flash));
-        return Response.ok(view).cookie(session.toCookie()).build();
+        return Response.ok(view).cookie(userContext.toCookie()).build();
     }
 
     @POST
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEdit(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @FormParam("questionId") Long questionId,
             @FormParam("id") Long id,
             MultivaluedMap<String, String> formParams) {
 
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent()) {
             return redirectToIndex(uinfo, null);
         }
@@ -130,6 +135,7 @@ public class AnswersController {
         Set<ConstraintViolation<AnswerEditForm>> errors = validator.validate(form);
         if (!errors.isEmpty()) {
             View view = new View("answers/edit", params(
+                    "account", account,
                     "form", new FormHelper<AnswerEditForm>(form, errors),
                     "question", question,
                     "answer", answer));
@@ -142,9 +148,9 @@ public class AnswersController {
             answer.setQuestionId(questionId);
             answer.setAuthorId(account.getId());
             answer.setPostedAt(new java.util.Date());
-            session.put("flash", "created");
+            userContext.setFlash("created");
         } else {
-            session.put("flash", "updated");
+            userContext.setFlash("updated");
         }
         answer.setBody(form.getBody());
         answer.setStatus(Answer.Status.fromValue(form.getStatus()));
@@ -153,17 +159,17 @@ public class AnswersController {
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/answers/edit")
                 .queryParam("id", answer.getId())
-                .build()).cookie(session.toCookie()).build();
+                .build()).cookie(userContext.toCookie()).build();
     }
 
     @GET
     @Path("delete")
     public Response delete(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("id") @DefaultValue("") Long id) {
 
-        Optional<Account> accountOpt = getAccount(session);
+        Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent())
             return redirectToIndex(uinfo, null);
         Account account = accountOpt.get();
@@ -180,13 +186,6 @@ public class AnswersController {
 
         answerDao.updateStatus(id, Answer.Status.DELETED);
         return redirectToDashboard(uinfo);
-    }
-
-    private Optional<Account> getAccount(Session session) {
-        Optional<String> accountId = session.get("accountId");
-        if (!accountId.isPresent())
-            return Optional.absent();
-        return accountDao.find(Long.parseLong(accountId.get()));
     }
 
     private Response redirect(UriInfo uinfo, String path) {

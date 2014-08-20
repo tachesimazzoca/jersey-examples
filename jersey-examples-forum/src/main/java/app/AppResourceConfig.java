@@ -57,7 +57,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // providers
         getSingletons().add(new ViewMessageBodyWriter(renderer));
-        getSingletons().add(new SessionProvider(userStorage, "APP_SESSION"));
+        getSingletons().add(new UserContextProvider(accountDao, userStorage, "APP_SESSION"));
 
         // controllers
         getSingletons().add(new PagesController());
@@ -65,11 +65,11 @@ public class AppResourceConfig extends ScanningResourceConfig {
                 accountDao, signupStorage, signupMailerFactory));
         getSingletons().add(new RecoveryController(
                 accountDao, recoveryStorage, recoveryMailerFactory));
-        getSingletons().add(new DashboardController(accountDao, questionDao, answerDao));
+        getSingletons().add(new DashboardController(questionDao, answerDao));
         getSingletons().add(new ProfileController(
                 accountDao, profileStorage, profileMailerFactory));
         getSingletons().add(
-                new QuestionsController(accountDao, questionDao, answerDao, accountQuestionDao));
-        getSingletons().add(new AnswersController(accountDao, questionDao, answerDao));
+                new QuestionsController(questionDao, answerDao, accountDao, accountQuestionDao));
+        getSingletons().add(new AnswersController(questionDao, answerDao));
     }
 }

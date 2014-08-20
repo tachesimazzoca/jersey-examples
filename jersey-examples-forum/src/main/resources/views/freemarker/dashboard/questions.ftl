@@ -4,7 +4,7 @@
 <p>
    <a href="${config.url.base}questions/edit" class="btn btn-default">New Question</a>
 </p>
-<#if pagination.results?has_content>
+<#if questions.results?has_content>
 <table class="table">
 <thead>
 <tr>
@@ -14,7 +14,7 @@
 </tr>
 </thead>
 <tbody>
-<#list pagination.results as x>
+<#list questions.results as x>
 <tr>
   <td>${(x.id)?html}</td>
   <td>${(x.status.label)?html}</td>
@@ -30,6 +30,6 @@
 </#list>
 </tbody>
 </table>
-<@p.defaultPagination pagination></@p.defaultPagination>
+<@p.defaultPagination questions></@p.defaultPagination>
 </#if>
 </@layout.defaultLayout>

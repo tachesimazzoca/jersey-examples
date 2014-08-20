@@ -52,19 +52,24 @@ public class RecoveryController {
 
     @GET
     @Path("entry")
-    public Response entry() {
+    public Response entry(@Context UserContext userContext) {
+        userContext.logout();
         RecoveryEntryForm form = RecoveryEntryForm.defaultForm();
         View view = new View("recovery/entry", params(
                 "form", new FormHelper<RecoveryEntryForm>(form)));
-        return Response.ok(view).build();
+        return Response.ok(view).cookie(userContext.toCookie()).build();
     }
 
     @POST
     @Path("entry")
     @Consumes("application/x-www-form-urlencoded")
-    public Response postEntry(@Context UriInfo uinfo,
+    public Response postEntry(
+            @Context UserContext userContext,
+            @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
             throws EmailException {
+
+        userContext.logout();
 
         RecoveryEntryForm form = RecoveryEntryForm.bindFrom(formParams);
         Account account = null;
@@ -81,7 +86,7 @@ public class RecoveryController {
             View view = new View("recovery/entry", params(
                     "form", new FormHelper<RecoveryEntryForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .build();
+                    .cookie(userContext.toCookie()).build();
         }
 
         Map<String, Object> params = params("id", account.getId());
@@ -93,35 +98,49 @@ public class RecoveryController {
                 .toString();
         recoveryMailerFactory.create(form.getEmail(), url).send();
 
-        return Response.ok(new View("recovery/verify")).build();
+        return Response.ok(new View("recovery/verify"))
+                .cookie(userContext.toCookie()).build();
     }
 
     @GET
     @Path("reset")
-    public Response reset(@Context UriInfo uinfo, @QueryParam("code") String code) {
+    public Response reset(
+            @Context UserContext userContext,
+            @Context UriInfo uinfo,
+            @QueryParam("code") String code) {
+
+        userContext.logout();
+
         Optional<?> opt = recoveryStorage.read(code, Map.class);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .path("/recovery/errors/session").build()).build();
+                    .path("/recovery/errors/session").build())
+                    .cookie(userContext.toCookie()).build();
         }
         RecoveryResetForm form = RecoveryResetForm.defaultForm();
         form.setCode(code);
         View view = new View("recovery/reset", params(
                 "form", new FormHelper<RecoveryResetForm>(form)));
-        return Response.ok(view).build();
+        return Response.ok(view).cookie(userContext.toCookie()).build();
     }
 
     @POST
     @Path("reset")
     @Consumes("application/x-www-form-urlencoded")
-    public Response postReset(@Context UriInfo uinfo,
+    public Response postReset(
+            @Context UserContext userContext,
+            @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams) {
+
+        userContext.logout();
+
         RecoveryResetForm form = RecoveryResetForm.bindFrom(formParams);
 
         Optional<?> opt = recoveryStorage.read(form.getCode(), Map.class);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .path("/recovery/errors/session").build()).build();
+                    .path("/recovery/errors/session").build())
+                    .cookie(userContext.toCookie()).build();
         }
         @SuppressWarnings("unchecked")
         Map<String, Object> params = (Map<String, Object>) opt.get();
@@ -130,7 +149,8 @@ public class RecoveryController {
         Optional<Account> accountOpt = accountDao.find(id);
         if (!accountOpt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .path("/recovery/errors/session").build()).build();
+                    .path("/recovery/errors/session").build())
+                    .cookie(userContext.toCookie()).build();
         }
         Account account = accountOpt.get();
 
@@ -139,7 +159,7 @@ public class RecoveryController {
             View view = new View("recovery/reset", params(
                     "form", new FormHelper<RecoveryResetForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .build();
+                    .cookie(userContext.toCookie()).build();
         }
 
         account.refreshPassword(form.getPassword());
@@ -147,6 +167,7 @@ public class RecoveryController {
 
         recoveryStorage.delete(form.getCode());
 
-        return Response.ok(new View("recovery/complete")).build();
+        return Response.ok(new View("recovery/complete"))
+                .cookie(userContext.toCookie()).build();
     }
 }

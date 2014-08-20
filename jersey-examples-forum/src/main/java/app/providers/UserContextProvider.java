@@ -15,26 +15,33 @@ import javax.ws.rs.ext.Provider;
 import java.lang.reflect.Type;
 import java.util.Map;
 
-import app.core.*;
+import app.core.Storage;
+import app.core.Session;
+import app.models.AccountDao;
+import app.models.UserContext;
 
 @Provider
-public class SessionProvider implements InjectableProvider<Context, Type> {
+public class UserContextProvider implements InjectableProvider<Context, Type> {
+    private final AccountDao accountDao;
     private final Storage userStorage;
     private final String cookieName;
     private final String path;
     private final String domain;
 
-    public SessionProvider(
+    public UserContextProvider(
+            AccountDao accountDao,
             Storage userStorage,
             String cookieName) {
-        this(userStorage, cookieName, "/", "");
+        this(accountDao, userStorage, cookieName, "/", "");
     }
 
-    public SessionProvider(
+    public UserContextProvider(
+            AccountDao accountDao,
             Storage userStorage,
             String cookieName,
             String path,
             String domain) {
+        this.accountDao = accountDao;
         this.userStorage = userStorage;
         this.cookieName = cookieName;
         this.path = path;
@@ -43,12 +50,12 @@ public class SessionProvider implements InjectableProvider<Context, Type> {
 
     @Override
     public Injectable<?> getInjectable(ComponentContext ic, Context ctx, Type t) {
-        if (!t.equals(Session.class)) {
+        if (!t.equals(UserContext.class)) {
             return null;
         }
-        return new AbstractHttpContextInjectable<Session>() {
+        return new AbstractHttpContextInjectable<UserContext>() {
             @Override
-            public Session getValue(HttpContext ctx) {
+            public UserContext getValue(HttpContext ctx) {
                 String sessionId = null;
                 Map<String, Cookie> cookies = ctx.getRequest().getCookies();
                 if (cookies.containsKey(cookieName))
@@ -57,7 +64,7 @@ public class SessionProvider implements InjectableProvider<Context, Type> {
                         cookieName, sessionId, path, domain,
                         NewCookie.DEFAULT_VERSION, "",
                         NewCookie.DEFAULT_MAX_AGE, false);
-                return new Session(userStorage, cookie, sessionId);
+                return new UserContext(new Session(userStorage, cookie, sessionId), accountDao);
             }
         };
     }

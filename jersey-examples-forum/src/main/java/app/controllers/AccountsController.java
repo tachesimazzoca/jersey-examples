@@ -53,19 +53,24 @@ public class AccountsController {
 
     @GET
     @Path("signup")
-    public Response signup(@Context Session session) {
-        session.remove("accountId");
+    public Response signup(@Context UserContext userContext) {
+        userContext.logout();
         View view = new View("accounts/signup", params(
                 "form", new FormHelper<AccountsSignupForm>(AccountsSignupForm.defaultForm())));
-        return Response.ok(view).cookie(session.toCookie()).build();
+        return Response.ok(view).cookie(userContext.toCookie()).build();
     }
 
     @POST
     @Path("signup")
     @Consumes("application/x-www-form-urlencoded")
-    public Response postSignup(@Context UriInfo uinfo,
+    public Response postSignup(
+            @Context UserContext userContext,
+            @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
             throws EmailException {
+
+        userContext.logout();
+
         AccountsSignupForm form = AccountsSignupForm.bindFrom(formParams);
         if (validator.validateProperty(form, "email").isEmpty()) {
             if (!form.getEmail().isEmpty()) {
@@ -78,7 +83,8 @@ public class AccountsController {
         if (!errors.isEmpty()) {
             View view = new View("accounts/signup", params(
                     "form", new FormHelper<AccountsSignupForm>(form, errors)));
-            return Response.status(Response.Status.FORBIDDEN).entity(view).build();
+            return Response.status(Response.Status.FORBIDDEN).entity(view)
+                    .cookie(userContext.toCookie()).build();
         }
 
         Map<String, Object> params = params(
@@ -92,26 +98,33 @@ public class AccountsController {
                 .toString();
         signupMailerFactory.create(form.getEmail(), url).send();
 
-        return Response.ok(new View("accounts/verify")).build();
+        return Response.ok(new View("accounts/verify"))
+                .cookie(userContext.toCookie()).build();
     }
 
     @GET
     @Path("activate")
     public Response activate(
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("code") String code) {
+
+        userContext.logout();
+
         Optional<?> opt = signupStorage.read(code, Map.class);
         signupStorage.delete(code);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .path("/accounts/errors/session").build()).build();
+                    .path("/accounts/errors/session").build())
+                    .cookie(userContext.toCookie()).build();
         }
 
         @SuppressWarnings("unchecked")
         Map<String, String> params = (Map<String, String>) opt.get();
         if (accountDao.findByEmail(params.get("email")).isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
-                    .path("/accounts/errors/email").build()).build();
+                    .path("/accounts/errors/email").build())
+                    .cookie(userContext.toCookie()).build();
         }
 
         Account account = new Account();
@@ -120,37 +133,43 @@ public class AccountsController {
         account.refreshPassword(params.get("password"));
         Account savedAccount = accountDao.save(account);
         return Response.ok(new View("accounts/activate",
-                params("account", savedAccount))).build();
+                params("account", savedAccount)))
+                .cookie(userContext.toCookie()).build();
     }
 
     @GET
     @Path("signin")
     public Response signin(
-            @Context Session session,
+            @Context UserContext userContext,
             @QueryParam("returnTo") @DefaultValue("") String returnTo) {
-        session.remove("accountId");
+
+        userContext.logout();
+
         AccountsSigninForm form = AccountsSigninForm.defaultForm();
         form.setReturnTo(returnTo);
         return Response.ok(new View("accounts/signin", params(
                 "form", new FormHelper<AccountsSigninForm>(form))))
-                .cookie(session.toCookie()).build();
+                .cookie(userContext.toCookie()).build();
     }
 
     @POST
     @Path("signin")
     @Consumes("application/x-www-form-urlencoded")
     public Response postSignin(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams) {
 
-        AccountsSigninForm form = AccountsSigninForm.bindFrom(formParams);
+        userContext.logout();
 
+        AccountsSigninForm form = AccountsSigninForm.bindFrom(formParams);
         Set<ConstraintViolation<AccountsSigninForm>> errors = validator.validate(form);
+
         Account account = null;
         if (errors.isEmpty()) {
-            Optional<Account> accountOpt = accountDao.findByEmail(form.getEmail());
-            if (accountOpt.isPresent() && accountOpt.get().isEqualPassword(form.getPassword())) {
+            Optional<Account> accountOpt = userContext.authenticate(
+                    form.getEmail(), form.getPassword());
+            if (accountOpt.isPresent()) {
                 account = accountOpt.get();
             } else {
                 form.setAuthorized(false);
@@ -160,27 +179,24 @@ public class AccountsController {
         if (account == null) {
             View view = new View("accounts/signin", params(
                     "form", new FormHelper<AccountsSigninForm>(form, errors)));
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity(view).build();
+            return Response.status(Response.Status.FORBIDDEN).entity(view)
+                    .cookie(userContext.toCookie()).build();
         }
-
-        session.put("accountId", account.getId().toString());
 
         String returnTo = form.getReturnTo();
         if (!returnTo.startsWith("/") || returnTo.isEmpty())
             returnTo = "/";
-        return Response.seeOther(safeURI(uinfo, returnTo)).cookie(session.toCookie()).build();
+        return Response.seeOther(safeURI(uinfo, returnTo))
+                .cookie(userContext.toCookie()).build();
     }
 
     @GET
     @Path("signout")
     public Response signout(
-            @Context Session session,
+            @Context UserContext userContext,
             @Context UriInfo uinfo) {
-        session.remove("accountId");
-        return Response.seeOther(uinfo.getBaseUriBuilder()
-                .path("/").build())
-                .cookie(session.toCookie())
-                .build();
+        userContext.logout();
+        return Response.seeOther(uinfo.getBaseUriBuilder().path("/").build())
+                .cookie(userContext.toCookie()).build();
     }
 }
