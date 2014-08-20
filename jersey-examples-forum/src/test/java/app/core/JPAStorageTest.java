@@ -2,6 +2,7 @@ package app.core;
 
 import static org.junit.Assert.*;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -10,13 +11,15 @@ import javax.persistence.EntityManagerFactory;
 import com.google.common.base.Optional;
 
 public class JPAStorageTest {
-    private static EntityManagerFactory ef() {
-        return JPA.ef();
+    private static final EntityManagerFactory ef = JPA.ef("test");
+
+    @AfterClass
+    public static void tearDown() {
+        ef.close();
     }
 
     @Test
     public void testCRUD() {
-        EntityManagerFactory ef = ef();
         EntityManager em = ef.createEntityManager();
 
         em.getTransaction().begin();
@@ -61,7 +64,6 @@ public class JPAStorageTest {
 
     @Test
     public void testPrefix() {
-        EntityManagerFactory ef = ef();
         EntityManager em = ef.createEntityManager();
 
         em.getTransaction().begin();

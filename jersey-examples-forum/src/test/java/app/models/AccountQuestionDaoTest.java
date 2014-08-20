@@ -1,6 +1,8 @@
 package app.models;
 
 import static org.junit.Assert.*;
+
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import javax.persistence.EntityManagerFactory;
@@ -10,14 +12,15 @@ import app.core.JPA;
 import java.util.Map;
 
 public class AccountQuestionDaoTest {
-    private static EntityManagerFactory ef() {
-        return JPA.ef();
+    private static final EntityManagerFactory ef = JPA.ef("test");
+
+    @AfterClass
+    public static void tearDown() {
+        ef.close();
     }
 
     @Test
     public void testGetPoint() {
-        EntityManagerFactory ef = ef();
-
         AccountQuestionDao dao = new AccountQuestionDao(ef);
 
         Fixtures fixtures = new Fixtures(ef);
@@ -39,8 +42,6 @@ public class AccountQuestionDaoTest {
 
     @Test
     public void testSumPositivePoints() {
-        EntityManagerFactory ef = ef();
-
         AccountQuestionDao dao = new AccountQuestionDao(ef);
 
         Fixtures fixtures = new Fixtures(ef);
@@ -59,8 +60,6 @@ public class AccountQuestionDaoTest {
 
     @Test
     public void testLog() {
-        EntityManagerFactory ef = ef();
-
         AccountQuestionDao dao = new AccountQuestionDao(ef);
 
         Fixtures fixtures = new Fixtures(ef);

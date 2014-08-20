@@ -7,18 +7,11 @@ import com.google.common.base.Optional;
 
 import java.util.List;
 
-public class AccountDao {
-    private final EntityManagerFactory ef;
+import app.core.JPADao;
 
+public class AccountDao extends JPADao<Account> {
     public AccountDao(EntityManagerFactory ef) {
-        this.ef = ef;
-    }
-
-    public Optional<Account> find(long id) {
-        EntityManager em = ef.createEntityManager();
-        Account account = em.find(Account.class, id);
-        em.close();
-        return Optional.fromNullable(account);
+        super(ef, Account.class);
     }
 
     public Optional<Account> findByEmail(String email) {
@@ -38,14 +31,9 @@ public class AccountDao {
     public Account save(Account account) {
         if (account.getId() == null && account.getPasswordHash().isEmpty())
             throw new IllegalArgumentException();
-        EntityManager em = ef.createEntityManager();
-        em.getTransaction().begin();
         if (account.getId() == null)
-            em.persist(account);
+            return create(account);
         else
-            em.merge(account);
-        em.getTransaction().commit();
-        em.close();
-        return account;
+            return update(account);
     }
 }

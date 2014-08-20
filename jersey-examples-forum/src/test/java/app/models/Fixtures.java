@@ -56,6 +56,7 @@ public class Fixtures {
             em.persist(account);
             em.getTransaction().commit();
         }
+        em.close();
     }
 
     public void createQuestions(int max) {

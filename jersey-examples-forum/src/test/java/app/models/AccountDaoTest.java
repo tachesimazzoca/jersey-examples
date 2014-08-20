@@ -1,6 +1,8 @@
 package app.models;
 
 import static org.junit.Assert.*;
+
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import javax.persistence.EntityManagerFactory;
@@ -8,20 +10,21 @@ import javax.persistence.EntityManagerFactory;
 import app.core.JPA;
 
 public class AccountDaoTest {
-    private static EntityManagerFactory ef() {
-        return JPA.ef();
+    private static final EntityManagerFactory ef = JPA.ef("test");
+
+    @AfterClass
+    public static void tearDown() {
+        ef.close();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testSaveEmptyAccount() {
-        EntityManagerFactory ef = ef();
         AccountDao dao = new AccountDao(ef);
         dao.save(new Account());
     }
 
     @Test
     public void testValidAccount() {
-        EntityManagerFactory ef = ef();
         AccountDao dao = new AccountDao(ef);
         Account account1 = new Account();
         account1.setEmail("account1@example.net");
@@ -46,7 +49,6 @@ public class AccountDaoTest {
 
     @Test(expected = javax.persistence.PersistenceException.class)
     public void testEmailConflict() {
-        EntityManagerFactory ef = ef();
         AccountDao dao = new AccountDao(ef);
         Account account1 = new Account();
         account1.setEmail("account1@example.net");

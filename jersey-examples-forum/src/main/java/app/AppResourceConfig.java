@@ -32,7 +32,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
         Config config = Config.load("conf/application");
 
         // storage
-        EntityManagerFactory ef = JPA.ef();
+        EntityManagerFactory ef = JPA.ef("default");
         Storage userStorage = new JPAStorage(ef, "session_storage", "user-");
         Storage signupStorage = new JPAStorage(ef, "session_storage", "signup-");
         Storage recoveryStorage = new JPAStorage(ef, "session_storage", "recovery-");

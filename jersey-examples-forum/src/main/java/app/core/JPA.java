@@ -13,11 +13,29 @@ import com.google.common.collect.ImmutableList;
 import app.core.Pagination;
 
 public class JPA {
-    public static final EntityManagerFactory ef =
-            Persistence.createEntityManagerFactory("default");
+    public static EntityManagerFactory ef(String name) {
+        return Persistence.createEntityManagerFactory(name);
+    }
 
-    public static EntityManagerFactory ef() {
-        return ef;
+    public static <T> T withTransaction(EntityManagerFactory ef, TransactionBlock<T> block) {
+        EntityManager em = ef.createEntityManager();
+        T result = null;
+        try {
+            em.getTransaction().begin();
+            result = block.apply(em);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive())
+                em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+        return result;
+    }
+
+    public interface TransactionBlock<T> {
+        T apply(EntityManager em);
     }
 
     @SuppressWarnings("unchecked")

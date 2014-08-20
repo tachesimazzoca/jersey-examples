@@ -3,12 +3,11 @@ package app.models;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import com.google.common.base.Optional;
-
 import app.core.JPA;
+import app.core.JPADao;
 import app.core.Pagination;
 
-public class QuestionDao {
+public class QuestionDao extends JPADao<Question> {
     private static final String SELECT_QUESTIONS_RESULT = "SELECT"
             + " questions.id,"
             + " questions.subject,"
@@ -34,39 +33,25 @@ public class QuestionDao {
     private static final String COUNT_QUESTIONS_RESULT =
             "SELECT COUNT(*) FROM questions";
 
-    private final EntityManagerFactory ef;
-
     public QuestionDao(EntityManagerFactory ef) {
-        this.ef = ef;
-    }
-
-    public Optional<Question> find(long id) {
-        EntityManager em = ef.createEntityManager();
-        Question question = em.find(Question.class, id);
-        em.close();
-        return Optional.fromNullable(question);
+        super(ef, Question.class);
     }
 
     public Question save(Question question) {
-        EntityManager em = ef.createEntityManager();
-        em.getTransaction().begin();
         if (question.getId() == null)
-            em.persist(question);
+            return create(question);
         else
-            em.merge(question);
-        em.getTransaction().commit();
-        em.close();
-        return question;
+            return update(question);
     }
 
-    public void updateStatus(Long id, Question.Status status) {
-        EntityManager em = ef.createEntityManager();
-        em.getTransaction().begin();
-        em.createNativeQuery("UPDATE questions SET status = ?1 WHERE id = ?2")
-                .setParameter(1, status.getValue())
-                .setParameter(2, id).executeUpdate();
-        em.getTransaction().commit();
-        em.close();
+    public void updateStatus(final Long id, final Question.Status status) {
+        withTransaction(new JPA.TransactionBlock<Integer>() {
+            public Integer apply(EntityManager em) {
+                return em.createNativeQuery("UPDATE questions SET status = ?1 WHERE id = ?2")
+                        .setParameter(1, status.getValue())
+                        .setParameter(2, id).executeUpdate();
+            }
+        });
     }
 
     public Pagination<QuestionsResult> selectPublicQuestions(int offset, int limit) {

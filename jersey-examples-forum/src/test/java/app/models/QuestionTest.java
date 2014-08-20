@@ -2,6 +2,7 @@ package app.models;
 
 import static org.junit.Assert.*;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -12,13 +13,15 @@ import java.math.BigInteger;
 import app.core.JPA;
 
 public class QuestionTest {
-    private static EntityManagerFactory ef() {
-        return JPA.ef();
+    private static final EntityManagerFactory ef = JPA.ef("test");
+
+    @AfterClass
+    public static void tearDown() {
+        ef.close();
     }
 
     @Test
     public void testPersistWithEmptyAssociation() {
-        EntityManagerFactory ef = ef();
         EntityManager em = ef.createEntityManager();
         Question question = new Question();
         question.setSubject("test subject");

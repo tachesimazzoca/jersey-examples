@@ -1,6 +1,8 @@
 package app.models;
 
 import static org.junit.Assert.*;
+
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -13,19 +15,22 @@ import app.core.JPA;
 import app.core.Pagination;
 
 public class QuestionsResultTest {
-    private static EntityManagerFactory ef() {
-        return JPA.ef();
+    private static final EntityManagerFactory ef = JPA.ef("test");
+
+    @AfterClass
+    public static void tearDown() {
+        ef.close();
     }
 
     @Test
     public void testResultSetMappings() {
-        Fixtures fixtures = new Fixtures(ef());
+        Fixtures fixtures = new Fixtures(ef);
         fixtures.createAccounts(100);
         fixtures.createQuestions(10);
         fixtures.createAnswers(50);
         fixtures.createAccountQuestions(100);
 
-        EntityManager em = ef().createEntityManager();
+        EntityManager em = ef.createEntityManager();
 
         Map<Long, Account> accountMap =
                 fixtures.getRecordMap(Long.class, Account.class);
@@ -90,5 +95,7 @@ public class QuestionsResultTest {
             assertEquals(positivePointsMap.get(result.getId()), result.getPositivePoints());
             assertEquals(negativePointsMap.get(result.getId()), result.getNegativePoints());
         }
+
+        em.close();
     }
 }

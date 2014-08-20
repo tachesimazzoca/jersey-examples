@@ -3,12 +3,11 @@ package app.models;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import com.google.common.base.Optional;
-
 import app.core.JPA;
+import app.core.JPADao;
 import app.core.Pagination;
 
-public class AnswerDao {
+public class AnswerDao extends JPADao<Answer> {
     private static final String SELECT_ANSWER_RESULT = "SELECT"
             + " answers.id,"
             + " answers.question_id,"
@@ -23,39 +22,25 @@ public class AnswerDao {
     private static final String COUNT_ANSWER_RESULT =
             "SELECT COUNT(*) FROM answers";
 
-    private final EntityManagerFactory ef;
-
     public AnswerDao(EntityManagerFactory ef) {
-        this.ef = ef;
-    }
-
-    public Optional<Answer> find(long id) {
-        EntityManager em = ef.createEntityManager();
-        Answer answer = em.find(Answer.class, id);
-        em.close();
-        return Optional.fromNullable(answer);
+        super(ef, Answer.class);
     }
 
     public Answer save(Answer answer) {
-        EntityManager em = ef.createEntityManager();
-        em.getTransaction().begin();
         if (answer.getId() == null)
-            em.persist(answer);
+            return create(answer);
         else
-            em.merge(answer);
-        em.getTransaction().commit();
-        em.close();
-        return answer;
+            return update(answer);
     }
 
-    public void updateStatus(Long id, Answer.Status status) {
-        EntityManager em = ef.createEntityManager();
-        em.getTransaction().begin();
-        em.createNativeQuery("UPDATE answers SET status = ?1 WHERE id = ?2")
-                .setParameter(1, status.getValue())
-                .setParameter(2, id).executeUpdate();
-        em.getTransaction().commit();
-        em.close();
+    public void updateStatus(final Long id, final Answer.Status status) {
+        withTransaction(new JPA.TransactionBlock<Integer>() {
+            public Integer apply(EntityManager em) {
+                return em.createNativeQuery("UPDATE answers SET status = ?1 WHERE id = ?2")
+                        .setParameter(1, status.getValue())
+                        .setParameter(2, id).executeUpdate();
+            }
+        });
     }
 
     public Pagination<AnswersResult> selectByQuestionId(

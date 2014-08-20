@@ -88,36 +88,38 @@ public class JPAStorage implements Storage {
     }
 
     @Override
-    public void write(String key, Object value) {
-        String v = objectToBase64(value);
-        EntityManager em = ef.createEntityManager();
-        em.getTransaction().begin();
-        List<?> rows = em.createNativeQuery(SELECT_FOR_UPDATE_QUERY)
-                .setParameter(1, key)
-                .getResultList();
-        if (rows.isEmpty()) {
-            em.createNativeQuery(INSERT_QUERY)
-                    .setParameter(1, key)
-                    .setParameter(2, v)
-                    .executeUpdate();
-        } else {
-            em.createNativeQuery(UPDATE_QUERY)
-                    .setParameter(1, v)
-                    .setParameter(2, key)
-                    .executeUpdate();
-        }
-        em.getTransaction().commit();
-        em.close();
+    public void write(final String key, final Object value) {
+        final String v = objectToBase64(value);
+        JPA.withTransaction(ef, new JPA.TransactionBlock<Void>() {
+            public Void apply(EntityManager em) {
+                List<?> rows = em.createNativeQuery(SELECT_FOR_UPDATE_QUERY)
+                        .setParameter(1, key)
+                        .getResultList();
+                if (rows.isEmpty()) {
+                    em.createNativeQuery(INSERT_QUERY)
+                            .setParameter(1, key)
+                            .setParameter(2, v)
+                            .executeUpdate();
+                } else {
+                    em.createNativeQuery(UPDATE_QUERY)
+                            .setParameter(1, v)
+                            .setParameter(2, key)
+                            .executeUpdate();
+                }
+                return null;
+            }
+        });
     }
 
     @Override
-    public void delete(String key) {
-        EntityManager em = ef.createEntityManager();
-        em.getTransaction().begin();
-        em.createNativeQuery(DELETE_QUERY)
-                .setParameter(1, key)
-                .executeUpdate();
-        em.getTransaction().commit();
-        em.close();
+    public void delete(final String key) {
+        JPA.withTransaction(ef, new JPA.TransactionBlock<Void>() {
+            public Void apply(EntityManager em) {
+                em.createNativeQuery(DELETE_QUERY)
+                        .setParameter(1, key)
+                        .executeUpdate();
+                return null;
+            }
+        });
     }
 }
