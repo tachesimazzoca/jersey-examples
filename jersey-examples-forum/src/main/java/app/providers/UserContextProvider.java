@@ -49,7 +49,7 @@ public class UserContextProvider implements InjectableProvider<Context, Type> {
     }
 
     @Override
-    public Injectable<?> getInjectable(ComponentContext ic, Context ctx, Type t) {
+    public Injectable<?> getInjectable(ComponentContext ic, Context a, Type t) {
         if (!t.equals(UserContext.class)) {
             return null;
         }
