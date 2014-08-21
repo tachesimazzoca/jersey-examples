@@ -37,8 +37,8 @@ public class QuestionsResultTest {
         Map<Long, Question> questionMap =
                 fixtures.getRecordMap(Long.class, Question.class);
         Map<Long, Integer> numAnswersMap = fixtures.getNumAnswersMap();
-        Map<Long, Integer> positivePointsMap = fixtures.getPointsMap("point > 0");
-        Map<Long, Integer> negativePointsMap = fixtures.getPointsMap("point < 0");
+        Map<Long, Integer> positivePointsMap = fixtures.getQuestionPointsMap("point > 0");
+        Map<Long, Integer> negativePointsMap = fixtures.getQuestionPointsMap("point < 0");
 
         String selectQuery = "SELECT"
                 + " questions.id,"
@@ -51,6 +51,9 @@ public class QuestionsResultTest {
                 + " (SELECT COUNT(*) FROM answers"
                 + " WHERE answers.question_id = questions.id AND answers.status = 0)"
                 + " AS num_answers,"
+                + " (SELECT SUM(account_questions.point) FROM account_questions"
+                + " WHERE account_questions.question_id = questions.id)"
+                + " AS sum_points,"
                 + " (SELECT SUM(account_questions.point) FROM account_questions"
                 + " WHERE account_questions.question_id = questions.id"
                 + " AND account_questions.point > 0)"
@@ -75,16 +78,20 @@ public class QuestionsResultTest {
             assertEquals(question.getPostedAt(), result.getPostedAt());
             assertEquals(author.getNickname(), result.getNickname());
             assertEquals(numAnswersMap.get(result.getId()), result.getNumAnswers());
-            assertEquals(positivePointsMap.get(result.getId()), result.getPositivePoints());
-            assertEquals(negativePointsMap.get(result.getId()), result.getNegativePoints());
+            int ppts = positivePointsMap.get(result.getId());
+            int npts = negativePointsMap.get(result.getId());
+            assertEquals(ppts + npts, (int) result.getSumPoints());
+            assertEquals(ppts, (int) result.getPositivePoints());
+            assertEquals(npts, (int) result.getNegativePoints());
         }
 
+        int limit = 10;
         Pagination<QuestionsResult> pagination =
-                JPA.paginate(em, 0, 10,
+                JPA.paginate(em, 0, limit,
                         em.createNativeQuery(countQuery),
                         em.createNativeQuery(selectQuery, "QuestionsResult"),
                         QuestionsResult.class);
-        assertEquals(questionMap.size(), pagination.getResults().size());
+        assertEquals(limit, pagination.getResults().size());
         for (QuestionsResult result : pagination.getResults()) {
             Question question = questionMap.get(result.getId());
             Account author = accountMap.get(result.getAuthorId());
@@ -92,8 +99,11 @@ public class QuestionsResultTest {
             assertEquals(question.getPostedAt(), result.getPostedAt());
             assertEquals(author.getNickname(), result.getNickname());
             assertEquals(numAnswersMap.get(result.getId()), result.getNumAnswers());
-            assertEquals(positivePointsMap.get(result.getId()), result.getPositivePoints());
-            assertEquals(negativePointsMap.get(result.getId()), result.getNegativePoints());
+            int ppts = positivePointsMap.get(result.getId());
+            int npts = negativePointsMap.get(result.getId());
+            assertEquals(ppts + npts, (int) result.getSumPoints());
+            assertEquals(ppts, (int) result.getPositivePoints());
+            assertEquals(npts, (int) result.getNegativePoints());
         }
 
         em.close();

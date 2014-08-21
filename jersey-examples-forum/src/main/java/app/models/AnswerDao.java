@@ -15,7 +15,18 @@ public class AnswerDao extends JPADao<Answer> {
             + " answers.posted_at,"
             + " answers.status,"
             + " accounts.id,"
-            + " accounts.nickname"
+            + " accounts.nickname,"
+            + " (SELECT SUM(account_answers.point) FROM account_answers"
+            + " WHERE account_answers.answer_id = answers.id)"
+            + " AS sum_points,"
+            + " (SELECT SUM(account_answers.point) FROM account_answers"
+            + " WHERE account_answers.answer_id = answers.id"
+            + " AND account_answers.point > 0)"
+            + " AS positive_points,"
+            + " (SELECT SUM(account_answers.point) FROM account_answers"
+            + " WHERE account_answers.answer_id = answers.id"
+            + " AND account_answers.point < 0)"
+            + " AS negative_points"
             + " FROM answers"
             + " LEFT JOIN accounts ON accounts.id = answers.author_id";
 
@@ -49,7 +60,7 @@ public class AnswerDao extends JPADao<Answer> {
         String where = " WHERE answers.status = 0 AND answers.question_id = ?1";
         String countQuery = COUNT_ANSWER_RESULT + where;
         String selectQuery = SELECT_ANSWER_RESULT + where
-                + " ORDER BY answers.posted_at ASC";
+                + " ORDER BY sum_points ASC";
         Pagination<AnswersResult> pagination = JPA.paginate(em, offset, limit,
                 em.createNativeQuery(countQuery).setParameter(1, questionId),
                 em.createNativeQuery(selectQuery, "AnswersResult").setParameter(1, questionId),
@@ -64,7 +75,7 @@ public class AnswerDao extends JPADao<Answer> {
         String where = " WHERE answers.status IN (0, 2) AND answers.author_id = ?1";
         String countQuery = COUNT_ANSWER_RESULT + where;
         String selectQuery = SELECT_ANSWER_RESULT + where
-                + " ORDER BY answers.posted_at DESC";
+                + " ORDER BY sum_points DESC";
         Pagination<AnswersResult> pagination = JPA.paginate(em, offset, limit,
                 em.createNativeQuery(countQuery).setParameter(1, authorId),
                 em.createNativeQuery(selectQuery, "AnswersResult").setParameter(1, authorId),

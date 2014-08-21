@@ -7,11 +7,11 @@ import org.junit.Test;
 
 import javax.persistence.EntityManagerFactory;
 
-import app.core.JPA;
-
 import java.util.Map;
 
-public class AccountQuestionDaoTest {
+import app.core.JPA;
+
+public class AccountAnswerDaoTest {
     private static final EntityManagerFactory ef = JPA.ef("test");
 
     @AfterClass
@@ -21,53 +21,54 @@ public class AccountQuestionDaoTest {
 
     @Test
     public void testGetPoint() {
-        AccountQuestionDao dao = new AccountQuestionDao(ef);
+        AccountAnswerDao dao = new AccountAnswerDao(ef);
 
         Fixtures fixtures = new Fixtures(ef);
         fixtures.createAccounts(100);
         fixtures.createQuestions(10);
-        fixtures.createAccountQuestions(100);
+        fixtures.createAnswers(50);
+        fixtures.createAccountAnswers(100);
 
         Map<Long, Account> accountMap = fixtures.getRecordMap(Long.class, Account.class);
-        Map<Long, Question> questionMap = fixtures.getRecordMap(Long.class, Question.class);
+        Map<Long, Answer> answerMap = fixtures.getRecordMap(Long.class, Answer.class);
         for (Map.Entry<Long, Account> x : accountMap.entrySet()) {
             Long accountId = x.getKey();
-            Map<Long, Integer> pointsMap = fixtures.getQuestionPointsMap("account_id = "
-                    + accountId);
-            for (Map.Entry<Long, Question> y : questionMap.entrySet()) {
-                Long questionId = y.getKey();
-                assertEquals((int) pointsMap.get(questionId), dao.getPoint(accountId, questionId));
+            Map<Long, Integer> pointsMap = fixtures.getAnswerPointsMap("account_id = " + accountId);
+            for (Map.Entry<Long, Answer> y : answerMap.entrySet()) {
+                Long answerId = y.getKey();
+                assertEquals((int) pointsMap.get(answerId), dao.getPoint(accountId, answerId));
             }
         }
     }
 
     @Test
     public void testSumPoints() {
-        AccountQuestionDao dao = new AccountQuestionDao(ef);
+        AccountAnswerDao dao = new AccountAnswerDao(ef);
 
         Fixtures fixtures = new Fixtures(ef);
         fixtures.createAccounts(100);
         fixtures.createQuestions(10);
-        fixtures.createAccountQuestions(100);
+        fixtures.createAnswers(50);
+        fixtures.createAccountAnswers(100);
 
-        Map<Long, Question> questionMap = fixtures.getRecordMap(Long.class, Question.class);
-        Map<Long, Integer> positivePointsMap = fixtures.getQuestionPointsMap("point > 0");
-        Map<Long, Integer> negativePointsMap = fixtures.getQuestionPointsMap("point < 0");
-        for (Map.Entry<Long, Question> entry : questionMap.entrySet()) {
-            Long questionId = entry.getKey();
-            int ppts = positivePointsMap.get(questionId);
-            int npts = negativePointsMap.get(questionId);
-            assertEquals(ppts, dao.sumPositivePoints(questionId));
-            assertEquals(npts, dao.sumNegativePoints(questionId));
+        Map<Long, Answer> answerMap = fixtures.getRecordMap(Long.class, Answer.class);
+        Map<Long, Integer> positivePointsMap = fixtures.getAnswerPointsMap("point > 0");
+        Map<Long, Integer> negativePointsMap = fixtures.getAnswerPointsMap("point < 0");
+        for (Map.Entry<Long, Answer> entry : answerMap.entrySet()) {
+            Long answerId = entry.getKey();
+            int ppts = positivePointsMap.get(answerId);
+            int npts = negativePointsMap.get(answerId);
+            assertEquals(ppts, dao.sumPositivePoints(answerId));
+            assertEquals(npts, dao.sumNegativePoints(answerId));
         }
     }
 
     @Test
     public void testLog() {
-        AccountQuestionDao dao = new AccountQuestionDao(ef);
+        AccountAnswerDao dao = new AccountAnswerDao(ef);
 
         Fixtures fixtures = new Fixtures(ef);
-        fixtures.createAccountQuestions(0);
+        fixtures.createAccountAnswers(0);
 
         dao.log(1L, 1L, 1);
         assertEquals(1, dao.getPoint(1L, 1L));

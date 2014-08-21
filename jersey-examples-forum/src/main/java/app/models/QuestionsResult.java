@@ -26,6 +26,7 @@ import org.apache.commons.io.IOUtils;
                         @ColumnResult(name = "accounts.id"),
                         @ColumnResult(name = "accounts.nickname"),
                         @ColumnResult(name = "num_answers"),
+                        @ColumnResult(name = "sum_points"),
                         @ColumnResult(name = "positive_points"),
                         @ColumnResult(name = "negative_points") })
 })
@@ -47,6 +48,8 @@ public class QuestionsResult {
 
     private Integer numAnswers = 0;
 
+    private Integer sumPoints = 0;
+
     private Integer positivePoints = 0;
 
     private Integer negativePoints = 0;
@@ -60,8 +63,10 @@ public class QuestionsResult {
             BigInteger authorId,
             String nickname,
             BigInteger numAnswers,
+            BigInteger sumPoints,
             BigInteger positivePoints,
             BigInteger negativePoints) {
+
         this.id = id.longValue();
         try {
             this.subject = IOUtils.toString(subject.getCharacterStream());
@@ -77,6 +82,8 @@ public class QuestionsResult {
         this.nickname = nickname;
         if (numAnswers != null)
             this.numAnswers = numAnswers.intValue();
+        if (sumPoints != null)
+            this.sumPoints = sumPoints.intValue();
         if (positivePoints != null)
             this.positivePoints = positivePoints.intValue();
         if (negativePoints != null)
@@ -113,6 +120,10 @@ public class QuestionsResult {
 
     public Integer getNumAnswers() {
         return numAnswers;
+    }
+
+    public Integer getSumPoints() {
+        return sumPoints;
     }
 
     public Integer getPositivePoints() {

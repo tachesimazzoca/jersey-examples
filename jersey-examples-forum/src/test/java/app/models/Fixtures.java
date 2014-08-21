@@ -142,6 +142,35 @@ public class Fixtures {
         em.close();
     }
 
+    public void createAccountAnswers(int max) {
+        EntityManager em = ef.createEntityManager();
+        em.getTransaction().begin();
+        em.createNativeQuery("TRUNCATE TABLE account_answers").executeUpdate();
+        em.getTransaction().commit();
+
+        Map<Long, Account> accountMap = getRecordMap(Long.class, Account.class);
+        Map<Long, Answer> answerMap = getRecordMap(Long.class, Answer.class);
+
+        int maxAccounts = accountMap.size();
+        Long[] accountIds = accountMap.keySet().toArray(new Long[maxAccounts]);
+        int maxAnswers = answerMap.size();
+        Long[] answerIds = answerMap.keySet().toArray(new Long[maxAnswers]);
+
+        for (int i = 0; i < max; i++) {
+            Long accountId = accountIds[(int) (Math.random() * maxAccounts)];
+            Long answerId = answerIds[(int) (Math.random() * maxAnswers)];
+            int point = ((int) (Math.random() * 2)) * 2 - 1;
+            em.getTransaction().begin();
+            em.createNativeQuery("INSERT INTO account_answers VALUES (?1, ?2, ?3, NOW())")
+                    .setParameter(1, accountId)
+                    .setParameter(2, answerId)
+                    .setParameter(3, point)
+                    .executeUpdate();
+            em.getTransaction().commit();
+        }
+        em.close();
+    }
+
     public Map<Long, Integer> getNumAnswersMap() {
         EntityManager em = ef.createEntityManager();
 
@@ -164,7 +193,7 @@ public class Fixtures {
         return m;
     }
 
-    public Map<Long, Integer> getPointsMap(String where) {
+    public Map<Long, Integer> getQuestionPointsMap(String where) {
         EntityManager em = ef.createEntityManager();
         Map<Long, Integer> m = new HashMap<Long, Integer>();
         Map<Long, Question> questionMap = getRecordMap(Long.class, Question.class);
@@ -177,6 +206,30 @@ public class Fixtures {
             sql += " WHERE " + where;
         }
         sql += " GROUP BY question_id";
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = (List<Object[]>) em.createNativeQuery(sql).getResultList();
+        em.close();
+        for (Object[] result : results) {
+            m.put((Long) ((BigInteger) result[0]).longValue(),
+                    ((BigInteger) result[1]).intValue());
+        }
+        return m;
+    }
+
+    public Map<Long, Integer> getAnswerPointsMap(String where) {
+        EntityManager em = ef.createEntityManager();
+        Map<Long, Integer> m = new HashMap<Long, Integer>();
+        Map<Long, Answer> answerMap = getRecordMap(Long.class, Answer.class);
+        for (Long answerId : answerMap.keySet()) {
+            m.put(answerId, 0);
+        }
+
+        String sql = "SELECT answer_id, SUM(point) FROM account_answers";
+        if (where != null && !where.isEmpty()) {
+            sql += " WHERE " + where;
+        }
+        sql += " GROUP BY answer_id";
 
         @SuppressWarnings("unchecked")
         List<Object[]> results = (List<Object[]>) em.createNativeQuery(sql).getResultList();
