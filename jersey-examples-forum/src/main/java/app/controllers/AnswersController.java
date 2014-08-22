@@ -220,10 +220,9 @@ public class AnswersController {
             return redirectToDashboard(uinfo);
         Answer answer = answerOpt.get();
         // Not allowed to vote by the same author
-        if (answer.isSameAuthor(account))
-            return redirectToIndex(uinfo, null);
+        if (!answer.isSameAuthor(account))
+            accountAnswerDao.log(account.getId(), answer.getId(), point);
 
-        accountAnswerDao.log(account.getId(), answer.getId(), point);
         if (returnTo != null && !returnTo.isEmpty())
             return redirect(uinfo, returnTo);
         else

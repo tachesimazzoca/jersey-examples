@@ -16,16 +16,16 @@ public class AnswerDao extends JPADao<Answer> {
             + " answers.status,"
             + " accounts.id,"
             + " accounts.nickname,"
-            + " (SELECT SUM(account_answers.point) FROM account_answers"
-            + " WHERE account_answers.answer_id = answers.id)"
+            + " IFNULL((SELECT SUM(account_answers.point) FROM account_answers"
+            + " WHERE account_answers.answer_id = answers.id), 0)"
             + " AS sum_points,"
-            + " (SELECT SUM(account_answers.point) FROM account_answers"
+            + " IFNULL((SELECT SUM(account_answers.point) FROM account_answers"
             + " WHERE account_answers.answer_id = answers.id"
-            + " AND account_answers.point > 0)"
+            + " AND account_answers.point > 0), 0)"
             + " AS positive_points,"
-            + " (SELECT SUM(account_answers.point) FROM account_answers"
+            + " IFNULL((SELECT SUM(account_answers.point) FROM account_answers"
             + " WHERE account_answers.answer_id = answers.id"
-            + " AND account_answers.point < 0)"
+            + " AND account_answers.point < 0), 0)"
             + " AS negative_points"
             + " FROM answers"
             + " LEFT JOIN accounts ON accounts.id = answers.author_id";
@@ -60,7 +60,7 @@ public class AnswerDao extends JPADao<Answer> {
         String where = " WHERE answers.status = 0 AND answers.question_id = ?1";
         String countQuery = COUNT_ANSWER_RESULT + where;
         String selectQuery = SELECT_ANSWER_RESULT + where
-                + " ORDER BY sum_points ASC";
+                + " ORDER BY sum_points DESC, answers.id ASC";
         Pagination<AnswersResult> pagination = JPA.paginate(em, offset, limit,
                 em.createNativeQuery(countQuery).setParameter(1, questionId),
                 em.createNativeQuery(selectQuery, "AnswersResult").setParameter(1, questionId),
@@ -75,7 +75,7 @@ public class AnswerDao extends JPADao<Answer> {
         String where = " WHERE answers.status IN (0, 2) AND answers.author_id = ?1";
         String countQuery = COUNT_ANSWER_RESULT + where;
         String selectQuery = SELECT_ANSWER_RESULT + where
-                + " ORDER BY sum_points DESC";
+                + " ORDER BY sum_points DESC, answers.id ASC";
         Pagination<AnswersResult> pagination = JPA.paginate(em, offset, limit,
                 em.createNativeQuery(countQuery).setParameter(1, authorId),
                 em.createNativeQuery(selectQuery, "AnswersResult").setParameter(1, authorId),

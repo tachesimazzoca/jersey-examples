@@ -16,19 +16,19 @@ public class QuestionDao extends JPADao<Question> {
             + " questions.status,"
             + " accounts.id,"
             + " accounts.nickname,"
-            + " (SELECT COUNT(*) FROM answers"
-            + " WHERE answers.question_id = questions.id AND answers.status = 0)"
+            + " IFNULL((SELECT COUNT(*) FROM answers"
+            + " WHERE answers.question_id = questions.id AND answers.status = 0), 0)"
             + " AS num_answers,"
-            + " (SELECT SUM(account_questions.point) FROM account_questions"
-            + " WHERE account_questions.question_id = questions.id)"
+            + " IFNULL((SELECT SUM(account_questions.point) FROM account_questions"
+            + " WHERE account_questions.question_id = questions.id), 0)"
             + " AS sum_points,"
-            + " (SELECT SUM(account_questions.point) FROM account_questions"
+            + " IFNULL((SELECT SUM(account_questions.point) FROM account_questions"
             + " WHERE account_questions.question_id = questions.id"
-            + " AND account_questions.point > 0)"
+            + " AND account_questions.point > 0), 0)"
             + " AS positive_points,"
-            + " (SELECT SUM(account_questions.point) FROM account_questions"
+            + " IFNULL((SELECT SUM(account_questions.point) FROM account_questions"
             + " WHERE account_questions.question_id = questions.id"
-            + " AND account_questions.point < 0)"
+            + " AND account_questions.point < 0), 0)"
             + " AS negative_points"
             + " FROM questions"
             + " LEFT JOIN accounts ON accounts.id = questions.author_id";
@@ -62,7 +62,7 @@ public class QuestionDao extends JPADao<Question> {
         String where = " WHERE questions.status = 0";
         String countQuery = COUNT_QUESTIONS_RESULT + where;
         String selectQuery = SELECT_QUESTIONS_RESULT + where
-                + " ORDER BY questions.posted_at DESC";
+                + " ORDER BY sum_points DESC, questions.posted_at DESC, questions.id ASC";
         Pagination<QuestionsResult> pagination = JPA.paginate(em, offset, limit,
                 em.createNativeQuery(countQuery),
                 em.createNativeQuery(selectQuery, "QuestionsResult"),
@@ -76,7 +76,7 @@ public class QuestionDao extends JPADao<Question> {
         String where = " WHERE questions.status IN (0, 2) AND questions.author_id = ?1";
         String countQuery = COUNT_QUESTIONS_RESULT + where;
         String selectQuery = SELECT_QUESTIONS_RESULT + where
-                + " ORDER BY questions.posted_at DESC";
+                + " ORDER BY questions.posted_at DESC, questions.id ASC";
         Pagination<QuestionsResult> pagination = JPA.paginate(em, offset, limit,
                 em.createNativeQuery(countQuery).setParameter(1, authorId),
                 em.createNativeQuery(selectQuery, "QuestionsResult").setParameter(1, authorId),

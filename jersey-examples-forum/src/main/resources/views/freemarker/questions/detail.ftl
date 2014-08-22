@@ -40,7 +40,7 @@
 <p>${answers.count} Answers</p>
 </#if>
 <#setting url_escaping_charset="UTF-8">
-<#assign _returnTo='${"/questions/${answers.currentOffsetUrl}"?url}'>
+<#assign _returnTo='${"/questions/${question.id}?offset=${answers.offset}&limit=${answers.limit}"?url}'>
 <#list answers.results as x>
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -50,23 +50,24 @@
   <div class="panel-body clearfix">
     <p>${x.body?html?replace("\n", "<br>")}</p>
     <div class="pull-right">
-      <#if (account?has_content && account.id != question.authorId)>
-      <div class="btn-group">
-        <a href="${config.url.base}answers/vote?id=${x.id}&point=1&returnTo=${_returnTo}" class="btn btn-default"><span class="glyphicon glyphicon-arrow-up" title="Up"></span></a>
-        <span class="btn btn-default">${x.positivePoints}</span>
-        <a href="${config.url.base}answers/vote?id=${x.id}&point=-1&returnTo=${_returnTo}" class="btn btn-default"><span class="glyphicon glyphicon-arrow-down" title="Down"></span></a>
-        <span class="btn btn-default">${x.negativePoints * -1}</span>
-      </div>
-      </#if>
-      <#if (account?has_content && account.id == x.authorId)>
-      <a href="${config.url.base}answers/edit?id=${x.id}" class="btn btn-default">Edit</a>
+      <#if (account?has_content)>
+        <#if (account.id == x.authorId)>
+          <a href="${config.url.base}answers/edit?id=${x.id}" class="btn btn-default">Edit</a>
+        <#else>
+        <div class="btn-group">
+          <a href="${config.url.base}answers/vote?id=${x.id}&point=1&returnTo=${_returnTo}" class="btn btn-default"><span class="glyphicon glyphicon-arrow-up" title="Up"></span></a>
+          <span class="btn btn-default">${x.positivePoints}</span>
+          <a href="${config.url.base}answers/vote?id=${x.id}&point=-1&returnTo=${_returnTo}" class="btn btn-default"><span class="glyphicon glyphicon-arrow-down" title="Down"></span></a>
+          <span class="btn btn-default">${x.negativePoints * -1}</span>
+        </div>
+        </#if>
       </#if>
     </div>
   </div>
 </div>
 </#list>
 </div>
-<@p.defaultPagination answers></@p.defaultPagination>
+<@p.defaultPagination answers "${config.url.base}questions/${question.id}"></@p.defaultPagination>
 </#if>
 
 </@layout.defaultLayout>

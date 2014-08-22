@@ -28,6 +28,6 @@
 </#list>
 </tbody>
 </table>
-<@p.defaultPagination answers></@p.defaultPagination>
+<@p.defaultPagination answers "${config.url.base}dashboard/answers"></@p.defaultPagination>
 </#if>
 </@layout.defaultLayout>

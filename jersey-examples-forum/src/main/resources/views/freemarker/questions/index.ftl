@@ -37,6 +37,6 @@
 </#list>
 </tbody>
 </table>
-<@p.defaultPagination questions></@p.defaultPagination>
+<@p.defaultPagination questions "${config.url.base}questions"></@p.defaultPagination>
 </#if>
 </@layout.defaultLayout>

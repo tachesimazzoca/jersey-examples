@@ -30,6 +30,6 @@
 </#list>
 </tbody>
 </table>
-<@p.defaultPagination questions></@p.defaultPagination>
+<@p.defaultPagination questions "${config.url.base}dashboard/questions"></@p.defaultPagination>
 </#if>
 </@layout.defaultLayout>

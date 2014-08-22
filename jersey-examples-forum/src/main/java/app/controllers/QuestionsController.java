@@ -17,7 +17,7 @@ import java.util.Map;
 import com.google.common.base.Optional;
 
 import app.core.FormHelper;
-import app.core.PaginationHelper;
+import app.core.Pagination;
 import app.core.View;
 import app.models.Account;
 import app.models.AccountDao;
@@ -60,9 +60,7 @@ public class QuestionsController {
             @Context UriInfo uinfo,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
-        PaginationHelper<QuestionsResult> questions = new PaginationHelper<QuestionsResult>(
-                questionDao.selectPublicQuestions(offset, limit),
-                "questions?offset=%d&limit=%d");
+        Pagination<QuestionsResult> questions = questionDao.selectPublicQuestions(offset, limit);
         return Response.ok(new View("questions/index", params(
                 "account", userContext.getAccount().orNull(),
                 "questions", questions))).build();
@@ -106,10 +104,7 @@ public class QuestionsController {
                 "starred", starred);
 
         // answers
-        PaginationHelper<AnswersResult> answers = new PaginationHelper<AnswersResult>(
-                answerDao.selectByQuestionId(id, offset, limit),
-                id + "?offset=%d&limit=%d");
-
+        Pagination<AnswersResult> answers = answerDao.selectByQuestionId(id, offset, limit);
         View view = new View("questions/detail", params(
                 "account", account,
                 "questionInfo", questionInfo,

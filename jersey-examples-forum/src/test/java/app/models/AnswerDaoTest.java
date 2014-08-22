@@ -41,8 +41,12 @@ public class AnswerDaoTest {
 
         for (Map.Entry<Long, Question> entry : questionMap.entrySet()) {
             Long questionId = entry.getKey();
-            assertAnswersResult(answerDao.selectByQuestionId(questionId, 0, 5),
-                    answerMap, accountMap, positivePointsMap, negativePointsMap);
+            Pagination<AnswersResult> r1 = answerDao.selectByQuestionId(questionId, 0, 5);
+            assertAnswersResult(r1, answerMap, accountMap, positivePointsMap, negativePointsMap);
+            if (r1.getCount() == 0)
+                continue;
+            Pagination<AnswersResult> r2 = answerDao.selectByQuestionId(questionId, 0, 1);
+            assertEquals(r1.getResults().get(0).getId(), r2.getResults().get(0).getId());
         }
         for (Map.Entry<Long, Account> entry : accountMap.entrySet()) {
             Long authorId = entry.getKey();

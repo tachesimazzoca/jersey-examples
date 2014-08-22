@@ -8,7 +8,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.google.common.base.Optional;
 
-import app.core.PaginationHelper;
+import app.core.Pagination;
 import app.core.View;
 
 import app.models.Account;
@@ -60,9 +60,8 @@ public class DashboardController {
             return redirectToLogin(uinfo, "/dashboard/questions");
         Account account = accountOpt.get();
 
-        PaginationHelper<QuestionsResult> questions = new PaginationHelper<QuestionsResult>(
-                questionDao.selectByAuthorId(account.getId(), offset, limit),
-                "questions?offset=%d&limit=%d");
+        Pagination<QuestionsResult> questions =
+                questionDao.selectByAuthorId(account.getId(), offset, limit);
         return Response.ok(new View("dashboard/questions", params(
                 "account", account,
                 "questions", questions))).build();
@@ -81,9 +80,8 @@ public class DashboardController {
             return redirectToLogin(uinfo, "/dashboard/answers");
         Account account = accountOpt.get();
 
-        PaginationHelper<AnswersResult> answers = new PaginationHelper<AnswersResult>(
-                answerDao.selectByAuthorId(account.getId(), offset, limit),
-                "answers?offset=%d&limit=%d");
+        Pagination<AnswersResult> answers =
+                answerDao.selectByAuthorId(account.getId(), offset, limit);
         return Response.ok(new View("dashboard/answers", params(
                 "account", account,
                 "answers", answers))).build();
