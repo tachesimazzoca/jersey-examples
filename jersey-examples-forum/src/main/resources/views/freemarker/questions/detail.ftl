@@ -1,5 +1,6 @@
 <#import "/_layouts/default.ftl" as layout>
 <#import "/_elements/pagination.ftl" as p>
+<#setting url_escaping_charset="UTF-8">
 <@layout.defaultLayout "${question.subject}">
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -20,13 +21,13 @@
           <#assign _vote="star">
           <#assign _btnStyle="btn-default">
         </#if>
-      </#if>
       <div class="btn-group">
         <a href="${_vote}?id=${question.id}" class="btn btn-sm ${_btnStyle}">
           <span class="glyphicon glyphicon-star" title="Star"></span>
         </a>
         <div class="btn btn-sm btn-default">${questionInfo.numPoints}</div>
       </div>
+      </#if>
     </#if>
     </div>
   </div>
@@ -39,7 +40,6 @@
 <#if (answers.count > 1)>
 <p>${answers.count} Answers</p>
 </#if>
-<#setting url_escaping_charset="UTF-8">
 <#assign _returnTo='${"/questions/${question.id}?offset=${answers.offset}&limit=${answers.limit}"?url}'>
 <#list answers.results as x>
 <div class="panel panel-default">

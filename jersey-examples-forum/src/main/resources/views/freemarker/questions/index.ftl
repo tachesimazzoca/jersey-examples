@@ -1,15 +1,25 @@
 <#import "/_layouts/default.ftl" as layout>
 <#import "/_elements/pagination.ftl" as p>
+<#setting url_escaping_charset="UTF-8">
 <@layout.defaultLayout "Questions">
 <p>
    <a href="questions/edit" class="btn btn-default">New Question</a>
 </p>
 <#if questions.results?has_content>
 <hr>
-<table class="table">
 <#if (questions.count > 1)>
 <p>${questions.count} Questions</p>
+<ul class="nav nav-tabs" role="tablist">
+  <#list sortMap?keys as _k>
+  <#if sort == _k>
+  <li class="active"><a href="#">${(sortMap[_k])?html}</a></li>
+  <#else>
+  <li><a href="?offset=0&limit=${questions.limit}&sort=${_k}">${(sortMap[_k])?html}</a></li>
+  </#if>
+  </#list>
+</ul>
 </#if>
+<table class="table">
 <thead>
 <tr>
   <th>#</th>
@@ -37,6 +47,6 @@
 </#list>
 </tbody>
 </table>
-<@p.defaultPagination questions "${config.url.base}questions"></@p.defaultPagination>
+<@p.defaultPagination questions "${config.url.base}questions?sort=${sort?url}"></@p.defaultPagination>
 </#if>
 </@layout.defaultLayout>

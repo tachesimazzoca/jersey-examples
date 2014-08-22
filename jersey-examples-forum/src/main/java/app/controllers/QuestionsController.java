@@ -41,6 +41,7 @@ public class QuestionsController {
     private final AnswerDao answerDao;
     private final AccountDao accountDao;
     private final AccountQuestionDao accountQuestionDao;
+    private final Map<String, Object> sortMap;
 
     public QuestionsController(
             QuestionDao questionDao,
@@ -52,18 +53,36 @@ public class QuestionsController {
         this.answerDao = answerDao;
         this.accountDao = accountDao;
         this.accountQuestionDao = accountQuestionDao;
+
+        sortMap = params(
+                QuestionsResult.OrderBy.POSTED_AT_DESC.getName(), "Recent",
+                QuestionsResult.OrderBy.NUM_ANSWERS_DESC.getName(), "Answers",
+                QuestionsResult.OrderBy.SUM_POINTS_DESC.getName(), "Vote");
     }
 
     @GET
     public Response index(
             @Context UserContext userContext,
             @Context UriInfo uinfo,
+            @QueryParam("sort") @DefaultValue("") String sort,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
-        Pagination<QuestionsResult> questions = questionDao.selectPublicQuestions(offset, limit);
+
+        QuestionsResult.OrderBy orderBy;
+        if (sort != null && sortMap.containsKey(sort))
+            orderBy = QuestionsResult.OrderBy.fromName(sort);
+        else
+            orderBy = QuestionsResult.OrderBy.defaultValue();
+        sort = orderBy.getName();
+
+        Pagination<QuestionsResult> questions = questionDao.selectPublicQuestions(
+                offset, limit, orderBy);
+
         return Response.ok(new View("questions/index", params(
                 "account", userContext.getAccount().orNull(),
-                "questions", questions))).build();
+                "questions", questions,
+                "sort", sort,
+                "sortMap", sortMap))).build();
     }
 
     @GET

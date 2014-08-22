@@ -38,7 +38,8 @@ public class QuestionDaoTest {
 
         QuestionDao questionDao = new QuestionDao(ef);
 
-        assertQuestionsResult(questionDao.selectPublicQuestions(0, 50),
+        assertQuestionsResult(questionDao.selectPublicQuestions(
+                0, 50, QuestionsResult.OrderBy.defaultValue()),
                 questionMap, accountMap, numAnswersMap, positivePointsMap, negativePointsMap);
 
         for (Map.Entry<Long, Account> entry : accountMap.entrySet()) {

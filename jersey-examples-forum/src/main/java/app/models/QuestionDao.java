@@ -57,12 +57,13 @@ public class QuestionDao extends JPADao<Question> {
         });
     }
 
-    public Pagination<QuestionsResult> selectPublicQuestions(int offset, int limit) {
+    public Pagination<QuestionsResult> selectPublicQuestions(
+            int offset, int limit, QuestionsResult.OrderBy orderBy) {
         EntityManager em = ef.createEntityManager();
         String where = " WHERE questions.status = 0";
         String countQuery = COUNT_QUESTIONS_RESULT + where;
         String selectQuery = SELECT_QUESTIONS_RESULT + where
-                + " ORDER BY sum_points DESC, questions.posted_at DESC, questions.id ASC";
+                + " ORDER BY " + orderBy.getCaluse();
         Pagination<QuestionsResult> pagination = JPA.paginate(em, offset, limit,
                 em.createNativeQuery(countQuery),
                 em.createNativeQuery(selectQuery, "QuestionsResult"),
@@ -76,7 +77,7 @@ public class QuestionDao extends JPADao<Question> {
         String where = " WHERE questions.status IN (0, 2) AND questions.author_id = ?1";
         String countQuery = COUNT_QUESTIONS_RESULT + where;
         String selectQuery = SELECT_QUESTIONS_RESULT + where
-                + " ORDER BY questions.posted_at DESC, questions.id ASC";
+                + " ORDER BY " + QuestionsResult.OrderBy.defaultValue().getCaluse();
         Pagination<QuestionsResult> pagination = JPA.paginate(em, offset, limit,
                 em.createNativeQuery(countQuery).setParameter(1, authorId),
                 em.createNativeQuery(selectQuery, "QuestionsResult").setParameter(1, authorId),
