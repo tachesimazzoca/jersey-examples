@@ -36,6 +36,10 @@ public class PaginationHelper<T> {
         return (getCount() > getOffset() + getLimit());
     }
 
+    public String getCurrentOffsetUrl() {
+        return String.format(offsetUrlFormat, getOffset(), getLimit());
+    }
+
     public String getPreviousOffsetUrl() {
         int limit = getLimit();
         int offset = getOffset() - limit;

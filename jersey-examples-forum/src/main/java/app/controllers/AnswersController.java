@@ -18,6 +18,7 @@ import com.google.common.base.Optional;
 import app.core.View;
 import app.core.FormHelper;
 import app.models.Account;
+import app.models.AccountAnswerDao;
 import app.models.Answer;
 import app.models.AnswerDao;
 import app.models.AnswerEditForm;
@@ -34,13 +35,16 @@ public class AnswersController {
     private final Validator validator;
     private final QuestionDao questionDao;
     private final AnswerDao answerDao;
+    private final AccountAnswerDao accountAnswerDao;
 
     public AnswersController(
             QuestionDao questionDao,
-            AnswerDao answerDao) {
+            AnswerDao answerDao,
+            AccountAnswerDao accountAnswerDao) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.answerDao = answerDao;
         this.questionDao = questionDao;
+        this.accountAnswerDao = accountAnswerDao;
     }
 
     @GET
@@ -186,6 +190,44 @@ public class AnswersController {
 
         answerDao.updateStatus(id, Answer.Status.DELETED);
         return redirectToDashboard(uinfo);
+    }
+
+    @GET
+    @Path("vote")
+    public Response vote(
+            @Context UserContext userContext,
+            @Context UriInfo uinfo,
+            @QueryParam("id") @DefaultValue("") Long id,
+            @QueryParam("point") @DefaultValue("0") int point,
+            @QueryParam("returnTo") @DefaultValue("") String returnTo) {
+
+        Optional<Account> accountOpt = userContext.getAccount();
+        if (!accountOpt.isPresent())
+            return redirectToIndex(uinfo, null);
+        Account account = accountOpt.get();
+
+        if (id == null)
+            return redirectToDashboard(uinfo);
+
+        // limit -1 =< point <= 1
+        if (point > 1)
+            point = 1;
+        if (point < -1)
+            point = -1;
+
+        Optional<Answer> answerOpt = answerDao.find(id);
+        if (!answerOpt.isPresent())
+            return redirectToDashboard(uinfo);
+        Answer answer = answerOpt.get();
+        // Not allowed to vote by the same author
+        if (answer.isSameAuthor(account))
+            return redirectToIndex(uinfo, null);
+
+        accountAnswerDao.log(account.getId(), answer.getId(), point);
+        if (returnTo != null && !returnTo.isEmpty())
+            return redirect(uinfo, returnTo);
+        else
+            return redirectToIndex(uinfo, answer.getQuestionId());
     }
 
     private Response redirect(UriInfo uinfo, String path) {

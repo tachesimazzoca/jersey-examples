@@ -57,6 +57,7 @@ public class QuestionsController {
     @GET
     public Response index(
             @Context UserContext userContext,
+            @Context UriInfo uinfo,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
         PaginationHelper<QuestionsResult> questions = new PaginationHelper<QuestionsResult>(
