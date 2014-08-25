@@ -84,7 +84,7 @@ public class Util {
     public static URI safeURI(UriInfo uinfo, String path) {
         URI uri = null;
         try {
-            if (path.startsWith("http")) {
+            if (path.matches("^https?://.+$")) {
                 uri = new URI(path);
             } else {
                 String base = uinfo.getBaseUriBuilder().build().toString();

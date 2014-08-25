@@ -63,5 +63,21 @@ public class UtilTest {
         uinfo = mockUriInfo("http://localhost/a/");
         assertEquals("http://localhost/dashboard?foo=bar",
                 safeURI(uinfo, "../dashboard?foo=bar").toString());
+
+        uinfo = mockUriInfo("http://localhost/");
+        assertEquals("http://www.example.net/bar/",
+                safeURI(uinfo, "http://www.example.net/bar/").toString());
+
+        uinfo = mockUriInfo("http://localhost/");
+        assertEquals("https://ssl.example.net/bar/",
+                safeURI(uinfo, "https://ssl.example.net/bar/").toString());
+
+        uinfo = mockUriInfo("http://localhost/a/");
+        assertEquals("http://localhost/a/http.html",
+                safeURI(uinfo, "http.html").toString());
+
+        uinfo = mockUriInfo("http://localhost/b/");
+        assertEquals("http://localhost/b/https.html",
+                safeURI(uinfo, "https.html").toString());
     }
 }
