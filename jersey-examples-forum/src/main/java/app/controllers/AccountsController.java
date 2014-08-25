@@ -28,6 +28,9 @@ import static app.core.Util.safeURI;
 @Path("/accounts")
 @Produces(MediaType.TEXT_HTML)
 public class AccountsController {
+    @Context
+    Config config;
+
     private final Validator validator;
     private final AccountDao accountDao;
     private final Storage signupStorage;
@@ -185,7 +188,7 @@ public class AccountsController {
 
         String returnTo = form.getReturnTo();
         if (!returnTo.startsWith("/") || returnTo.isEmpty())
-            returnTo = "/";
+            returnTo = config.get("url.home", String.class);
         return Response.seeOther(safeURI(uinfo, returnTo))
                 .cookie(userContext.toCookie()).build();
     }
@@ -196,7 +199,8 @@ public class AccountsController {
             @Context UserContext userContext,
             @Context UriInfo uinfo) {
         userContext.logout();
-        return Response.seeOther(uinfo.getBaseUriBuilder().path("/").build())
+        String returnTo = config.get("url.home", String.class);
+        return Response.seeOther(safeURI(uinfo, returnTo))
                 .cookie(userContext.toCookie()).build();
     }
 }

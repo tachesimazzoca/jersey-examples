@@ -82,16 +82,21 @@ public class Util {
     }
 
     public static URI safeURI(UriInfo uinfo, String path) {
-        if (!path.startsWith("/") || path.isEmpty())
-            throw new IllegalArgumentException("The parameter path must be an absolute path.");
         URI uri = null;
         try {
-            uri = new URI(path);
+            if (path.startsWith("http")) {
+                uri = new URI(path);
+            } else {
+                String base = uinfo.getBaseUriBuilder().build().toString();
+                if (!base.endsWith("/"))
+                    base += "/";
+                uri = new URI(base + path).normalize();
+            }
         } catch (UriBuilderException e) {
             throw new IllegalArgumentException(e);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }
-        return uinfo.getBaseUriBuilder().uri(uri).build();
+        return uri;
     }
 }

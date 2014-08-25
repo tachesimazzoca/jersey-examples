@@ -40,6 +40,11 @@ public class Config {
         return typesafeConfig.getAnyRef(key);
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T get(String key, Class<T> type) {
+        return (T) typesafeConfig.getAnyRef(key);
+    }
+
     public Optional<Object> maybe(String key) {
         Optional<Object> o;
         try {

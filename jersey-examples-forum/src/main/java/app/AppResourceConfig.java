@@ -58,6 +58,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // providers
         getSingletons().add(new ViewMessageBodyWriter(renderer));
+        getSingletons().add(new ConfigProvider(config));
         getSingletons().add(new UserContextProvider(accountDao, userStorage, "APP_SESSION"));
 
         // controllers
