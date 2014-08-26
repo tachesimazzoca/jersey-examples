@@ -33,6 +33,23 @@ public class Util {
         return builder.build();
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> T nullTo(T... args) {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] != null)
+                return args[i];
+        }
+        return null;
+    }
+
+    public static String emptyTo(String... args) {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] != null && !args[i].isEmpty())
+                return args[i];
+        }
+        return null;
+    }
+
     public static String objectToBase64(Object obj) {
         String ser = null;
         ByteArrayOutputStream os = null;
