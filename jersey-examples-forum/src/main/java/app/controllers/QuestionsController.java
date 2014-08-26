@@ -55,8 +55,8 @@ public class QuestionsController {
         this.accountQuestionDao = accountQuestionDao;
 
         sortMap = params(
-                QuestionsResult.OrderBy.POSTED_AT_DESC.getName(), "Recent",
-                QuestionsResult.OrderBy.NUM_ANSWERS_DESC.getName(), "Answers",
+                QuestionsResult.OrderBy.POSTED_AT_DESC.getName(), "Newest",
+                QuestionsResult.OrderBy.NUM_ANSWERS_DESC.getName(), "Active",
                 QuestionsResult.OrderBy.SUM_POINTS_DESC.getName(), "Vote");
     }
 
