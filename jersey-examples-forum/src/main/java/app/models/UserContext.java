@@ -4,9 +4,13 @@ import javax.ws.rs.core.NewCookie;
 
 import com.google.common.base.Optional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import app.core.Session;
 
 public class UserContext {
+    private static final String KEY_ATTRIBUTES = "attributes";
     private static final String KEY_FLASH = "flash";
     private static final String KEY_ACCOUNT_ID = "accountId";
     private final Session session;
@@ -22,11 +26,35 @@ public class UserContext {
     }
 
     public Optional<String> getFlash() {
-        return session.remove(KEY_FLASH);
+        return session.remove(KEY_FLASH, String.class);
     }
 
     public void setFlash(String value) {
         session.put(KEY_FLASH, value);
+    }
+
+    public Optional<?> getAttribute(String key) {
+        return getAttribute(key, Object.class);
+    }
+
+    public <T> Optional<T> getAttribute(String key, Class<T> type) {
+        @SuppressWarnings("unchecked")
+        Map<String, T> attributes = (Map<String, T>) session.get(
+                KEY_ATTRIBUTES, Map.class).orNull();
+        if (attributes != null && attributes.containsKey(key))
+            return Optional.of((T) attributes.get(key));
+        else
+            return Optional.absent();
+    }
+
+    public void setAttribute(String key, Object value) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> attributes = (Map<String, Object>) session.get(
+                KEY_ATTRIBUTES, Map.class).orNull();
+        if (attributes == null)
+            attributes = new HashMap<String, Object>();
+        attributes.put(key, value);
+        session.put(KEY_ATTRIBUTES, attributes);
     }
 
     public Optional<Account> getAccount() {

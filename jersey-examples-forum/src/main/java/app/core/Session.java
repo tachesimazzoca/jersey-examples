@@ -35,37 +35,45 @@ public class Session {
     }
 
     public Optional<String> get(String key) {
+        return get(key, String.class);
+    }
+
+    public <T> Optional<T> get(String key, Class<T> type) {
         Optional<?> opt = storage.read(sessionId);
         if (!opt.isPresent()) {
             return Optional.absent();
         }
         @SuppressWarnings("unchecked")
-        Map<String, String> m = (Map<String, String>) opt.get();
+        Map<String, T> m = (Map<String, T>) opt.get();
         if (!m.containsKey(key))
             return Optional.absent();
         return Optional.of(m.get(key));
     }
 
     @SuppressWarnings("unchecked")
-    public void put(String key, String value) {
+    public <T> void put(String key, T value) {
         Optional<?> opt = storage.read(sessionId);
-        Map<String, String> data;
+        Map<String, T> data;
         if (opt.isPresent()) {
-            data = (Map<String, String>) opt.get();
+            data = (Map<String, T>) opt.get();
         } else {
-            data = new HashMap<String, String>();
+            data = new HashMap<String, T>();
         }
         data.put(key, value);
         storage.write(sessionId, data);
     }
 
     public Optional<String> remove(String key) {
+        return remove(key, String.class);
+    }
+
+    public <T> Optional<T> remove(String key, Class<T> type) {
         Optional<?> opt = storage.read(sessionId);
         if (!opt.isPresent())
             return Optional.absent();
         @SuppressWarnings("unchecked")
-        Map<String, String> data = (Map<String, String>) opt.get();
-        String v = null;
+        Map<String, T> data = (Map<String, T>) opt.get();
+        T v = null;
         if (data.containsKey(key))
             v = data.get(key);
         data.remove(key);
