@@ -4,6 +4,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import javax.persistence.Persistence;
+import javax.persistence.PersistenceException;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -24,7 +25,7 @@ public class JPA {
             em.getTransaction().begin();
             result = block.apply(em);
             em.getTransaction().commit();
-        } catch (Exception e) {
+        } catch (PersistenceException e) {
             if (em.getTransaction().isActive())
                 em.getTransaction().rollback();
             throw e;
