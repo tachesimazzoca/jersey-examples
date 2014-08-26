@@ -126,6 +126,7 @@
   <build>
     <plugins>
       <plugin>
+        <!--
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
         <version>9.2.2.v20140723</version>
@@ -134,6 +135,22 @@
             <port>9000</port>
             <host>0.0.0.0</host>
           </httpConnector>
+          <scanIntervalSeconds>0</scanIntervalSeconds>
+          <webApp>
+            <contextPath>/forum</contextPath>
+          </webApp>
+        </configuration>
+        -->
+        <groupId>org.mortbay.jetty</groupId>
+        <artifactId>jetty-maven-plugin</artifactId>
+        <version>8.1.15.v20140411</version>
+        <configuration>
+          <connectors>
+            <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+              <port>9000</port>
+              <host>0.0.0.0</host>
+            </connector>
+          </connectors>
           <scanIntervalSeconds>0</scanIntervalSeconds>
           <webApp>
             <contextPath>/forum</contextPath>
