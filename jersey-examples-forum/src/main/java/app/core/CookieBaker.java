@@ -123,19 +123,22 @@ public class CookieBaker {
             return Optional.absent();
     }
 
-    public CookieBaker put(String key, String value) {
+    public void put(String key, String value) {
         data.put(key, value);
-        return this;
     }
 
-    public CookieBaker remove(String key) {
+    public Optional<String> remove(String key) {
+        Optional<String> opt;
+        if (data.containsKey(key))
+            opt = Optional.of(data.get(key));
+        else
+            opt = Optional.absent();
         data.remove(key);
-        return this;
+        return opt;
     }
 
-    public CookieBaker clear() {
+    public void clear() {
         data.clear();
-        return this;
     }
 
     public boolean isEmpty() {
