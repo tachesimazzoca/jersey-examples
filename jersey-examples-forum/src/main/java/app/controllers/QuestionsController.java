@@ -30,7 +30,11 @@ import app.models.QuestionsResult;
 import app.models.QuestionDao;
 import app.models.QuestionEditForm;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import static app.core.Util.params;
+import static app.core.Util.nullTo;
+import static app.core.Util.emptyTo;
 import static app.core.Util.safeURI;
 
 @Path("/questions")
@@ -65,11 +69,21 @@ public class QuestionsController {
             @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("sort") @DefaultValue("") String sort,
-            @QueryParam("offset") @DefaultValue("0") int offset,
-            @QueryParam("limit") @DefaultValue("20") int limit) {
+            @QueryParam("offset") @DefaultValue("") Integer offset,
+            @QueryParam("limit") @DefaultValue("") Integer limit) {
+
+        final String KEY_CONDITION = "questions.condition";
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> condition = (Map<String, Object>) userContext.getAttribute(
+                KEY_CONDITION, Map.class).or(params());
+
+        offset = nullTo(offset, (Integer) condition.get("offset"), 0);
+        limit = nullTo(limit, (Integer) condition.get("limit"), 20);
+        sort = emptyTo(sort, (String) condition.get("sort"));
 
         QuestionsResult.OrderBy orderBy;
-        if (sort != null && sortMap.containsKey(sort))
+        if (!isEmpty(sort) && sortMap.containsKey(sort))
             orderBy = QuestionsResult.OrderBy.fromName(sort);
         else
             orderBy = QuestionsResult.OrderBy.defaultValue();
@@ -78,11 +92,16 @@ public class QuestionsController {
         Pagination<QuestionsResult> questions = questionDao.selectPublicQuestions(
                 offset, limit, orderBy);
 
+        userContext.setAttribute(KEY_CONDITION, params(
+                "offset", (Integer) questions.getOffset(),
+                "limit", (Integer) questions.getLimit(),
+                "sort", sort));
+
         return Response.ok(new View("questions/index", params(
                 "account", userContext.getAccount().orNull(),
                 "questions", questions,
                 "sort", sort,
-                "sortMap", sortMap))).build();
+                "sortMap", sortMap))).cookie(userContext.toCookie()).build();
     }
 
     @GET
