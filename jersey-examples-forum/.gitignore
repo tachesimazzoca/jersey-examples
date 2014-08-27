@@ -8,4 +8,6 @@
 /bower_components
 /src/main/webapp/assets/lib
 
+/src/main/resources/conf
 /src/main/resources/META-INF/persistence.xml
+/src/main/webapp/META-INF

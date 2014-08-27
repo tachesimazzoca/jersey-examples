@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+  <!-- Add the JDBC resource into the GlobalNamingResources element in conf/server.xml. -->
+  <!--
+  <Resource name="jdbc/forum"
+            auth="Container"
+            type="javax.sql.DataSource"
+            username="dev"
+            password="dev"
+            driverClassName="org.h2.Driver"
+            url="jdbc:h2:mem:default;MODE=MYSQL"
+            initSize="5"
+            maxActive="20"
+            minIdle="5"
+            maxIdle="10"/>
+  -->
+  <ResourceLink name="jdbc/forum" global="jdbc/forum" type="javax.sql.DataSource" />
+</Context>
+
