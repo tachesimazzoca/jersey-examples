@@ -52,7 +52,7 @@
 (function($) {
   $(function() {
     var Uploader = {
-	  postImage: function(el) {
+      postImage: function(el) {
         var defer = $.Deferred();
         var fd = new FormData();
         fd.append('file', el.files[0]);
@@ -67,10 +67,11 @@
         , error: defer.reject 
         });
         return defer.promise();
-	  }
-	};
-	$('#jsIconFile').on("change", function() {
-	  Uploader.postImage(this).then(
+      }
+    };
+
+    $('#jsIconFile').on("change", function() {
+      Uploader.postImage(this).then(
         // done
         function(data) {
           $('#jsIconTokenInput').attr('value', data);
@@ -82,8 +83,8 @@
           $('#jsIconImg').hide();
         }
       );
-	})
-  });	
+    });
+  });  
 })(jQuery.noConflict());
 </script>
 </@layout.defaultLayout>
