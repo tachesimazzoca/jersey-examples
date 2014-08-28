@@ -12,7 +12,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class FreemarkerRendererTest {
     private String getResourcePath() {
-        return this.getClass().getResource("/views/freemarker").getPath();
+        return this.getClass().getResource("/test/views/freemarker").getPath();
     }
 
     @Test(expected = IOException.class)
