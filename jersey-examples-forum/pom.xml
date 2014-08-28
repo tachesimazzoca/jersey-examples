@@ -15,7 +15,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <jersey.version>1.18.1</jersey.version>
     <jackson.version>2.4.1</jackson.version>
-    <hibernate.version>4.3.5.Final</hibernate.version>
+    <hibernate.version>4.3.6.Final</hibernate.version>
     <el.version>2.2.4</el.version>
   </properties>
   <dependencies>
