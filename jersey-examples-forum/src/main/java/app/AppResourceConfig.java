@@ -15,6 +15,7 @@ import app.core.*;
 import app.providers.*;
 import app.mail.TextMailerFactory;
 import app.models.*;
+import app.resources.*;
 import app.controllers.*;
 import app.renderer.*;
 
@@ -60,6 +61,9 @@ public class AppResourceConfig extends ScanningResourceConfig {
         getSingletons().add(new ViewMessageBodyWriter(renderer));
         getSingletons().add(new ConfigProvider(config));
         getSingletons().add(new UserContextProvider(accountDao, userStorage, "APP_SESSION"));
+
+        // resources
+        getSingletons().add(new UploaderResource(config.get("path.tmp", String.class)));
 
         // controllers
         getSingletons().add(new PagesController());

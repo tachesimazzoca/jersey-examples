@@ -5,6 +5,8 @@
 /.settings
 /target
 
+/tmp
+/upload
 /bower_components
 /src/main/webapp/assets/lib
 
