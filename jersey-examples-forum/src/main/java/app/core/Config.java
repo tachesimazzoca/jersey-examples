@@ -17,11 +17,11 @@ public class Config {
     private Config(String name) {
         File f = new File(this.getClass().getResource(
                 "/" + name + ".conf").getPath());
-        this.typesafeConfig = ConfigFactory.parseFile(f);
+        this.typesafeConfig = ConfigFactory.parseFile(f).resolve();
     }
 
     public static Config load() {
-        return new Config(ConfigFactory.load());
+        return new Config(ConfigFactory.load().resolve());
     }
 
     public static Config load(String name) {
