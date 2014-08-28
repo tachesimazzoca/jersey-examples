@@ -34,9 +34,56 @@
     <label>Nickname</label>
     ${form.toHTMLInput("text", "nickname", "class=\"form-control\"")}
   </div>
+  <div class="form-group">
+    <label>Icon</label>
+    <div><img src="" id="jsIconImg" style="display: none;"></div>
+    <div>
+      <input type="hidden" name="iconToken" id="jsIconTokenInput"> 
+      <input type="file" name="file" id="jsIconFile"> 
+    </div>
+  </div>
 </div>
 <div>
   <input type="submit" value="Update" class="btn btn-success">
 </div>
 </form>
+
+<script type="text/javascript">
+(function($) {
+  $(function() {
+    var Uploader = {
+	  postImage: function(el) {
+        var defer = $.Deferred();
+        var fd = new FormData();
+        fd.append('file', el.files[0]);
+        $.ajax({
+          url: '${config.url.base}api/uploader/images'
+        , data: fd
+        , cache: false
+        , contentType: false
+        , processData: false
+        , type: 'POST'
+        , success: defer.resolve
+        , error: defer.reject 
+        });
+        return defer.promise();
+	  }
+	};
+	$('#jsIconFile').on("change", function() {
+	  Uploader.postImage(this).then(
+        // done
+        function(data) {
+          $('#jsIconTokenInput').attr('value', data);
+          $('#jsIconImg').attr('src', '${config.url.base}api/uploader/images/' + data).show();
+        }
+        // fail
+      , function(data) {
+          $('#jsIconTokenInput').attr('value', '');
+          $('#jsIconImg').hide();
+        }
+      );
+	})
+  });	
+})(jQuery.noConflict());
+</script>
 </@layout.defaultLayout>

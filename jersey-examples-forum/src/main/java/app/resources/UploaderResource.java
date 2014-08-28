@@ -53,7 +53,15 @@ public class UploaderResource {
             @FormDataParam("file") InputStream file,
             @FormDataParam("file") FormDataContentDisposition disposition)
             throws IOException {
+        if (file == null)
+            return Response.status(Response.Status.FORBIDDEN).entity(
+                    "file is empty").build();
+
         String fileName = disposition.getFileName();
+        if (fileName == null)
+            return Response.status(Response.Status.FORBIDDEN).entity(
+                    "Invalid file name").build();
+
         String suffix = null;
         for (int i = 0; i < SUPPORTED_IMAGES.length; i++) {
             if (fileName.endsWith(SUPPORTED_IMAGES[i])) {
