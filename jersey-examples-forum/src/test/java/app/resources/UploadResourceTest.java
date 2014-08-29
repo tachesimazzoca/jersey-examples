@@ -16,7 +16,7 @@ import org.apache.commons.io.FileUtils;
 
 import app.core.Config;
 
-public class UploaderResourceTest {
+public class UploadResourceTest {
     @Test
     public void testPostAndGetImage() throws IOException {
         Config config = Config.load("conf/application");
@@ -24,7 +24,7 @@ public class UploaderResourceTest {
         File tmpDir = new File(testTmpDir, "tmp");
         FileUtils.forceMkdir(tmpDir);
 
-        UploaderResource resource = new UploaderResource(tmpDir);
+        UploadResource resource = new UploadResource(tmpDir);
         FormDataContentDisposition dispo = FormDataContentDisposition
                 .name("file")
                 .fileName("jersey_logo.png")

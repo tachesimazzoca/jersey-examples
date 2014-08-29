@@ -38,7 +38,7 @@
     <label>Icon</label>
     <div><img src="" id="jsIconImg" style="display: none;"></div>
     <div>
-      <input type="hidden" name="iconToken" id="jsIconTokenInput"> 
+      <input type="hidden" name="iconToken" id="jsIconTokenInput">
       <input type="file" name="file" id="jsIconFile"> 
     </div>
   </div>
@@ -57,7 +57,7 @@
         var fd = new FormData();
         fd.append('file', el.files[0]);
         $.ajax({
-          url: '${config.url.base}api/uploader/images'
+          url: '${config.url.base}api/upload/image'
         , data: fd
         , cache: false
         , contentType: false
@@ -75,7 +75,7 @@
         // done
         function(data) {
           $('#jsIconTokenInput').attr('value', data);
-          $('#jsIconImg').attr('src', '${config.url.base}api/uploader/images/' + data).show();
+          $('#jsIconImg').attr('src', '${config.url.base}api/upload/image/' + data).show();
         }
         // fail
       , function(data) {

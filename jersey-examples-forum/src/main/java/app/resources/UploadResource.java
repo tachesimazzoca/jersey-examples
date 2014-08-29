@@ -16,22 +16,22 @@ import javax.activation.MimetypesFileTypeMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.io.FileUtils;
 
-@Path("/api/uploader")
-public class UploaderResource {
+@Path("/api/upload")
+public class UploadResource {
     private static long MAX_UPLOAD_SIZE = 2000;
     private static final String[] SUPPORTED_IMAGES = { ".jpg", ".png", ".gif" };
     private final File tmpDir;
 
-    public UploaderResource(File tmpDir) {
+    public UploadResource(File tmpDir) {
         this.tmpDir = tmpDir;
     }
 
-    public UploaderResource(String tmpDir) {
+    public UploadResource(String tmpDir) {
         this.tmpDir = new File(tmpDir);
     }
 
     @GET
-    @Path("images/{token}")
+    @Path("image/{token}")
     @Produces("image/*")
     public Response image(@PathParam("token") String token) throws IOException {
         if (!StringUtils.endsWithAny(token, SUPPORTED_IMAGES))
@@ -46,7 +46,7 @@ public class UploaderResource {
     }
 
     @POST
-    @Path("images")
+    @Path("image")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
     public Response postImage(

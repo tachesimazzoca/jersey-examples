@@ -63,7 +63,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
         getSingletons().add(new UserContextProvider(accountDao, userStorage, "APP_SESSION"));
 
         // resources
-        getSingletons().add(new UploaderResource(config.get("path.tmp", String.class)));
+        getSingletons().add(new UploadResource(config.get("path.tmp", String.class)));
 
         // controllers
         getSingletons().add(new PagesController());
