@@ -24,17 +24,20 @@ public class UploadResourceTest {
         File tmpDir = new File(testTmpDir, "tmp");
         FileUtils.forceMkdir(tmpDir);
 
-        UploadResource resource = new UploadResource(tmpDir);
+        UploadResource resource = new UploadResource(tmpDir.getAbsolutePath());
         FormDataContentDisposition dispo = FormDataContentDisposition
                 .name("file")
                 .fileName("jersey_logo.png")
                 .size(1628)
                 .build();
         InputStream is = getClass().getResourceAsStream("/test/upload/jersey_logo.png");
-        Response response = resource.postImage(is, dispo);
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        String body = (String) response.getEntity();
-        assertFalse(body.isEmpty());
+        Response postImageResponse = resource.postImage(is, dispo);
+        assertEquals(Response.Status.OK.getStatusCode(), postImageResponse.getStatus());
+        String token = (String) postImageResponse.getEntity();
+        assertFalse(token.isEmpty());
+
+        Response imageResponse = resource.image(token);
+        assertEquals(Response.Status.OK.getStatusCode(), imageResponse.getStatus());
 
         FileUtils.deleteDirectory(testTmpDir);
     }
