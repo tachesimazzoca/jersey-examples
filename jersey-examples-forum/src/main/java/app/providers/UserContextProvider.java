@@ -23,26 +23,26 @@ import app.models.UserContext;
 @Provider
 public class UserContextProvider implements InjectableProvider<Context, Type> {
     private final AccountDao accountDao;
-    private final Storage userStorage;
+    private final Storage<Map<String, Object>> storage;
     private final String cookieName;
     private final String path;
     private final String domain;
 
     public UserContextProvider(
             AccountDao accountDao,
-            Storage userStorage,
+            Storage<Map<String, Object>> storage,
             String cookieName) {
-        this(accountDao, userStorage, cookieName, "/", "");
+        this(accountDao, storage, cookieName, "/", "");
     }
 
     public UserContextProvider(
             AccountDao accountDao,
-            Storage userStorage,
+            Storage<Map<String, Object>> storage,
             String cookieName,
             String path,
             String domain) {
         this.accountDao = accountDao;
-        this.userStorage = userStorage;
+        this.storage = storage;
         this.cookieName = cookieName;
         this.path = path;
         this.domain = domain;
@@ -64,7 +64,7 @@ public class UserContextProvider implements InjectableProvider<Context, Type> {
                         cookieName, sessionId, path, domain,
                         NewCookie.DEFAULT_VERSION, "",
                         NewCookie.DEFAULT_MAX_AGE, false);
-                return new UserContext(new Session(userStorage, cookie, sessionId), accountDao);
+                return new UserContext(new Session(storage, cookie, sessionId), accountDao);
             }
         };
     }

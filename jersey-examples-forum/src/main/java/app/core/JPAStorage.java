@@ -7,6 +7,7 @@ import com.google.common.base.Optional;
 
 import java.util.UUID;
 import java.util.List;
+import java.util.Map;
 
 import java.sql.Clob;
 
@@ -15,7 +16,7 @@ import org.apache.commons.io.IOUtils;
 import static app.core.Util.objectToBase64;
 import static app.core.Util.base64ToObject;
 
-public class JPAStorage implements Storage {
+public class JPAStorage implements Storage<Map<String, Object>> {
     private final EntityManagerFactory ef;
     private final String INSERT_QUERY;
     private final String UPDATE_QUERY;
@@ -50,31 +51,26 @@ public class JPAStorage implements Storage {
     }
 
     @Override
-    public String create(Object value) {
+    public String create(Map<String, Object> value) {
         String key = prefix + UUID.randomUUID().toString();
         write(key, value);
         return key;
     }
 
     @Override
-    public Optional<Object> read(String key) {
-        return read(key, Object.class);
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
-    public <T> Optional<T> read(String key, Class<T> type) {
+    public Optional<Map<String, Object>> read(String key) {
         EntityManager em = ef.createEntityManager();
         List<Clob> rows = em.createNativeQuery(SELECT_QUERY)
                 .setParameter(1, key)
                 .getResultList();
         em.close();
 
-        T v = null;
+        Map<String, Object> v = null;
         if (!rows.isEmpty()) {
             try {
                 String encoded = IOUtils.toString(rows.get(0).getCharacterStream());
-                v = base64ToObject(encoded, type);
+                v = (Map<String, Object>) base64ToObject(encoded, Map.class);
             } catch (Exception e) {
                 // fail gracefully if the storage value is corrupted or type
                 // mismatch.
@@ -88,7 +84,7 @@ public class JPAStorage implements Storage {
     }
 
     @Override
-    public void write(final String key, final Object value) {
+    public void write(final String key, final Map<String, Object> value) {
         final String v = objectToBase64(value);
         JPA.withTransaction(ef, new JPA.TransactionBlock<Void>() {
             public Void apply(EntityManager em) {

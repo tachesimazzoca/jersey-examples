@@ -2,14 +2,12 @@ package app.core;
 
 import com.google.common.base.Optional;
 
-public interface Storage {
-    public String create(Object value);
+public interface Storage<T> {
+    public String create(T value);
 
-    public Optional<Object> read(String key);
+    public Optional<T> read(String key);
 
-    public <T> Optional<T> read(String key, Class<T> type);
-
-    public void write(String key, Object value);
+    public void write(String key, T value);
 
     public void delete(String key);
 }

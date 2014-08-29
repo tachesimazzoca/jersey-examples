@@ -29,12 +29,12 @@ import static app.core.Util.params;
 public class RecoveryController {
     private final Validator validator;
     private final AccountDao accountDao;
-    private final Storage recoveryStorage;
+    private final Storage<Map<String, Object>> recoveryStorage;
     private final TextMailerFactory recoveryMailerFactory;
 
     public RecoveryController(
             AccountDao accountDao,
-            Storage recoveryStorage,
+            Storage<Map<String, Object>> recoveryStorage,
             TextMailerFactory recoveryMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.accountDao = accountDao;
@@ -111,7 +111,7 @@ public class RecoveryController {
 
         userContext.logout();
 
-        Optional<?> opt = recoveryStorage.read(code, Map.class);
+        Optional<Map<String, Object>> opt = recoveryStorage.read(code);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/recovery/errors/session").build())
@@ -136,14 +136,13 @@ public class RecoveryController {
 
         RecoveryResetForm form = RecoveryResetForm.bindFrom(formParams);
 
-        Optional<?> opt = recoveryStorage.read(form.getCode(), Map.class);
+        Optional<Map<String, Object>> opt = recoveryStorage.read(form.getCode());
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/recovery/errors/session").build())
                     .cookie(userContext.toCookie()).build();
         }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> params = (Map<String, Object>) opt.get();
+        Map<String, Object> params = opt.get();
 
         Long id = (Long) params.get("id");
         Optional<Account> accountOpt = accountDao.find(id);

@@ -33,12 +33,12 @@ public class AccountsController {
 
     private final Validator validator;
     private final AccountDao accountDao;
-    private final Storage signupStorage;
+    private final Storage<Map<String, Object>> signupStorage;
     private final TextMailerFactory signupMailerFactory;
 
     public AccountsController(
             AccountDao accountDao,
-            Storage signupStorage,
+            Storage<Map<String, Object>> signupStorage,
             TextMailerFactory signupMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.accountDao = accountDao;
@@ -114,7 +114,7 @@ public class AccountsController {
 
         userContext.logout();
 
-        Optional<?> opt = signupStorage.read(code, Map.class);
+        Optional<Map<String, Object>> opt = signupStorage.read(code);
         signupStorage.delete(code);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
@@ -122,18 +122,17 @@ public class AccountsController {
                     .cookie(userContext.toCookie()).build();
         }
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> params = (Map<String, String>) opt.get();
-        if (accountDao.findByEmail(params.get("email")).isPresent()) {
+        Map<String, Object> params = opt.get();
+        if (accountDao.findByEmail((String) params.get("email")).isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/accounts/errors/email").build())
                     .cookie(userContext.toCookie()).build();
         }
 
         Account account = new Account();
-        account.setEmail(params.get("email"));
+        account.setEmail((String) params.get("email"));
         account.setStatus(Account.Status.ACTIVE);
-        account.refreshPassword(params.get("password"));
+        account.refreshPassword((String) params.get("password"));
         Account savedAccount = accountDao.save(account);
         return Response.ok(new View("accounts/activate",
                 params("account", savedAccount)))

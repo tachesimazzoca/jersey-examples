@@ -17,23 +17,23 @@ import java.util.Map;
 
 @Provider
 public class SessionProvider implements InjectableProvider<Context, Type> {
-    private final Storage userStorage;
+    private final Storage<Map<String, Object>> storage;
     private final String cookieName;
     private final String path;
     private final String domain;
 
     public SessionProvider(
-            Storage userStorage,
+            Storage<Map<String, Object>> storage,
             String cookieName) {
-        this(userStorage, cookieName, "/", "");
+        this(storage, cookieName, "/", "");
     }
 
     public SessionProvider(
-            Storage userStorage,
+            Storage<Map<String, Object>> storage,
             String cookieName,
             String path,
             String domain) {
-        this.userStorage = userStorage;
+        this.storage = storage;
         this.cookieName = cookieName;
         this.path = path;
         this.domain = domain;
@@ -55,7 +55,7 @@ public class SessionProvider implements InjectableProvider<Context, Type> {
                         cookieName, sessionId, path, domain,
                         NewCookie.DEFAULT_VERSION, "",
                         NewCookie.DEFAULT_MAX_AGE, false);
-                return new Session(userStorage, cookie, sessionId);
+                return new Session(storage, cookie, sessionId);
             }
         };
     }

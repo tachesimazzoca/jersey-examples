@@ -34,10 +34,14 @@ public class AppResourceConfig extends ScanningResourceConfig {
 
         // storage
         EntityManagerFactory ef = JPA.ef("default");
-        Storage userStorage = new JPAStorage(ef, "session_storage", "user-");
-        Storage signupStorage = new JPAStorage(ef, "session_storage", "signup-");
-        Storage recoveryStorage = new JPAStorage(ef, "session_storage", "recovery-");
-        Storage profileStorage = new JPAStorage(ef, "session_storage", "profile-");
+        Storage<Map<String, Object>> userStorage =
+                new JPAStorage(ef, "session_storage", "user-");
+        Storage<Map<String, Object>> signupStorage =
+                new JPAStorage(ef, "session_storage", "signup-");
+        Storage<Map<String, Object>> recoveryStorage =
+                new JPAStorage(ef, "session_storage", "recovery-");
+        Storage<Map<String, Object>> profileStorage =
+                new JPAStorage(ef, "session_storage", "profile-");
 
         // dao
         AccountDao accountDao = new AccountDao(ef);

@@ -32,12 +32,12 @@ import static app.core.Util.params;
 public class ProfileController {
     private final Validator validator;
     private final AccountDao accountDao;
-    private final Storage profileStorage;
+    private final Storage<Map<String, Object>> profileStorage;
     private final TextMailerFactory profileMailerFactory;
 
     public ProfileController(
             AccountDao accountDao,
-            Storage profileStorage,
+            Storage<Map<String, Object>> profileStorage,
             TextMailerFactory profileMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.accountDao = accountDao;
@@ -140,15 +140,14 @@ public class ProfileController {
             @Context UserContext userContext,
             @Context UriInfo uinfo,
             @QueryParam("code") String code) {
-        Optional<?> opt = profileStorage.read(code, Map.class);
+        Optional<Map<String, Object>> opt = profileStorage.read(code);
         profileStorage.delete(code);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/profile/errors/session").build()).build();
         }
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> params = (Map<String, Object>) opt.get();
+        Map<String, Object> params = opt.get();
         Long id = (Long) params.get("id");
         String email = (String) params.get("email");
 

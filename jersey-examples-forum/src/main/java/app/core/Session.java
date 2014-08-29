@@ -8,15 +8,15 @@ import java.util.Map;
 import com.google.common.base.Optional;
 
 public class Session {
-    private final Storage storage;
+    private final Storage<Map<String, Object>> storage;
     private final NewCookie cookie;
     private final String sessionId;
 
-    public Session(Storage storage, NewCookie cookie) {
+    public Session(Storage<Map<String, Object>> storage, NewCookie cookie) {
         this(storage, cookie, null);
     }
 
-    public Session(Storage storage, NewCookie cookie, String sessionId) {
+    public Session(Storage<Map<String, Object>> storage, NewCookie cookie, String sessionId) {
         this.storage = storage;
         this.cookie = cookie;
         if (sessionId == null || sessionId.isEmpty()
@@ -50,14 +50,13 @@ public class Session {
         return Optional.of(m.get(key));
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> void put(String key, T value) {
-        Optional<?> opt = storage.read(sessionId);
-        Map<String, T> data;
+    public void put(String key, Object value) {
+        Optional<Map<String, Object>> opt = storage.read(sessionId);
+        Map<String, Object> data;
         if (opt.isPresent()) {
-            data = (Map<String, T>) opt.get();
+            data = (Map<String, Object>) opt.get();
         } else {
-            data = new HashMap<String, T>();
+            data = new HashMap<String, Object>();
         }
         data.put(key, value);
         storage.write(sessionId, data);
@@ -67,15 +66,15 @@ public class Session {
         return remove(key, String.class);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> Optional<T> remove(String key, Class<T> type) {
-        Optional<?> opt = storage.read(sessionId);
+        Optional<Map<String, Object>> opt = storage.read(sessionId);
         if (!opt.isPresent())
             return Optional.absent();
-        @SuppressWarnings("unchecked")
-        Map<String, T> data = (Map<String, T>) opt.get();
+        Map<String, Object> data = opt.get();
         T v = null;
         if (data.containsKey(key))
-            v = data.get(key);
+            v = (T) data.get(key);
         data.remove(key);
         storage.write(sessionId, data);
         return Optional.fromNullable(v);
