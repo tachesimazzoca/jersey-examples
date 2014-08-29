@@ -32,6 +32,8 @@ public class ProfileEditForm {
 
     private String nickname = "";
 
+    private String iconToken = "";
+
     @AssertTrue(message = "{Account.validCurrentPassword.AssertTrue}")
     private boolean validCurrentPassword = true;
 
@@ -76,6 +78,14 @@ public class ProfileEditForm {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public String getIconToken() {
+        return iconToken;
+    }
+
+    public void setIconToken(String iconToken) {
+        this.iconToken = iconToken;
     }
 
     public boolean isValidCurrentPassword() {

@@ -36,7 +36,20 @@
   </div>
   <div class="form-group">
     <label>Icon</label>
-    <div><img src="" id="jsIconImg" style="display: none;"></div>
+    <div>
+    <#if form.iconToken?has_content>
+    <img src="${config.url.base}api/upload/image/${form.iconToken}" id="jsIconImg">
+    <#else>
+    <img src="" id="jsIconImg" style="display: none;">
+    </#if>
+    </div>
+    <div id="jsIconError" class="alert alert-danger" style="display: none;">
+      <p>Uploading failed. Please check the following conditions.</p>
+      <ul>
+        <li>The supported file formats are (jpg|png|gif).</li>
+        <li>The size of the file must be equal or less than 1MB.</li>
+      </ul>
+    </div>
     <div>
       <input type="hidden" name="iconToken" id="jsIconTokenInput">
       <input type="file" name="file" id="jsIconFile"> 
@@ -74,13 +87,15 @@
       Uploader.postImage(this).then(
         // done
         function(data) {
+          $('#jsIconError').hide();
           $('#jsIconTokenInput').attr('value', data);
           $('#jsIconImg').attr('src', '${config.url.base}api/upload/image/' + data).show();
         }
         // fail
       , function(data) {
-          $('#jsIconTokenInput').attr('value', '');
           $('#jsIconImg').hide();
+          $('#jsIconTokenInput').attr('value', '');
+          $('#jsIconError').show();
         }
       );
     });

@@ -18,7 +18,7 @@ import org.apache.commons.io.FileUtils;
 
 @Path("/api/upload")
 public class UploadResource {
-    private static long MAX_UPLOAD_SIZE = 2000;
+    private static long MAX_UPLOAD_SIZE = 5000;
     private static final String[] SUPPORTED_IMAGES = { ".jpg", ".png", ".gif" };
     private final File tmpDir;
 
@@ -55,12 +55,12 @@ public class UploadResource {
             throws IOException {
         if (file == null)
             return Response.status(Response.Status.FORBIDDEN).entity(
-                    "file is empty").build();
+                    "The file is empty").build();
 
         String fileName = disposition.getFileName();
         if (fileName == null)
             return Response.status(Response.Status.FORBIDDEN).entity(
-                    "Invalid file name").build();
+                    "The file has no content disposition").build();
 
         String suffix = null;
         for (int i = 0; i < SUPPORTED_IMAGES.length; i++) {
@@ -70,14 +70,21 @@ public class UploadResource {
             }
         }
         if (suffix == null)
-            return Response.status(Response.Status.FORBIDDEN).build();
-        if (disposition.getSize() > MAX_UPLOAD_SIZE)
-            return Response.status(Response.Status.FORBIDDEN).build();
+            return Response.status(Response.Status.FORBIDDEN).entity(
+                    "Unsupported file format").build();
 
         String token = UUID.randomUUID().toString() + suffix;
         File tmpfile = new File(tmpDir, token);
-        // TODO: Avoid invalid images by parsing.
         FileUtils.copyInputStreamToFile(file, tmpfile);
+        if (FileUtils.sizeOf(tmpfile) > MAX_UPLOAD_SIZE) {
+            FileUtils.deleteQuietly(tmpfile);
+            return Response.status(Response.Status.FORBIDDEN).entity(
+                    String.format("The size of the file must be less than %,d KBytes",
+                            MAX_UPLOAD_SIZE / 1000)).build();
+        }
+
+        // TODO: Avoid invalid images by parsing.
+
         return Response.ok(token).build();
     }
 }
