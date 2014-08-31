@@ -35,6 +35,7 @@ public class UploadResourceTest {
         assertEquals(Response.Status.OK.getStatusCode(), postImageResponse.getStatus());
         String token = (String) postImageResponse.getEntity();
         assertFalse(token.isEmpty());
+        assertTrue(token.endsWith(".png"));
 
         Response imageResponse = resource.image(token);
         assertEquals(Response.Status.OK.getStatusCode(), imageResponse.getStatus());

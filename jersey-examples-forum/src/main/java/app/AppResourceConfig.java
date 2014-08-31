@@ -56,8 +56,7 @@ public class AppResourceConfig extends ScanningResourceConfig {
         TextMailerFactory profileMailerFactory = factoryConfig.getProfileMailerFactory();
 
         // renderer
-        String templateDir = this.getClass()
-                .getResource("/views/freemarker").getPath();
+        String templateDir = this.getClass().getResource("/views/freemarker").getPath();
         Map<String, Object> sharedVariables = params("config", config);
         Renderer renderer = new FreemarkerRenderer(templateDir, sharedVariables);
 

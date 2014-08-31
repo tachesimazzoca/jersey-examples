@@ -19,8 +19,6 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import app.core.FileStreamStorage;
-
 @Path("/api/upload")
 public class UploadResource {
     private static long MAX_UPLOAD_SIZE = 1000000;
@@ -30,14 +28,20 @@ public class UploadResource {
                     "image/gif", ImmutableList.of("gif"),
                     "image/png", ImmutableList.of("png"));
 
-    private final FileStreamStorage tmpStorage;
+    private final File tempDirectory;
 
-    public UploadResource(FileStreamStorage tmpStorage) {
-        this.tmpStorage = tmpStorage;
+    public UploadResource(File directory) {
+        if (!directory.isDirectory())
+            throw new IllegalArgumentException("The parameter path must be a diretory.");
+        this.tempDirectory = directory;
     }
 
-    public UploadResource(String tmpDir) {
-        this.tmpStorage = new FileStreamStorage(new File(tmpDir));
+    public UploadResource(String path) {
+        File d = new File(path);
+        if (!d.isDirectory())
+            throw new IllegalArgumentException(
+                    "The parameter path must be a diretory path.");
+        this.tempDirectory = new File(path);
     }
 
     private Optional<String> detectContentType(String filename) {
@@ -57,11 +61,11 @@ public class UploadResource {
         Optional<String> contentType = detectContentType(filename);
         if (!contentType.isPresent())
             return Response.status(Response.Status.FORBIDDEN).build();
-        Optional<InputStream> in = tmpStorage.read(FilenameUtils.getBaseName(filename));
-        if (!in.isPresent())
+        File f = new File(tempDirectory, filename);
+        if (!f.isFile() || !f.canRead())
             return Response.status(Response.Status.NOT_FOUND).build();
 
-        return Response.ok(in.get()).type(contentType.get()).build();
+        return Response.ok(f).type(contentType.get()).build();
     }
 
     @POST
@@ -87,13 +91,11 @@ public class UploadResource {
                     "Unsupported file format").build();
 
         String extension = SUPPORTED_IMAGES.get(contentType.get()).get(0);
-        String key = tmpStorage.create(file);
-        Optional<File> tmpfile = tmpStorage.getFile(key);
-        if (!tmpfile.isPresent())
-            return Response.status(Response.Status.FORBIDDEN).entity(
-                    "Uploading failed").build();
-        if (FileUtils.sizeOf(tmpfile.get()) > MAX_UPLOAD_SIZE) {
-            tmpStorage.delete(key);
+        File tmpfile = File.createTempFile("tmp-", "." + extension, tempDirectory);
+        FileUtils.copyInputStreamToFile(file, tmpfile);
+
+        if (FileUtils.sizeOf(tmpfile) > MAX_UPLOAD_SIZE) {
+            FileUtils.deleteQuietly(tmpfile);
             return Response.status(Response.Status.FORBIDDEN).entity(
                     String.format("The size of the file must be less than %,d KBytes",
                             MAX_UPLOAD_SIZE / 1000)).build();
@@ -101,6 +103,6 @@ public class UploadResource {
 
         // TODO: Avoid invalid images by parsing.
 
-        return Response.ok(key + "." + extension).build();
+        return Response.ok(tmpfile.getName()).build();
     }
 }
