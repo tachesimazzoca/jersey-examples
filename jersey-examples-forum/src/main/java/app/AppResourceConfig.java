@@ -65,8 +65,15 @@ public class AppResourceConfig extends ScanningResourceConfig {
         getSingletons().add(new ConfigProvider(config));
         getSingletons().add(new UserContextProvider(accountDao, userStorage, "APP_SESSION"));
 
+        // finder
+        String tmpPath = config.get("path.tmp", String.class);
+        Uploader uploader = new Uploader(tmpPath);
+        String uploadPath = config.get("path.upload", String.class);
+        Finder accountsIconFinder = FinderFactory.createAccountsIconFinder(
+                uploadPath + "/accounts/icon");
+
         // resources
-        getSingletons().add(new UploadResource(config.get("path.tmp", String.class)));
+        getSingletons().add(new UploadResource(uploader, accountsIconFinder));
 
         // controllers
         getSingletons().add(new PagesController());
@@ -75,8 +82,8 @@ public class AppResourceConfig extends ScanningResourceConfig {
         getSingletons().add(new RecoveryController(
                 accountDao, recoveryStorage, recoveryMailerFactory));
         getSingletons().add(new DashboardController(questionDao, answerDao));
-        getSingletons().add(new ProfileController(
-                accountDao, profileStorage, profileMailerFactory));
+        getSingletons().add(new ProfileController(accountDao,
+                uploader, accountsIconFinder, profileStorage, profileMailerFactory));
         getSingletons().add(
                 new QuestionsController(questionDao, answerDao, accountDao, accountQuestionDao));
         getSingletons().add(new AnswersController(questionDao, answerDao, accountAnswerDao));

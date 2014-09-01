@@ -19,34 +19,36 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
+import app.core.Uploader;
+import app.core.Finder;
+
 @Path("/api/upload")
 public class UploadResource {
-    private static long MAX_UPLOAD_SIZE = 1000000;
-    private static final Map<String, List<String>> SUPPORTED_IMAGES =
+    private static final long MAX_UPLOAD_SIZE = 1000000;
+
+    private static final Map<String, List<String>> SUPPORTED_TYPES =
             ImmutableMap.<String, List<String>> of(
                     "image/jpeg", ImmutableList.of("jpg", "jpeg"),
                     "image/gif", ImmutableList.of("gif"),
                     "image/png", ImmutableList.of("png"));
 
-    private final File tempDirectory;
-
-    public UploadResource(File directory) {
-        if (!directory.isDirectory())
-            throw new IllegalArgumentException("The parameter path must be a diretory.");
-        this.tempDirectory = directory;
+    private static final CacheControl NO_CACHE;
+    static {
+        NO_CACHE = new CacheControl();
+        NO_CACHE.setNoCache(true);
     }
 
-    public UploadResource(String path) {
-        File d = new File(path);
-        if (!d.isDirectory())
-            throw new IllegalArgumentException(
-                    "The parameter path must be a diretory path.");
-        this.tempDirectory = new File(path);
+    private final Uploader uploader;
+    private final Finder accountsIconFinder;
+
+    public UploadResource(Uploader uploader, Finder accountsIconFinder) {
+        this.uploader = uploader;
+        this.accountsIconFinder = accountsIconFinder;
     }
 
     private Optional<String> detectContentType(String filename) {
         String ext = FilenameUtils.getExtension(filename);
-        for (Map.Entry<String, List<String>> format : SUPPORTED_IMAGES.entrySet()) {
+        for (Map.Entry<String, List<String>> format : SUPPORTED_TYPES.entrySet()) {
             if (format.getValue().contains(ext)) {
                 return Optional.of(format.getKey());
             }
@@ -55,24 +57,36 @@ public class UploadResource {
     }
 
     @GET
-    @Path("image/{filename}")
-    @Produces("image/*")
-    public Response image(@PathParam("filename") String filename) throws IOException {
+    @Path("accounts/icon/{id}")
+    public Response accountsIcon(@PathParam("id") Long id) {
+        Optional<Finder.Result> resultOpt = accountsIconFinder.find(id.toString());
+        if (!resultOpt.isPresent())
+            return Response.status(Response.Status.NOT_FOUND).build();
+        Finder.Result result = resultOpt.get();
+        return Response.ok(result.getFile())
+                .type(result.getMimeType())
+                .cacheControl(NO_CACHE)
+                .build();
+    }
+
+    @GET
+    @Path("tempfile/{filename}")
+    public Response tempfile(@PathParam("filename") String filename) throws IOException {
         Optional<String> contentType = detectContentType(filename);
         if (!contentType.isPresent())
             return Response.status(Response.Status.FORBIDDEN).build();
-        File f = new File(tempDirectory, filename);
-        if (!f.isFile() || !f.canRead())
+        Optional<File> tempfile = uploader.read(filename);
+        if (!tempfile.isPresent())
             return Response.status(Response.Status.NOT_FOUND).build();
-
-        return Response.ok(f).type(contentType.get()).build();
+        return Response.ok(tempfile.get()).type(contentType.get())
+                .cacheControl(NO_CACHE).build();
     }
 
     @POST
-    @Path("image")
+    @Path("tempfile")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
-    public Response postImage(
+    public Response postTempfile(
             @FormDataParam("file") InputStream file,
             @FormDataParam("file") FormDataContentDisposition disposition)
             throws IOException {
@@ -90,9 +104,8 @@ public class UploadResource {
             return Response.status(Response.Status.FORBIDDEN).entity(
                     "Unsupported file format").build();
 
-        String extension = SUPPORTED_IMAGES.get(contentType.get()).get(0);
-        File tmpfile = File.createTempFile("tmp-", "." + extension, tempDirectory);
-        FileUtils.copyInputStreamToFile(file, tmpfile);
+        String extension = SUPPORTED_TYPES.get(contentType.get()).get(0);
+        File tmpfile = uploader.upload(file, "tmp-", "." + extension);
 
         if (FileUtils.sizeOf(tmpfile) > MAX_UPLOAD_SIZE) {
             FileUtils.deleteQuietly(tmpfile);

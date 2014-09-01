@@ -60,8 +60,8 @@ public class FinderTest {
 
         Map<String, String> mimeTypes = ImmutableMap.of("png", "image/png");
         Finder.NamingStrategy namingStrategy = new Finder.NamingStrategy() {
-            public File getFile(File directory, String name, String extension) {
-                return new File(directory, extension + "/" + name + "." + extension);
+            public String buildRelativePath(String name, String extension) {
+                return extension + "/" + name + "." + extension;
             }
         };
         Finder finder = new Finder(testDirectory, mimeTypes, namingStrategy);
@@ -81,5 +81,7 @@ public class FinderTest {
                 new File(testDirectory, "png/test.png"), result.getFile());
         assertEquals("It should be a corresponding mime type.",
                 "image/png", result.getMimeType());
+
+        FileUtils.deleteDirectory(testDirectory);
     }
 }

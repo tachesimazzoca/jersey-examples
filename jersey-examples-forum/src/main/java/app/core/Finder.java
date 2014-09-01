@@ -12,12 +12,15 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 public class Finder {
-    private static NamingStrategy DEFAULT_NAMING_STRATEGY = new NamingStrategy() {
-        public File getFile(File directory, String name, String extension) {
+    private static final Map<String, String> DEFAULT_MIME_TYPES =
+            ImmutableMap.of("", "application/octet-stream");
+
+    private static final NamingStrategy DEFAULT_NAMING_STRATEGY = new NamingStrategy() {
+        public String buildRelativePath(String name, String extension) {
             if (extension.isEmpty())
-                return new File(directory, name);
+                return name;
             else
-                return new File(directory, name + "." + extension);
+                return name + "." + extension;
         }
     };
 
@@ -27,7 +30,7 @@ public class Finder {
 
     public Finder(File directory) {
         this.directory = directory;
-        this.mimeTypes = ImmutableMap.of("", "application/octet-stream");
+        this.mimeTypes = DEFAULT_MIME_TYPES;
         this.namingStrategy = DEFAULT_NAMING_STRATEGY;
     }
 
@@ -45,7 +48,8 @@ public class Finder {
 
     public Optional<Result> find(String name) {
         for (Map.Entry<String, String> entry : mimeTypes.entrySet()) {
-            final File f = namingStrategy.getFile(directory, name, entry.getKey());
+            final File f = new File(directory,
+                    namingStrategy.buildRelativePath(name, entry.getKey()));
             if (f.exists() && f.isFile())
                 return Optional.of(new Result(f, entry.getValue()));
         }
@@ -56,7 +60,8 @@ public class Finder {
         if (!mimeTypes.containsKey(extension))
             return Optional.absent();
         final String mimeType = mimeTypes.get(extension);
-        final File f = namingStrategy.getFile(directory, name, extension);
+        final File f = new File(directory,
+                namingStrategy.buildRelativePath(name, extension));
         if (f.exists() && f.isFile())
             return Optional.of(new Result(f, mimeType));
         else
@@ -70,7 +75,8 @@ public class Finder {
     public boolean save(InputStream input, String name, String extension) throws IOException {
         if (!mimeTypes.containsKey(extension))
             return false;
-        final File f = namingStrategy.getFile(directory, name, extension);
+        final File f = new File(directory,
+                namingStrategy.buildRelativePath(name, extension));
         if (f.exists() && !f.isFile())
             return false;
         FileUtils.copyInputStreamToFile(input, f);
@@ -87,7 +93,8 @@ public class Finder {
     }
 
     public boolean delete(String name, String extension) {
-        final File f = namingStrategy.getFile(directory, name, extension);
+        final File f = new File(directory,
+                namingStrategy.buildRelativePath(name, extension));
         if (!f.exists())
             return true;
         if (!f.isFile())
@@ -96,7 +103,7 @@ public class Finder {
     }
 
     public interface NamingStrategy {
-        public File getFile(File directory, String name, String extension);
+        public String buildRelativePath(String name, String extension);
     }
 
     public class Result {

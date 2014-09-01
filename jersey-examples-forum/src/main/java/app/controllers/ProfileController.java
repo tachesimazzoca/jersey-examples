@@ -13,11 +13,18 @@ import javax.validation.Validator;
 
 import com.google.common.base.Optional;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import app.core.Finder;
 import app.core.FormHelper;
 import app.core.Storage;
+import app.core.Uploader;
 import app.core.View;
 import app.mail.TextMailerFactory;
 import app.models.Account;
@@ -32,15 +39,21 @@ import static app.core.Util.params;
 public class ProfileController {
     private final Validator validator;
     private final AccountDao accountDao;
+    private final Uploader uploader;
+    private final Finder accountsIconFinder;
     private final Storage<Map<String, Object>> profileStorage;
     private final TextMailerFactory profileMailerFactory;
 
     public ProfileController(
             AccountDao accountDao,
+            Uploader uploader,
+            Finder accountsIconFinder,
             Storage<Map<String, Object>> profileStorage,
             TextMailerFactory profileMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.accountDao = accountDao;
+        this.uploader = uploader;
+        this.accountsIconFinder = accountsIconFinder;
         this.profileStorage = profileStorage;
         this.profileMailerFactory = profileMailerFactory;
     }
@@ -49,17 +62,19 @@ public class ProfileController {
     @Path("edit")
     public Response edit(
             @Context UserContext userContext,
-            @Context UriInfo uinfo,
-            @QueryParam("flash") @DefaultValue("") String flash) {
+            @Context UriInfo uinfo) {
+
         Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo);
         Account account = accountOpt.get();
+        boolean icon = accountsIconFinder.find(account.getId().toString()).isPresent();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(account);
         View view = new View("profile/edit", params(
                 "account", account,
                 "form", new FormHelper<ProfileEditForm>(form),
+                "icon", icon,
                 "flash", userContext.getFlash().orNull()));
         return Response.ok(view).build();
     }
@@ -70,11 +85,14 @@ public class ProfileController {
     public Response postEdit(
             @Context UserContext userContext,
             @Context UriInfo uinfo,
-            MultivaluedMap<String, String> formParams) {
+            MultivaluedMap<String, String> formParams)
+            throws IOException {
+
         Optional<Account> accountOpt = userContext.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo);
         Account account = accountOpt.get();
+        Boolean icon = accountsIconFinder.find(account.getId().toString()).isPresent();
 
         ProfileEditForm form = ProfileEditForm.bindFrom(formParams);
         if (validator.validateProperty(form, "email").isEmpty()) {
@@ -94,6 +112,7 @@ public class ProfileController {
         if (!errors.isEmpty()) {
             View view = new View("profile/edit", params(
                     "account", account,
+                    "icon", icon,
                     "form", new FormHelper<ProfileEditForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(view).build();
@@ -104,6 +123,19 @@ public class ProfileController {
             account.refreshPassword(form.getPassword());
         }
         accountDao.save(account);
+
+        if (!form.getIconToken().isEmpty()) {
+            Optional<File> tempfileOpt = uploader.read(form.getIconToken());
+            if (tempfileOpt.isPresent()) {
+                File tempfile = tempfileOpt.get();
+                String extension = FilenameUtils.getExtension(tempfile.getName());
+                String iconName = account.getId().toString();
+                accountsIconFinder.delete(iconName);
+                accountsIconFinder.save(FileUtils.openInputStream(tempfile),
+                        iconName, extension);
+                FileUtils.deleteQuietly(tempfile);
+            }
+        }
 
         if (form.getEmail().equals(account.getEmail())) {
             userContext.setFlash("saved");

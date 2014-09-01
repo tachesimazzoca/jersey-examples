@@ -13,7 +13,7 @@
 </div>
 </#if>
 <form action="edit" method="POST">
-<div style="width: 400px;">
+<div style="max-width: 400px;">
   <div class="form-group">
     <label>E-mail</label>
     ${form.toHTMLInput("text", "email", "class=\"form-control\"")}
@@ -36,12 +36,26 @@
   </div>
   <div class="form-group">
     <label>Icon</label>
-    <div>
-    <#if form.iconToken?has_content>
-    <img src="${config.url.base}api/upload/image/${form.iconToken}" id="jsIconImg">
-    <#else>
-    <img src="" id="jsIconImg" style="display: none;">
-    </#if>
+    <div id="jsIconBlock">
+      <#if icon>
+      <div class="thumbnail">
+        <img src="${config.url.base}api/upload/accounts/icon/${account.id}">
+      </div>
+      </#if>
+    </div>
+    <div id="jsTempIconBlock" style="display: none;">
+      <div class="thumbnail clearfix">
+        <div class="pull-right">
+          <a href="#" onclick="return false;" id="jsRemoveTempIcon">
+            <span class="glyphicon glyphicon-remove" style="color: #999"></span>
+          </a>
+        </div>
+        <#if form.iconToken?has_content>
+        <img src="${config.url.base}api/upload/tempfile/${form.iconToken}" id="jsTempIconImg">
+        <#else>
+        <img src="" id="jsTempIconImg">
+        </#if>
+      </div>
     </div>
     <div id="jsIconError" class="alert alert-danger" style="display: none;">
       <p>Uploading failed. Please check the following conditions.</p>
@@ -52,7 +66,7 @@
     </div>
     <div>
       <input type="hidden" name="iconToken" id="jsIconTokenInput">
-      <input type="file" name="file" id="jsIconFile"> 
+      <input type="file" name="file" id="jsIconFileInput"> 
     </div>
   </div>
 </div>
@@ -65,12 +79,12 @@
 (function($) {
   $(function() {
     var Uploader = {
-      postImage: function(el) {
+      postTempfile: function(el) {
         var defer = $.Deferred();
         var fd = new FormData();
         fd.append('file', el.files[0]);
         $.ajax({
-          url: '${config.url.base}api/upload/image'
+          url: '${config.url.base}api/upload/tempfile'
         , data: fd
         , cache: false
         , contentType: false
@@ -83,21 +97,36 @@
       }
     };
 
-    $('#jsIconFile').on("change", function() {
-      Uploader.postImage(this).then(
-        // done
+    var showTempIcon = function(filename) {
+      $('#jsIconBlock').hide();
+      $('#jsIconTokenInput').attr('value', filename);
+      $('#jsTempIconImg').attr('src', '${config.url.base}api/upload/tempfile/' + filename);
+      $('#jsTempIconBlock').show();
+    };
+
+    var hideTempIcon = function() {
+      $('#jsTempIconBlock').hide();
+      $('#jsIconTokenInput').attr('value', '');
+      $('#jsIconBlock').show();
+    };
+
+    $('#jsIconFileInput').on("change", function() {
+      Uploader.postTempfile(this).then(
         function(data) {
-          $('#jsIconError').hide();
-          $('#jsIconTokenInput').attr('value', data);
-          $('#jsIconImg').attr('src', '${config.url.base}api/upload/image/' + data).show();
+    	  $('#jsIconError').hide();
+          showTempIcon(data);
         }
-        // fail
       , function(data) {
-          $('#jsIconImg').hide();
-          $('#jsIconTokenInput').attr('value', '');
-          $('#jsIconError').show();
+    	  hideTempIcon();
+    	  $('#jsIconError').show();
         }
       );
+    });
+
+    $('#jsRemoveTempIcon').on("click", function() {
+      hideTempIcon();
+      var emptyIconFileInput = $('#jsIconFileInput').clone(true);
+      $('#jsIconFileInput').replaceWith(emptyIconFileInput);
     });
   });  
 })(jQuery.noConflict());
