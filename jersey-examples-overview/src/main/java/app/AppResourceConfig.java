@@ -4,8 +4,7 @@ import app.controllers.PagesController;
 import app.core.config.Config;
 import app.core.config.ConfigBinder;
 import app.core.config.TypesafeConfig;
-import app.core.http.StorageSessionFactory;
-import app.core.http.SessionFactoryProvider;
+import app.core.session.*;
 import app.core.storage.FakeStorage;
 import app.core.view.FreemarkerRenderer;
 import app.core.view.Renderer;
@@ -23,11 +22,13 @@ public class AppResourceConfig extends ResourceConfig {
         Config config = TypesafeConfig.load("conf/application");
         register(new ConfigBinder(config));
 
-        // StorageSession
-        register(new SessionFactoryProvider.Binder(
-                new StorageSessionFactory(
-                        new FakeStorage<Map<String, Object>>(),
-                        "APP_SESSION")));
+        // Session
+        SessionFactoryMap sessionFactoryMap = new SessionFactoryMap(
+            new StorageSessionFactory(
+                new FakeStorage<Map<String, Object>>(), "APP_SESSION"),
+            new CookieSessionFactory("APP_SESSION_ID", "aSecretKeyMustBeSpecified")
+        );
+        register(new SessionFactoryProvider.Binder(sessionFactoryMap));
 
         // renderer
         String templateDir = this.getClass().getResource("/views/freemarker").getPath();

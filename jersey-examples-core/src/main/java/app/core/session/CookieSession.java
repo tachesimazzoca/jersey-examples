@@ -1,4 +1,4 @@
-package app.core.http;
+package app.core.session;
 
 import com.google.common.base.Optional;
 import org.apache.commons.codec.binary.Hex;
@@ -12,21 +12,26 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-public class CookieBaker {
+public class CookieSession {
     private static final String ENCODING = "UTF-8";
     private static final String MAC_ALGORITHM = "HmacSHA1";
     private static final int MAX_VALUE_LENGTH = 2048;
 
-    private Optional<String> secret;
     private NewCookie cookie;
-    private Map<String, String> data;
+    private String secret;
+    private ConcurrentMap<String, String> data;
 
-    public CookieBaker(Optional<String> secret, NewCookie cookie) {
-        this.secret = secret;
+    public CookieSession(NewCookie cookie) {
+        this(cookie, null);
+    }
+
+    public CookieSession(NewCookie cookie, String secret) {
         this.cookie = cookie;
+        this.secret = secret;
         this.data = decode(cookie.getValue());
     }
 
@@ -43,8 +48,8 @@ public class CookieBaker {
             if (sb.length() > 0)
                 sb.deleteCharAt(sb.length() - 1);
             encoded = sb.toString();
-            if (secret.isPresent()) {
-                String sign = sign(encoded, secret.get().getBytes(ENCODING));
+            if (null != secret) {
+                String sign = sign(encoded, secret.getBytes(ENCODING));
                 encoded = sign + "-" + encoded;
             }
         } catch (UnsupportedEncodingException e) {
@@ -60,17 +65,17 @@ public class CookieBaker {
         return encoded;
     }
 
-    private Map<String, String> decode(String value) {
-        Map<String, String> m = new LinkedHashMap<String, String>();
+    private ConcurrentMap<String, String> decode(String value) {
+        ConcurrentMap<String, String> m = new ConcurrentHashMap<String, String>();
         String msg;
-        if (secret.isPresent()) {
+        if (null != secret) {
             String[] tokens = StringUtils.splitPreserveAllTokens(value, "-", 2);
             if (tokens.length != 2) {
                 return m;
             }
             String sign = "";
             try {
-                sign = sign(tokens[1], secret.get().getBytes(ENCODING));
+                sign = sign(tokens[1], secret.getBytes(ENCODING));
             } catch (UnsupportedEncodingException e) {
                 return m;
             }

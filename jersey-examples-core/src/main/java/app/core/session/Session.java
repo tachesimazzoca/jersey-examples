@@ -1,4 +1,4 @@
-package app.core.http;
+package app.core.session;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

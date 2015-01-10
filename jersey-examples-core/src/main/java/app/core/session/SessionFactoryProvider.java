@@ -1,4 +1,4 @@
-package app.core.http;
+package app.core.session;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.InjectionResolver;
@@ -15,17 +15,17 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class SessionFactoryProvider<T> extends AbstractValueFactoryProvider {
-    private SessionFactory sessionFactory;
+public class SessionFactoryProvider extends AbstractValueFactoryProvider {
+    private SessionFactoryMap sessionFactoryMap;
 
     @Inject
     public SessionFactoryProvider(
             final MultivaluedParameterExtractorProvider extractorProvider,
             final ServiceLocator injector,
-            final SessionFactory<T> sessionFactory
+            final SessionFactoryMap sessionFactoryMap
     ) {
         super(extractorProvider, injector, Parameter.Source.UNKNOWN);
-        this.sessionFactory = sessionFactory;
+        this.sessionFactoryMap = sessionFactoryMap;
     }
 
     @Override
@@ -35,8 +35,9 @@ public class SessionFactoryProvider<T> extends AbstractValueFactoryProvider {
         if (null == annotation)
             return null;
 
-        if (classType.isAssignableFrom(sessionFactory.getGeneratedClass()))
-            return sessionFactory.clone();
+        SessionFactory<?> factory = sessionFactoryMap.get(classType);
+        if (null != factory)
+            return factory.clone();
         else
             return null;
     }
@@ -47,16 +48,16 @@ public class SessionFactoryProvider<T> extends AbstractValueFactoryProvider {
         }
     }
 
-    public static class Binder<T> extends AbstractBinder {
-        private final SessionFactory<T> factory;
+    public static class Binder extends AbstractBinder {
+        private final SessionFactoryMap factoryMap;
 
-        public Binder(SessionFactory<T> factory) {
-            this.factory = factory;
+        public Binder(SessionFactoryMap factoryMap) {
+            this.factoryMap = factoryMap;
         }
 
         @Override
         protected void configure() {
-            bind(this.factory).to(SessionFactory.class);
+            bind(this.factoryMap).to(SessionFactoryMap.class);
             bind(SessionFactoryProvider.class).to(ValueFactoryProvider.class)
                     .in(Singleton.class);
             bind(SessionInjectionResolver.class).to(

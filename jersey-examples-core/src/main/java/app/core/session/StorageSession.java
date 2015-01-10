@@ -1,4 +1,4 @@
-package app.core.http;
+package app.core.session;
 
 import javax.ws.rs.core.NewCookie;
 

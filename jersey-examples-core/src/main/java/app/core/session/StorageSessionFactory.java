@@ -1,4 +1,4 @@
-package app.core.http;
+package app.core.session;
 
 import app.core.storage.Storage;
 
@@ -34,12 +34,12 @@ public class StorageSessionFactory extends SessionFactory<StorageSession> {
         this.domain = domain;
     }
 
-    public StorageSessionFactory clone() {
-        return new StorageSessionFactory(storage, cookieName, path, domain);
-    }
-
     public void setHttpHeaders(HttpHeaders headers) {
         this.headers = headers;
+    }
+
+    public StorageSessionFactory clone() {
+        return new StorageSessionFactory(storage, cookieName, path, domain);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class StorageSessionFactory extends SessionFactory<StorageSession> {
         else
             sessionId = null;
         NewCookie cookie = new NewCookie(
-                cookieName, sessionId, path, domain,
+                cookieName, "", path, domain,
                 NewCookie.DEFAULT_VERSION, "",
                 NewCookie.DEFAULT_MAX_AGE, false);
         return new StorageSession(storage, cookie, sessionId);
