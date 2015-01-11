@@ -17,6 +17,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import java.util.Date;
 import java.util.Map;
 
+import static app.core.util.ParameterUtils.params;
+
 public class AppResourceConfig extends ResourceConfig {
 
     public AppResourceConfig() {
@@ -24,24 +26,22 @@ public class AppResourceConfig extends ResourceConfig {
         Config config = TypesafeConfig.load("conf/application");
         register(new ConfigBinder(config));
 
-        // UserContext
-        UserContextFactoryMap factoryMap = new UserContextFactoryMap(
-            new StorageSessionFactory(
-                new FakeStorage<Map<String, Object>>(), "APP_SESSION"),
-            new CookieSessionFactory("APP_SESSION_ID", "aSecretKeyMustBeSpecified")
-        );
-        register(new UserContextFactoryProvider.Binder(factoryMap));
-
         // renderer
         String templateDir = this.getClass().getResource("/views/freemarker").getPath();
-        Renderer renderer = new FreemarkerRenderer(templateDir);
-
-        // MessageBodyWriters
+        Map<String, Object> sharedVariables = params("config", config);
+        Renderer renderer = new FreemarkerRenderer(templateDir, sharedVariables);
         register(new ViewMessageBodyWriter(renderer));
+
+        // UserContext
+        UserContextFactoryMap factoryMap = new UserContextFactoryMap(
+                new StorageSessionFactory(
+                        new FakeStorage<Map<String, Object>>(), "APP_SESSION"),
+                new CookieSessionFactory("APP_SESSION_ID", "aSecretKeyMustBeSpecified")
+        );
+        register(new UserContextFactoryProvider.Binder(factoryMap));
 
         register(new MainResource(
                 "Hello World! This application was registered at " + new Date()));
         register(new PagesController());
-
     }
 }
