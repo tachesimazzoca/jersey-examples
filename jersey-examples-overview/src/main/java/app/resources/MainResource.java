@@ -1,8 +1,8 @@
 package app.resources;
 
 import app.core.config.Config;
+import app.core.inject.UserContext;
 import app.core.session.CookieSession;
-import app.core.session.Session;
 import app.core.session.StorageSession;
 
 import javax.ws.rs.GET;
@@ -47,7 +47,7 @@ public class MainResource {
     @GET
     @Path("/storageSession")
     public Response storageSession(
-            @Session final StorageSession session,
+            @UserContext final StorageSession session,
             @QueryParam("save") final String save,
             @QueryParam("flash") final String flash) {
 
@@ -67,7 +67,7 @@ public class MainResource {
     @GET
     @Path("/cookieSession")
     public Response cookieSession(
-            @Session CookieSession session,
+            @UserContext CookieSession session,
             @QueryParam("save") final String save,
             @QueryParam("flash") final String flash) {
 

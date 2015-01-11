@@ -1,5 +1,6 @@
 package app.core.session;
 
+import app.core.inject.UserContextFactory;
 import app.core.storage.Storage;
 
 import javax.ws.rs.core.Context;
@@ -8,7 +9,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.NewCookie;
 import java.util.Map;
 
-public class StorageSessionFactory extends SessionFactory<StorageSession> {
+public class StorageSessionFactory extends UserContextFactory<StorageSession> {
     @Context
     private HttpHeaders headers;
 

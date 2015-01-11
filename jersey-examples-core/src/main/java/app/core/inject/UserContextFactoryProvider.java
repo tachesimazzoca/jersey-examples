@@ -1,4 +1,4 @@
-package app.core.session;
+package app.core.inject;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.InjectionResolver;
@@ -15,53 +15,53 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class SessionFactoryProvider extends AbstractValueFactoryProvider {
-    private SessionFactoryMap sessionFactoryMap;
+public class UserContextFactoryProvider extends AbstractValueFactoryProvider {
+    private UserContextFactoryMap factoryMap;
 
     @Inject
-    public SessionFactoryProvider(
+    public UserContextFactoryProvider(
             final MultivaluedParameterExtractorProvider extractorProvider,
             final ServiceLocator injector,
-            final SessionFactoryMap sessionFactoryMap
+            final UserContextFactoryMap factoryMap
     ) {
         super(extractorProvider, injector, Parameter.Source.UNKNOWN);
-        this.sessionFactoryMap = sessionFactoryMap;
+        this.factoryMap = factoryMap;
     }
 
     @Override
     protected Factory<?> createValueFactory(Parameter parameter) {
         final Class<?> classType = parameter.getRawType();
-        Session annotation = parameter.getAnnotation(Session.class);
+        UserContext annotation = parameter.getAnnotation(UserContext.class);
         if (null == annotation)
             return null;
 
-        SessionFactory<?> factory = sessionFactoryMap.get(classType);
+        UserContextFactory<?> factory = factoryMap.get(classType);
         if (null != factory)
             return factory.clone();
         else
             return null;
     }
 
-    public static class SessionInjectionResolver extends ParamInjectionResolver<Session> {
+    public static class SessionInjectionResolver extends ParamInjectionResolver<UserContext> {
         public SessionInjectionResolver() {
-            super(SessionFactoryProvider.class);
+            super(UserContextFactoryProvider.class);
         }
     }
 
     public static class Binder extends AbstractBinder {
-        private final SessionFactoryMap factoryMap;
+        private final UserContextFactoryMap factoryMap;
 
-        public Binder(SessionFactoryMap factoryMap) {
+        public Binder(UserContextFactoryMap factoryMap) {
             this.factoryMap = factoryMap;
         }
 
         @Override
         protected void configure() {
-            bind(this.factoryMap).to(SessionFactoryMap.class);
-            bind(SessionFactoryProvider.class).to(ValueFactoryProvider.class)
+            bind(this.factoryMap).to(UserContextFactoryMap.class);
+            bind(UserContextFactoryProvider.class).to(ValueFactoryProvider.class)
                     .in(Singleton.class);
             bind(SessionInjectionResolver.class).to(
-                    new TypeLiteral<InjectionResolver<Session>>() {
+                    new TypeLiteral<InjectionResolver<UserContext>>() {
                     }
             ).in(Singleton.class);
         }

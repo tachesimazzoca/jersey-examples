@@ -1,13 +1,14 @@
 package app.core.session;
 
-import java.util.Map;
+import app.core.inject.UserContextFactory;
 
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.NewCookie;
+import java.util.Map;
 
-public class CookieSessionFactory extends SessionFactory<CookieSession> {
+public class CookieSessionFactory extends UserContextFactory<CookieSession> {
     @Context
     private HttpHeaders headers;
 
