@@ -2,17 +2,17 @@ package app.controllers;
 
 import app.core.config.Config;
 import app.core.inject.UserContext;
+import app.core.mail.MailerException;
+import app.core.mail.TextMailerFactory;
 import app.core.storage.Storage;
 import app.core.view.FormHelper;
 import app.core.view.View;
-import app.mail.TextMailerFactory;
 import app.models.Account;
 import app.models.AccountDao;
 import app.models.AccountsSigninForm;
 import app.models.AccountsSignupForm;
 import app.models.ForumUser;
 import com.google.common.base.Optional;
-import org.apache.commons.mail.EmailException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -70,7 +70,7 @@ public class AccountsController {
             @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
-            throws EmailException {
+            throws MailerException {
 
         forumUser.logout();
 

@@ -6,6 +6,7 @@ import app.core.config.ConfigBinder;
 import app.core.config.TypesafeConfig;
 import app.core.inject.UserContextFactoryMap;
 import app.core.inject.UserContextFactoryProvider;
+import app.core.mail.TextMailerFactory;
 import app.core.storage.Storage;
 import app.core.util.FileHelper;
 import app.core.util.Jackson;
@@ -13,7 +14,6 @@ import app.core.view.FreemarkerRenderer;
 import app.core.view.Renderer;
 import app.core.view.ViewMessageBodyWriter;
 import app.db.JPAStorage;
-import app.mail.TextMailerFactory;
 import app.models.*;
 import app.resources.UploadResource;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -79,7 +79,7 @@ public class AppResourceConfig extends ResourceConfig {
         TempFileHelper tempFileHelper = new TempFileHelper(tmpPath);
         String uploadPath = config.get("path.upload", String.class);
         FileHelper accountsIconFinder = FileHelperFactory.createAccountsIconFinder(
-            uploadPath + "/accounts/icon");
+                uploadPath + "/accounts/icon");
 
         // resources
         register(new UploadResource(tempFileHelper, accountsIconFinder));

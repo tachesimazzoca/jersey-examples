@@ -1,12 +1,13 @@
 package app.controllers;
 
+import app.core.mail.MailerException;
 import app.models.TempFileHelper;
 import app.core.inject.UserContext;
 import app.core.storage.Storage;
 import app.core.util.FileHelper;
 import app.core.view.FormHelper;
 import app.core.view.View;
-import app.mail.TextMailerFactory;
+import app.core.mail.TextMailerFactory;
 import app.models.Account;
 import app.models.AccountDao;
 import app.models.ForumUser;
@@ -78,8 +79,8 @@ public class ProfileController {
     public Response postEdit(
             @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
-            MultivaluedMap<String, String> formParams)
-            throws IOException {
+            MultivaluedMap<String, String> formParams) throws
+            IOException, MailerException {
 
         Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())

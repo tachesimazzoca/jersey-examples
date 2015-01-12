@@ -22,7 +22,12 @@
       <version>${project.version}</version>
     </dependency>
 
-    <!-- jersey-media-multipart -->
+    <!-- jersey -->
+    <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-servlet</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-multipart</artifactId>
@@ -65,6 +70,7 @@
       <version>1.4.179</version>
     </dependency>
 
+    <!-- servlet -->
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
@@ -72,6 +78,7 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- testing -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

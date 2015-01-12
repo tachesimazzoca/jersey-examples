@@ -1,4 +1,4 @@
-package app.mail;
+package app.core.mail;
 
 import org.apache.commons.mail.SimpleEmail;
 
@@ -41,7 +41,10 @@ public class TextMailerFactory {
     public Mailer create(Set<InternetAddress> to, String msg) {
         try {
             SimpleEmail email;
-            email = new SimpleEmail();
+            if (fake)
+                email = new FakeSimpleEmail();
+            else
+                email = new SimpleEmail();
             email.setHostName(hostName);
             email.setSmtpPort(smtpPort);
             email.setCharset(charset);
@@ -49,7 +52,7 @@ public class TextMailerFactory {
             email.setFrom(from.getAddress(), from.getPersonal());
             email.setTo(to);
             email.setMsg(msg);
-            return new CommonsMailer(email, fake);
+            return new CommonsMailer(email);
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
