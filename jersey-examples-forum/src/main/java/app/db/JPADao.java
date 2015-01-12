@@ -1,4 +1,4 @@
-package app.core;
+package app.db;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

@@ -9,7 +9,7 @@ import com.google.common.base.Optional;
 public class TypesafeConfigTest {
     @Test
     public void testMaybe() {
-        Config config = TypesafeConfig.load("test/conf/test");
+        Config config = TypesafeConfig.load("/test/conf/test.conf");
         assertEquals(Optional.absent(), config.maybe("unknown"));
         assertEquals("/", config.maybe("url.base").or("/foo"));
         assertEquals("TEST", config.maybe("session.cookieName").or("TEST"));

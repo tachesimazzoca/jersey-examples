@@ -1,11 +1,11 @@
 package app.models;
 
+import app.core.util.Pagination;
+import app.db.JPA;
+import app.db.JPADao;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-
-import app.core.JPA;
-import app.core.JPADao;
-import app.core.Pagination;
 
 public class QuestionDao extends JPADao<Question> {
     private static final String SELECT_QUESTIONS_RESULT = "SELECT"

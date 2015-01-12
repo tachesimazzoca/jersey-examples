@@ -7,7 +7,7 @@ import com.google.common.base.Optional;
 
 import java.util.List;
 
-import app.core.JPADao;
+import app.db.JPADao;
 
 public class AccountDao extends JPADao<Account> {
     public AccountDao(EntityManagerFactory ef) {

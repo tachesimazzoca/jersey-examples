@@ -1,29 +1,29 @@
 package app.controllers;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import app.core.config.Config;
+import app.core.inject.UserContext;
+import app.core.storage.Storage;
+import app.core.view.FormHelper;
+import app.core.view.View;
+import app.mail.TextMailerFactory;
+import app.models.Account;
+import app.models.AccountDao;
+import app.models.AccountsSigninForm;
+import app.models.AccountsSignupForm;
+import app.models.ForumUser;
+import com.google.common.base.Optional;
+import org.apache.commons.mail.EmailException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-
-import com.google.common.base.Optional;
-
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.mail.EmailException;
-
-import app.core.*;
-import app.mail.TextMailerFactory;
-import app.models.*;
-
-import static app.core.Util.params;
-import static app.core.Util.safeURI;
+import static app.core.util.ParameterUtils.params;
+import static app.core.util.URIUtils.safeURI;
 
 @Path("/accounts")
 @Produces(MediaType.TEXT_HTML)
@@ -56,23 +56,23 @@ public class AccountsController {
 
     @GET
     @Path("signup")
-    public Response signup(@Context UserContext userContext) {
-        userContext.logout();
+    public Response signup(@UserContext ForumUser forumUser) {
+        forumUser.logout();
         View view = new View("accounts/signup", params(
                 "form", new FormHelper<AccountsSignupForm>(AccountsSignupForm.defaultForm())));
-        return Response.ok(view).cookie(userContext.toCookie()).build();
+        return Response.ok(view).cookie(forumUser.toCookie()).build();
     }
 
     @POST
     @Path("signup")
     @Consumes("application/x-www-form-urlencoded")
     public Response postSignup(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
             throws EmailException {
 
-        userContext.logout();
+        forumUser.logout();
 
         AccountsSignupForm form = AccountsSignupForm.bindFrom(formParams);
         if (validator.validateProperty(form, "email").isEmpty()) {
@@ -87,7 +87,7 @@ public class AccountsController {
             View view = new View("accounts/signup", params(
                     "form", new FormHelper<AccountsSignupForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
 
         Map<String, Object> params = params(
@@ -102,31 +102,31 @@ public class AccountsController {
         signupMailerFactory.create(form.getEmail(), url).send();
 
         return Response.ok(new View("accounts/verify"))
-                .cookie(userContext.toCookie()).build();
+                .cookie(forumUser.toCookie()).build();
     }
 
     @GET
     @Path("activate")
     public Response activate(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("code") String code) {
 
-        userContext.logout();
+        forumUser.logout();
 
         Optional<Map<String, Object>> opt = signupStorage.read(code);
         signupStorage.delete(code);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/accounts/errors/session").build())
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
 
         Map<String, Object> params = opt.get();
         if (accountDao.findByEmail((String) params.get("email")).isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/accounts/errors/email").build())
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
 
         Account account = new Account();
@@ -136,40 +136,40 @@ public class AccountsController {
         Account savedAccount = accountDao.save(account);
         return Response.ok(new View("accounts/activate",
                 params("account", savedAccount)))
-                .cookie(userContext.toCookie()).build();
+                .cookie(forumUser.toCookie()).build();
     }
 
     @GET
     @Path("signin")
     public Response signin(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @QueryParam("returnTo") @DefaultValue("") String returnTo) {
 
-        userContext.logout();
+        forumUser.logout();
 
         AccountsSigninForm form = AccountsSigninForm.defaultForm();
         form.setReturnTo(returnTo);
         return Response.ok(new View("accounts/signin", params(
                 "form", new FormHelper<AccountsSigninForm>(form))))
-                .cookie(userContext.toCookie()).build();
+                .cookie(forumUser.toCookie()).build();
     }
 
     @POST
     @Path("signin")
     @Consumes("application/x-www-form-urlencoded")
     public Response postSignin(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams) {
 
-        userContext.logout();
+        forumUser.logout();
 
         AccountsSigninForm form = AccountsSigninForm.bindFrom(formParams);
         Set<ConstraintViolation<AccountsSigninForm>> errors = validator.validate(form);
 
         Account account = null;
         if (errors.isEmpty()) {
-            Optional<Account> accountOpt = userContext.authenticate(
+            Optional<Account> accountOpt = forumUser.authenticate(
                     form.getEmail(), form.getPassword());
             if (accountOpt.isPresent()) {
                 account = accountOpt.get();
@@ -182,24 +182,24 @@ public class AccountsController {
             View view = new View("accounts/signin", params(
                     "form", new FormHelper<AccountsSigninForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
 
         String returnTo = form.getReturnTo();
         if (!returnTo.startsWith("/") || returnTo.isEmpty())
             returnTo = config.get("url.home", String.class);
         return Response.seeOther(safeURI(uinfo, returnTo))
-                .cookie(userContext.toCookie()).build();
+                .cookie(forumUser.toCookie()).build();
     }
 
     @GET
     @Path("signout")
     public Response signout(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo) {
-        userContext.logout();
+        forumUser.logout();
         String returnTo = config.get("url.home", String.class);
         return Response.seeOther(safeURI(uinfo, returnTo))
-                .cookie(userContext.toCookie()).build();
+                .cookie(forumUser.toCookie()).build();
     }
 }

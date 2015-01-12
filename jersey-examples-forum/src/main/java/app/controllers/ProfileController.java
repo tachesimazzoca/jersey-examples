@@ -1,58 +1,51 @@
 package app.controllers;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import app.models.TempFileHelper;
+import app.core.inject.UserContext;
+import app.core.storage.Storage;
+import app.core.util.FileHelper;
+import app.core.view.FormHelper;
+import app.core.view.View;
+import app.mail.TextMailerFactory;
+import app.models.Account;
+import app.models.AccountDao;
+import app.models.ForumUser;
+import app.models.ProfileEditForm;
+import com.google.common.base.Optional;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-
-import com.google.common.base.Optional;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import app.core.Finder;
-import app.core.FormHelper;
-import app.core.Storage;
-import app.core.Uploader;
-import app.core.View;
-import app.mail.TextMailerFactory;
-import app.models.Account;
-import app.models.AccountDao;
-import app.models.ProfileEditForm;
-import app.models.UserContext;
-
-import static app.core.Util.params;
+import static app.core.util.ParameterUtils.params;
 
 @Path("/profile")
 @Produces(MediaType.TEXT_HTML)
 public class ProfileController {
     private final Validator validator;
     private final AccountDao accountDao;
-    private final Uploader uploader;
-    private final Finder accountsIconFinder;
+    private final TempFileHelper tempFileHelper;
+    private final FileHelper accountsIconFinder;
     private final Storage<Map<String, Object>> profileStorage;
     private final TextMailerFactory profileMailerFactory;
 
     public ProfileController(
             AccountDao accountDao,
-            Uploader uploader,
-            Finder accountsIconFinder,
+            TempFileHelper tempFileHelper,
+            FileHelper accountsIconFinder,
             Storage<Map<String, Object>> profileStorage,
             TextMailerFactory profileMailerFactory) {
         this.validator = Validation.buildDefaultValidatorFactory().getValidator();
         this.accountDao = accountDao;
-        this.uploader = uploader;
+        this.tempFileHelper = tempFileHelper;
         this.accountsIconFinder = accountsIconFinder;
         this.profileStorage = profileStorage;
         this.profileMailerFactory = profileMailerFactory;
@@ -61,10 +54,10 @@ public class ProfileController {
     @GET
     @Path("edit")
     public Response edit(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo) {
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo);
         Account account = accountOpt.get();
@@ -75,7 +68,7 @@ public class ProfileController {
                 "account", account,
                 "form", new FormHelper<ProfileEditForm>(form),
                 "icon", icon,
-                "flash", userContext.getFlash().orNull()));
+                "flash", forumUser.getFlash().orNull()));
         return Response.ok(view).build();
     }
 
@@ -83,12 +76,12 @@ public class ProfileController {
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEdit(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
             throws IOException {
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo);
         Account account = accountOpt.get();
@@ -125,7 +118,7 @@ public class ProfileController {
         accountDao.save(account);
 
         if (!form.getIconToken().isEmpty()) {
-            Optional<File> tempfileOpt = uploader.read(form.getIconToken());
+            Optional<File> tempfileOpt = tempFileHelper.read(form.getIconToken());
             if (tempfileOpt.isPresent()) {
                 File tempfile = tempfileOpt.get();
                 String extension = FilenameUtils.getExtension(tempfile.getName());
@@ -138,10 +131,10 @@ public class ProfileController {
         }
 
         if (form.getEmail().equals(account.getEmail())) {
-            userContext.setFlash("saved");
+            forumUser.setFlash("saved");
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/profile/edit").build())
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
 
         Map<String, Object> params = params(
@@ -161,15 +154,15 @@ public class ProfileController {
 
     @GET
     @Path("verify")
-    public Response verify(@Context UserContext userContext) {
+    public Response verify(@UserContext ForumUser forumUser) {
         return Response.ok(new View("profile/verify", params(
-                "account", userContext.getAccount().orNull()))).build();
+                "account", forumUser.getAccount().orNull()))).build();
     }
 
     @GET
     @Path("activate")
     public Response activate(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("code") String code) {
         Optional<Map<String, Object>> opt = profileStorage.read(code);
@@ -183,7 +176,7 @@ public class ProfileController {
         Long id = (Long) params.get("id");
         String email = (String) params.get("email");
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (accountOpt.isPresent()) {
             Account account = accountOpt.get();
             if (!id.equals(account.getId())) {
@@ -213,11 +206,11 @@ public class ProfileController {
     @GET
     @Path("errors/{name}")
     public Response errors(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @PathParam("name") String name) {
         return Response.status(Response.Status.FORBIDDEN)
                 .entity(new View("profile/errors/" + name, params(
-                        "account", userContext.getAccount().orNull()))).build();
+                        "account", forumUser.getAccount().orNull()))).build();
     }
 
     private Response redirectToLogin(UriInfo uinfo) {

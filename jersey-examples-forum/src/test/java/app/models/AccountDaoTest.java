@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import javax.persistence.EntityManagerFactory;
 
-import app.core.JPA;
+import app.db.JPA;
 
 public class AccountDaoTest {
     private static final EntityManagerFactory ef = JPA.ef("test");

@@ -1,7 +1,9 @@
-package app.core;
+package app.db;
 
 import static org.junit.Assert.*;
 
+import app.db.JPA;
+import app.db.JPAStorage;
 import org.junit.AfterClass;
 import org.junit.Test;
 
@@ -12,7 +14,7 @@ import java.util.Map;
 
 import com.google.common.base.Optional;
 
-import static app.core.Util.params;
+import static app.core.util.ParameterUtils.params;
 
 public class JPAStorageTest {
     private static final EntityManagerFactory ef = JPA.ef("test");

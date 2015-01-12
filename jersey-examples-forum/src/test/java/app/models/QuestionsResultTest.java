@@ -11,8 +11,8 @@ import javax.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Map;
 
-import app.core.JPA;
-import app.core.Pagination;
+import app.db.JPA;
+import app.core.util.Pagination;
 
 public class QuestionsResultTest {
     private static final EntityManagerFactory ef = JPA.ef("test");

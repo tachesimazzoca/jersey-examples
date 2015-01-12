@@ -20,8 +20,7 @@ public class TypesafeConfig implements Config {
     }
 
     private TypesafeConfig(String name) {
-        File f = new File(this.getClass().getResource(
-                "/" + name + ".conf").getPath());
+        File f = new File(getClass().getResource(name).getPath());
         this.typesafeConfig = ConfigFactory.parseFile(f).resolve();
     }
 

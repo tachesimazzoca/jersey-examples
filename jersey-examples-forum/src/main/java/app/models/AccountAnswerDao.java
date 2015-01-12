@@ -5,7 +5,7 @@ import javax.persistence.EntityManagerFactory;
 
 import java.math.BigInteger;
 
-import app.core.JPA;
+import app.db.JPA;
 
 public class AccountAnswerDao {
     private final EntityManagerFactory ef;

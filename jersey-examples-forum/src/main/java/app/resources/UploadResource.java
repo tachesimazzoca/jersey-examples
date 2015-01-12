@@ -3,9 +3,6 @@ package app.resources;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
-
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
@@ -19,8 +16,10 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import app.core.Uploader;
-import app.core.Finder;
+import app.models.TempFileHelper;
+import app.core.util.FileHelper;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 @Path("/api/upload")
 public class UploadResource {
@@ -38,11 +37,11 @@ public class UploadResource {
         NO_CACHE.setNoCache(true);
     }
 
-    private final Uploader uploader;
-    private final Finder accountsIconFinder;
+    private final TempFileHelper tempFileHelper;
+    private final FileHelper accountsIconFinder;
 
-    public UploadResource(Uploader uploader, Finder accountsIconFinder) {
-        this.uploader = uploader;
+    public UploadResource(TempFileHelper tempFileHelper, FileHelper accountsIconFinder) {
+        this.tempFileHelper = tempFileHelper;
         this.accountsIconFinder = accountsIconFinder;
     }
 
@@ -59,10 +58,10 @@ public class UploadResource {
     @GET
     @Path("accounts/icon/{id}")
     public Response accountsIcon(@PathParam("id") Long id) {
-        Optional<Finder.Result> resultOpt = accountsIconFinder.find(id.toString());
+        Optional<FileHelper.Result> resultOpt = accountsIconFinder.find(id.toString());
         if (!resultOpt.isPresent())
             return Response.status(Response.Status.NOT_FOUND).build();
-        Finder.Result result = resultOpt.get();
+        FileHelper.Result result = resultOpt.get();
         return Response.ok(result.getFile())
                 .type(result.getMimeType())
                 .cacheControl(NO_CACHE)
@@ -75,7 +74,7 @@ public class UploadResource {
         Optional<String> contentType = detectContentType(filename);
         if (!contentType.isPresent())
             return Response.status(Response.Status.FORBIDDEN).build();
-        Optional<File> tempfile = uploader.read(filename);
+        Optional<File> tempfile = tempFileHelper.read(filename);
         if (!tempfile.isPresent())
             return Response.status(Response.Status.NOT_FOUND).build();
         return Response.ok(tempfile.get()).type(contentType.get())
@@ -105,7 +104,7 @@ public class UploadResource {
                     "Unsupported file format").build();
 
         String extension = SUPPORTED_TYPES.get(contentType.get()).get(0);
-        File tmpfile = uploader.upload(file, "tmp-", "." + extension);
+        File tmpfile = tempFileHelper.create(file, "tmp-", "." + extension);
 
         if (FileUtils.sizeOf(tmpfile) > MAX_UPLOAD_SIZE) {
             FileUtils.deleteQuietly(tmpfile);

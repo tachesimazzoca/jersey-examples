@@ -1,17 +1,14 @@
 package app.models;
 
-import app.core.Finder.NamingStrategy;
+import app.core.util.FileHelper;
+import app.core.util.FileHelper.NamingStrategy;
+import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
-
-import org.apache.commons.lang.StringUtils;
-
-import app.core.Finder;
-
-public class FinderFactory {
+public class FileHelperFactory {
     public static final Map<String, String> TYPES_IMAGE = ImmutableMap.of(
             "jpg", "image/jpeg",
             "gif", "image/gif",
@@ -34,8 +31,11 @@ public class FinderFactory {
         }
     };
 
-    public static Finder createAccountsIconFinder(String directoryPath) {
-        return new Finder(new File(directoryPath),
-                TYPES_IMAGE, NAMING_NUMERIC_TREE);
+    public static FileHelper createAccountsIconFinder(String directoryPath) {
+        return createAccountsIconFinder(new File(directoryPath));
+    }
+
+    public static FileHelper createAccountsIconFinder(File directory) {
+        return new FileHelper(directory, TYPES_IMAGE, NAMING_NUMERIC_TREE);
     }
 }

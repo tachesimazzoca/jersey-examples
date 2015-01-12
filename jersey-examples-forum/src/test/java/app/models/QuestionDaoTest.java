@@ -9,8 +9,8 @@ import javax.persistence.EntityManagerFactory;
 
 import java.util.Map;
 
-import app.core.JPA;
-import app.core.Pagination;
+import app.db.JPA;
+import app.core.util.Pagination;
 
 public class QuestionDaoTest {
     private static final EntityManagerFactory ef = JPA.ef("test");

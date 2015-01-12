@@ -1,20 +1,16 @@
-package app.core;
+package app.db;
+
+import app.core.storage.Storage;
+import app.core.util.ObjectSerializer;
+import com.google.common.base.Optional;
+import org.apache.commons.io.IOUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-
-import com.google.common.base.Optional;
-
-import java.util.UUID;
+import java.sql.Clob;
 import java.util.List;
 import java.util.Map;
-
-import java.sql.Clob;
-
-import org.apache.commons.io.IOUtils;
-
-import static app.core.Util.objectToBase64;
-import static app.core.Util.base64ToObject;
+import java.util.UUID;
 
 public class JPAStorage implements Storage<Map<String, Object>> {
     private final EntityManagerFactory ef;
@@ -70,7 +66,7 @@ public class JPAStorage implements Storage<Map<String, Object>> {
         if (!rows.isEmpty()) {
             try {
                 String encoded = IOUtils.toString(rows.get(0).getCharacterStream());
-                v = (Map<String, Object>) base64ToObject(encoded, Map.class);
+                v = (Map<String, Object>) ObjectSerializer.BASE64.deserialize(encoded, Map.class);
             } catch (Exception e) {
                 // fail gracefully if the storage value is corrupted or type
                 // mismatch.
@@ -85,7 +81,7 @@ public class JPAStorage implements Storage<Map<String, Object>> {
 
     @Override
     public void write(final String key, final Map<String, Object> value) {
-        final String v = objectToBase64(value);
+        final String v = ObjectSerializer.BASE64.serialize(value);
         JPA.withTransaction(ef, new JPA.TransactionBlock<Void>() {
             public Void apply(EntityManager em) {
                 List<?> rows = em.createNativeQuery(SELECT_FOR_UPDATE_QUERY)

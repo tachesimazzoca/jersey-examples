@@ -1,22 +1,20 @@
 package app.models;
 
-import javax.ws.rs.core.NewCookie;
-
+import app.core.session.StorageSession;
 import com.google.common.base.Optional;
 
+import javax.ws.rs.core.NewCookie;
 import java.util.HashMap;
 import java.util.Map;
 
-import app.core.Session;
-
-public class UserContext {
+public class ForumUser {
     private static final String KEY_ATTRIBUTES = "attributes";
     private static final String KEY_FLASH = "flash";
     private static final String KEY_ACCOUNT_ID = "accountId";
-    private final Session session;
+    private final StorageSession session;
     private final AccountDao accountDao;
 
-    public UserContext(Session session, AccountDao accountDao) {
+    public ForumUser(StorageSession session, AccountDao accountDao) {
         this.session = session;
         this.accountDao = accountDao;
     }

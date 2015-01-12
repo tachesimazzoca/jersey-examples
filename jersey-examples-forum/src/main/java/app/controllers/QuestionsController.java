@@ -1,41 +1,34 @@
 package app.controllers;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import app.core.inject.UserContext;
+import app.core.util.Pagination;
+import app.core.view.FormHelper;
+import app.core.view.View;
+import app.models.Account;
+import app.models.AccountDao;
+import app.models.AccountQuestionDao;
+import app.models.AnswerDao;
+import app.models.AnswersResult;
+import app.models.ForumUser;
+import app.models.Question;
+import app.models.QuestionDao;
+import app.models.QuestionEditForm;
+import app.models.QuestionsResult;
+import com.google.common.base.Optional;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-
-import java.util.Set;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
 import java.util.Map;
+import java.util.Set;
 
-import com.google.common.base.Optional;
-
-import app.core.FormHelper;
-import app.core.Pagination;
-import app.core.View;
-import app.models.Account;
-import app.models.AccountDao;
-import app.models.AccountQuestionDao;
-import app.models.AnswersResult;
-import app.models.AnswerDao;
-import app.models.UserContext;
-import app.models.Question;
-import app.models.QuestionsResult;
-import app.models.QuestionDao;
-import app.models.QuestionEditForm;
-
+import static app.core.util.ParameterUtils.emptyTo;
+import static app.core.util.ParameterUtils.nullTo;
+import static app.core.util.ParameterUtils.params;
+import static app.core.util.URIUtils.safeURI;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-
-import static app.core.Util.params;
-import static app.core.Util.nullTo;
-import static app.core.Util.emptyTo;
-import static app.core.Util.safeURI;
 
 @Path("/questions")
 @Produces(MediaType.TEXT_HTML)
@@ -66,7 +59,7 @@ public class QuestionsController {
 
     @GET
     public Response index(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("sort") @DefaultValue("") String sort,
             @QueryParam("offset") @DefaultValue("") Integer offset,
@@ -75,7 +68,7 @@ public class QuestionsController {
         final String KEY_CONDITION = "questions.condition";
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> condition = (Map<String, Object>) userContext.getAttribute(
+        Map<String, Object> condition = (Map<String, Object>) forumUser.getAttribute(
                 KEY_CONDITION, Map.class).or(params());
 
         offset = nullTo(offset, (Integer) condition.get("offset"), 0);
@@ -92,29 +85,29 @@ public class QuestionsController {
         Pagination<QuestionsResult> questions = questionDao.selectPublicQuestions(
                 offset, limit, orderBy);
 
-        userContext.setAttribute(KEY_CONDITION, params(
+        forumUser.setAttribute(KEY_CONDITION, params(
                 "offset", (Integer) questions.getOffset(),
                 "limit", (Integer) questions.getLimit(),
                 "sort", sort));
 
         return Response.ok(new View("questions/index", params(
-                "account", userContext.getAccount().orNull(),
+                "account", forumUser.getAccount().orNull(),
                 "questions", questions,
                 "sort", sort,
-                "sortMap", sortMap))).cookie(userContext.toCookie()).build();
+                "sortMap", sortMap))).cookie(forumUser.toCookie()).build();
     }
 
     @GET
     @Path("{id}")
     public Response detail(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @PathParam("id") Long id,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("5") int limit) {
 
         // account
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         Account account = accountOpt.orNull();
 
         // question
@@ -152,7 +145,7 @@ public class QuestionsController {
         return Response.ok(view).build();
     }
 
-    private Response vote(UserContext userContext, UriInfo uinfo, Long id, int point) {
+    private Response vote(ForumUser forumUser, UriInfo uinfo, Long id, int point) {
         Optional<Question> questionOpt = questionDao.find(id);
         if (!questionOpt.isPresent())
             return redirectToIndex(uinfo);
@@ -160,7 +153,7 @@ public class QuestionsController {
         if (question.getStatus() != Question.Status.PUBLISHED)
             return redirectToIndex(uinfo);
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())
             return redirect(uinfo, "/questions/" + id);
         Account account = accountOpt.get();
@@ -173,30 +166,30 @@ public class QuestionsController {
     @GET
     @Path("star")
     public Response star(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("id") Long id) {
-        return vote(userContext, uinfo, id, 1);
+        return vote(forumUser, uinfo, id, 1);
     }
 
     @GET
     @Path("unstar")
     public Response unstar(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("id") Long id) {
 
-        return vote(userContext, uinfo, id, 0);
+        return vote(forumUser, uinfo, id, 0);
     }
 
     @GET
     @Path("edit")
     public Response edit(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("id") @DefaultValue("") Long id) {
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, id);
         Account account = accountOpt.get();
@@ -215,25 +208,25 @@ public class QuestionsController {
             form = QuestionEditForm.defaultForm();
         }
 
-        String flash = userContext.getFlash().orNull();
+        String flash = forumUser.getFlash().orNull();
         View view = new View("questions/edit", params(
                 "account", account,
                 "form", new FormHelper<QuestionEditForm>(form),
                 "question", question,
                 "flash", flash));
-        return Response.ok(view).cookie(userContext.toCookie()).build();
+        return Response.ok(view).cookie(forumUser.toCookie()).build();
     }
 
     @POST
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEdit(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @FormParam("id") Long id,
             MultivaluedMap<String, String> formParams) {
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, id);
         Account account = accountOpt.get();
@@ -264,9 +257,9 @@ public class QuestionsController {
             question = new Question();
             question.setAuthorId(account.getId());
             question.setPostedAt(new java.util.Date());
-            userContext.setFlash("created");
+            forumUser.setFlash("created");
         } else {
-            userContext.setFlash("updated");
+            forumUser.setFlash("updated");
         }
         question.setSubject(form.getSubject());
         question.setBody(form.getBody());
@@ -276,17 +269,17 @@ public class QuestionsController {
         return Response.seeOther(uinfo.getBaseUriBuilder()
                 .path("/questions/edit")
                 .queryParam("id", question.getId())
-                .build()).cookie(userContext.toCookie()).build();
+                .build()).cookie(forumUser.toCookie()).build();
     }
 
     @GET
     @Path("delete")
     public Response delete(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("id") @DefaultValue("") Long id) {
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, id);
         Account account = accountOpt.get();

@@ -1,39 +1,47 @@
 package app;
 
-import com.sun.jersey.api.core.ScanningResourceConfig;
-
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import app.controllers.*;
+import app.core.config.Config;
+import app.core.config.ConfigBinder;
+import app.core.config.TypesafeConfig;
+import app.core.inject.UserContextFactoryMap;
+import app.core.inject.UserContextFactoryProvider;
+import app.core.storage.Storage;
+import app.core.util.FileHelper;
+import app.core.util.Jackson;
+import app.core.view.FreemarkerRenderer;
+import app.core.view.Renderer;
+import app.core.view.ViewMessageBodyWriter;
+import app.db.JPAStorage;
+import app.mail.TextMailerFactory;
+import app.models.*;
+import app.resources.UploadResource;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.persistence.EntityManagerFactory;
-
+import javax.persistence.Persistence;
 import java.io.IOException;
 import java.util.Map;
 
-import app.core.*;
-import app.providers.*;
-import app.mail.TextMailerFactory;
-import app.models.*;
-import app.resources.*;
-import app.controllers.*;
-import app.renderer.*;
+import static app.core.util.ParameterUtils.params;
 
-import static app.core.Util.params;
-
-public class AppResourceConfig extends ScanningResourceConfig {
+public class AppResourceConfig extends ResourceConfig {
     public AppResourceConfig() throws IOException {
+        // features
+        register(MultiPartFeature.class);
+
         // factory
-        JsonParser parser = new YAMLFactory().createParser(
-                this.getClass().getResourceAsStream("/conf/factory.yml"));
-        ObjectMapper mapper = Jackson.newObjectMapper();
-        AppFactoryConfig factoryConfig = mapper.readValue(parser, AppFactoryConfig.class);
+        AppFactoryConfig factoryConfig = Jackson.fromYAML(
+                getClass().getResourceAsStream("/conf/factory.yml"),
+                AppFactoryConfig.class);
 
         // config
-        Config config = Config.load("conf/application");
+        Config config = TypesafeConfig.load("/conf/application.conf");
+        register(new ConfigBinder(config));
 
         // storage
-        EntityManagerFactory ef = JPA.ef("default");
+        EntityManagerFactory ef = Persistence.createEntityManagerFactory("default");
         Storage<Map<String, Object>> userStorage =
                 new JPAStorage(ef, "session_storage", "user-");
         Storage<Map<String, Object>> signupStorage =
@@ -59,33 +67,31 @@ public class AppResourceConfig extends ScanningResourceConfig {
         String templateDir = this.getClass().getResource("/views/freemarker").getPath();
         Map<String, Object> sharedVariables = params("config", config);
         Renderer renderer = new FreemarkerRenderer(templateDir, sharedVariables);
+        register(new ViewMessageBodyWriter(renderer));
 
         // providers
-        getSingletons().add(new ViewMessageBodyWriter(renderer));
-        getSingletons().add(new ConfigProvider(config));
-        getSingletons().add(new UserContextProvider(accountDao, userStorage, "APP_SESSION"));
+        UserContextFactoryMap factoryMap = new UserContextFactoryMap(
+                new ForumUserFactory(accountDao, userStorage, "APP_SESSION"));
+        register(new UserContextFactoryProvider.Binder(factoryMap));
 
         // finder
         String tmpPath = config.get("path.tmp", String.class);
-        Uploader uploader = new Uploader(tmpPath);
+        TempFileHelper tempFileHelper = new TempFileHelper(tmpPath);
         String uploadPath = config.get("path.upload", String.class);
-        Finder accountsIconFinder = FinderFactory.createAccountsIconFinder(
-                uploadPath + "/accounts/icon");
+        FileHelper accountsIconFinder = FileHelperFactory.createAccountsIconFinder(
+            uploadPath + "/accounts/icon");
 
         // resources
-        getSingletons().add(new UploadResource(uploader, accountsIconFinder));
+        register(new UploadResource(tempFileHelper, accountsIconFinder));
 
         // controllers
-        getSingletons().add(new PagesController());
-        getSingletons().add(new AccountsController(
-                accountDao, signupStorage, signupMailerFactory));
-        getSingletons().add(new RecoveryController(
-                accountDao, recoveryStorage, recoveryMailerFactory));
-        getSingletons().add(new DashboardController(questionDao, answerDao));
-        getSingletons().add(new ProfileController(accountDao,
-                uploader, accountsIconFinder, profileStorage, profileMailerFactory));
-        getSingletons().add(
-                new QuestionsController(questionDao, answerDao, accountDao, accountQuestionDao));
-        getSingletons().add(new AnswersController(questionDao, answerDao, accountAnswerDao));
+        register(new PagesController());
+        register(new AccountsController(accountDao, signupStorage, signupMailerFactory));
+        register(new RecoveryController(accountDao, recoveryStorage, recoveryMailerFactory));
+        register(new DashboardController(questionDao, answerDao));
+        register(new ProfileController(accountDao, tempFileHelper, accountsIconFinder,
+                profileStorage, profileMailerFactory));
+        register(new QuestionsController(questionDao, answerDao, accountDao, accountQuestionDao));
+        register(new AnswersController(questionDao, answerDao, accountAnswerDao));
     }
 }

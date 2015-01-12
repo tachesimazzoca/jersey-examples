@@ -1,24 +1,20 @@
 package app.controllers;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import com.google.common.base.Optional;
-
-import app.core.Pagination;
-import app.core.View;
-
+import app.core.inject.UserContext;
+import app.core.util.Pagination;
+import app.core.view.View;
 import app.models.Account;
 import app.models.AnswerDao;
 import app.models.AnswersResult;
-import app.models.UserContext;
+import app.models.ForumUser;
 import app.models.QuestionDao;
 import app.models.QuestionsResult;
+import com.google.common.base.Optional;
 
-import static app.core.Util.params;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+
+import static app.core.util.ParameterUtils.params;
 
 @Path("/dashboard")
 @Produces(MediaType.TEXT_HTML)
@@ -35,10 +31,10 @@ public class DashboardController {
 
     @GET
     public Response index(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo) {
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, "/dashboard");
         Account account = accountOpt.get();
@@ -50,12 +46,12 @@ public class DashboardController {
     @GET
     @Path("questions")
     public Response questions(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, "/dashboard/questions");
         Account account = accountOpt.get();
@@ -70,12 +66,12 @@ public class DashboardController {
     @GET
     @Path("answers")
     public Response answers(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
 
-        Optional<Account> accountOpt = userContext.getAccount();
+        Optional<Account> accountOpt = forumUser.getAccount();
         if (!accountOpt.isPresent())
             return redirectToLogin(uinfo, "/dashboard/answers");
         Account account = accountOpt.get();

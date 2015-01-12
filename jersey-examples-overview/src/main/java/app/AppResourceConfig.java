@@ -23,7 +23,7 @@ public class AppResourceConfig extends ResourceConfig {
 
     public AppResourceConfig() {
         // Config
-        Config config = TypesafeConfig.load("conf/application");
+        Config config = TypesafeConfig.load("/conf/application.conf");
         register(new ConfigBinder(config));
 
         // renderer

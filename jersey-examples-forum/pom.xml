@@ -1,84 +1,35 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.github.tachesimazzoca</groupId>
+
+  <parent>
+    <groupId>com.github.tachesimazzoca</groupId>
+    <artifactId>jersey-examples</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
   <artifactId>jersey-examples-forum</artifactId>
-  <packaging>jar</packaging>
-  <version>0.1.0-SNAPSHOT</version>
   <name>Jersey Examples | Forum</name>
-  <url>http://github.com/tachesimazzoca/jersey-examples/</url>
   <properties>
-    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
-    <maven.compiler.target>1.6</maven.compiler.target>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <jersey.version>1.18.1</jersey.version>
-    <jackson.version>2.4.1</jackson.version>
-    <hibernate.version>4.3.6.Final</hibernate.version>
     <el.version>2.2.4</el.version>
+    <hibernate.version>4.3.6.Final</hibernate.version>
   </properties>
+
   <dependencies>
     <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-server</artifactId>
+      <groupId>com.github.tachesimazzoca</groupId>
+      <artifactId>jersey-examples-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- jersey-media-multipart -->
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-multipart</artifactId>
       <version>${jersey.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-servlet</artifactId>
-      <version>${jersey.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-multipart</artifactId>
-      <version>${jersey.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>17.0</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.4</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.9</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-email</artifactId>
-      <version>1.3.3</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-yaml</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>config</artifactId>
-      <version>1.2.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.freemarker</groupId>
-      <artifactId>freemarker</artifactId>
-      <version>2.3.20</version>
-    </dependency>
+
+    <!-- hibernate-validator -->
     <dependency>
       <groupId>javax.el</groupId>
       <artifactId>javax.el-api</artifactId>
@@ -94,6 +45,8 @@
       <artifactId>hibernate-validator</artifactId>
       <version>5.1.1.Final</version>
     </dependency>
+
+    <!-- hibernate -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-core</artifactId>
@@ -104,34 +57,35 @@
       <artifactId>hibernate-entitymanager</artifactId>
       <version>${hibernate.version}</version>
     </dependency>
+
+    <!-- h2 -->
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
       <version>1.4.179</version>
     </dependency>
+
     <dependency>
       <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>2.5</version>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
       <scope>provided</scope>
     </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.10</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
-      <version>1.9.5</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
     <plugins>
       <plugin>
-        <!--
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
         <version>9.2.2.v20140723</version>
@@ -140,22 +94,6 @@
             <port>9000</port>
             <host>0.0.0.0</host>
           </httpConnector>
-          <scanIntervalSeconds>0</scanIntervalSeconds>
-          <webApp>
-            <contextPath>/forum</contextPath>
-          </webApp>
-        </configuration>
-        -->
-        <groupId>org.mortbay.jetty</groupId>
-        <artifactId>jetty-maven-plugin</artifactId>
-        <version>8.1.15.v20140411</version>
-        <configuration>
-          <connectors>
-            <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
-              <port>9000</port>
-              <host>0.0.0.0</host>
-            </connector>
-          </connectors>
           <scanIntervalSeconds>0</scanIntervalSeconds>
           <webApp>
             <contextPath>/forum</contextPath>
@@ -174,11 +112,6 @@
             </resource>
           </webResources>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.2.1</version>
       </plugin>
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>

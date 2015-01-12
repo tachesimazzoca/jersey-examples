@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import javax.persistence.EntityManagerFactory;
 
-import app.core.JPA;
+import app.db.JPA;
 
 import java.util.Map;
 

@@ -1,28 +1,27 @@
 package app.controllers;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import app.core.inject.UserContext;
+import app.core.storage.Storage;
+import app.core.view.FormHelper;
+import app.core.view.View;
+import app.mail.TextMailerFactory;
+import app.models.Account;
+import app.models.AccountDao;
+import app.models.ForumUser;
+import app.models.RecoveryEntryForm;
+import app.models.RecoveryResetForm;
+import com.google.common.base.Optional;
+import org.apache.commons.mail.EmailException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-
-import com.google.common.base.Optional;
-
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.mail.EmailException;
-
-import app.core.*;
-import app.mail.TextMailerFactory;
-import app.models.*;
-
-import static app.core.Util.params;
+import static app.core.util.ParameterUtils.params;
 
 @Path("/recovery")
 @Produces(MediaType.TEXT_HTML)
@@ -52,24 +51,24 @@ public class RecoveryController {
 
     @GET
     @Path("entry")
-    public Response entry(@Context UserContext userContext) {
-        userContext.logout();
+    public Response entry(@UserContext ForumUser forumUser) {
+        forumUser.logout();
         RecoveryEntryForm form = RecoveryEntryForm.defaultForm();
         View view = new View("recovery/entry", params(
                 "form", new FormHelper<RecoveryEntryForm>(form)));
-        return Response.ok(view).cookie(userContext.toCookie()).build();
+        return Response.ok(view).cookie(forumUser.toCookie()).build();
     }
 
     @POST
     @Path("entry")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEntry(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams)
             throws EmailException {
 
-        userContext.logout();
+        forumUser.logout();
 
         RecoveryEntryForm form = RecoveryEntryForm.bindFrom(formParams);
         Account account = null;
@@ -86,7 +85,7 @@ public class RecoveryController {
             View view = new View("recovery/entry", params(
                     "form", new FormHelper<RecoveryEntryForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
 
         Map<String, Object> params = params("id", account.getId());
@@ -99,40 +98,40 @@ public class RecoveryController {
         recoveryMailerFactory.create(form.getEmail(), url).send();
 
         return Response.ok(new View("recovery/verify"))
-                .cookie(userContext.toCookie()).build();
+                .cookie(forumUser.toCookie()).build();
     }
 
     @GET
     @Path("reset")
     public Response reset(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             @QueryParam("code") String code) {
 
-        userContext.logout();
+        forumUser.logout();
 
         Optional<Map<String, Object>> opt = recoveryStorage.read(code);
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/recovery/errors/session").build())
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
         RecoveryResetForm form = RecoveryResetForm.defaultForm();
         form.setCode(code);
         View view = new View("recovery/reset", params(
                 "form", new FormHelper<RecoveryResetForm>(form)));
-        return Response.ok(view).cookie(userContext.toCookie()).build();
+        return Response.ok(view).cookie(forumUser.toCookie()).build();
     }
 
     @POST
     @Path("reset")
     @Consumes("application/x-www-form-urlencoded")
     public Response postReset(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @Context UriInfo uinfo,
             MultivaluedMap<String, String> formParams) {
 
-        userContext.logout();
+        forumUser.logout();
 
         RecoveryResetForm form = RecoveryResetForm.bindFrom(formParams);
 
@@ -140,7 +139,7 @@ public class RecoveryController {
         if (!opt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/recovery/errors/session").build())
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
         Map<String, Object> params = opt.get();
 
@@ -149,7 +148,7 @@ public class RecoveryController {
         if (!accountOpt.isPresent()) {
             return Response.seeOther(uinfo.getBaseUriBuilder()
                     .path("/recovery/errors/session").build())
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
         Account account = accountOpt.get();
 
@@ -158,7 +157,7 @@ public class RecoveryController {
             View view = new View("recovery/reset", params(
                     "form", new FormHelper<RecoveryResetForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .cookie(userContext.toCookie()).build();
+                    .cookie(forumUser.toCookie()).build();
         }
 
         account.refreshPassword(form.getPassword());
@@ -167,6 +166,6 @@ public class RecoveryController {
         recoveryStorage.delete(form.getCode());
 
         return Response.ok(new View("recovery/complete"))
-                .cookie(userContext.toCookie()).build();
+                .cookie(forumUser.toCookie()).build();
     }
 }

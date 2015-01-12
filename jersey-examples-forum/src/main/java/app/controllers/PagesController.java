@@ -1,36 +1,39 @@
 package app.controllers;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
+import app.core.inject.UserContext;
+import app.core.view.View;
+import app.models.ForumUser;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import app.core.View;
-import app.models.UserContext;
-
-import static app.core.Util.params;
+import static app.core.util.ParameterUtils.params;
 
 @Path("/")
 @Produces(MediaType.TEXT_HTML)
 public class PagesController {
     @GET
-    public Response home(@Context UserContext userContext) {
-        return index(userContext);
+    public Response home(@UserContext ForumUser forumUser) {
+        return index(forumUser);
     }
 
     @GET
     @Path("index.html")
-    public Response index(@Context UserContext userContext) {
-        return page(userContext, "index");
+    public Response index(@UserContext ForumUser forumUser) {
+        return page(forumUser, "index");
     }
 
     @GET
     @Path("pages/{name}.html")
     public Response page(
-            @Context UserContext userContext,
+            @UserContext ForumUser forumUser,
             @PathParam("name") String name) {
         View view = new View("pages/" + name, params(
-                "account", userContext.getAccount().orNull()));
+                "account", forumUser.getAccount().orNull()));
         return Response.ok(view).build();
     }
 }

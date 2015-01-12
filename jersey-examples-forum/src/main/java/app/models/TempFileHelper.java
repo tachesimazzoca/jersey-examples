@@ -1,27 +1,26 @@
-package app.core;
-
-import java.io.File;
-import java.io.InputStream;
-import java.io.IOException;
-
-import org.apache.commons.io.FileUtils;
+package app.models;
 
 import com.google.common.base.Optional;
+import org.apache.commons.io.FileUtils;
 
-public class Uploader {
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+public class TempFileHelper {
     private File directory;
 
-    public Uploader(File directory) {
+    public TempFileHelper(File directory) {
         if (!directory.exists() || !directory.isDirectory())
             throw new IllegalArgumentException("The directory does not exist.");
         this.directory = directory;
     }
 
-    public Uploader(String directoryPath) {
+    public TempFileHelper(String directoryPath) {
         this(new File(directoryPath));
     }
 
-    public File upload(InputStream input, String prefix, String suffix)
+    public File create(InputStream input, String prefix, String suffix)
             throws IOException {
         File tempfile = File.createTempFile(prefix, suffix, directory);
         FileUtils.copyInputStreamToFile(input, tempfile);

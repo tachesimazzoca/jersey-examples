@@ -9,7 +9,7 @@ import javax.persistence.EntityManagerFactory;
 
 import java.util.Map;
 
-import app.core.JPA;
+import app.db.JPA;
 
 public class AccountAnswerDaoTest {
     private static final EntityManagerFactory ef = JPA.ef("test");

@@ -10,7 +10,7 @@ import javax.persistence.EntityManagerFactory;
 
 import java.math.BigInteger;
 
-import app.core.JPA;
+import app.db.JPA;
 
 public class QuestionTest {
     private static final EntityManagerFactory ef = JPA.ef("test");

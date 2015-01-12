@@ -3,16 +3,25 @@ package app.mail;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 
-public class CommonsMailer implements Mailer {
-    private final Email email;
+import java.util.logging.Logger;
 
-    public CommonsMailer(Email email) {
+public class CommonsMailer implements Mailer {
+    private static final Logger LOGGER = Logger.getLogger(CommonsMailer.class.getName());
+
+    private final Email email;
+    private final boolean fake;
+
+    public CommonsMailer(Email email, boolean fake) {
         this.email = email;
+        this.fake = fake;
     }
 
     public void send() {
         try {
-            email.send();
+            if (fake)
+                LOGGER.info((String) email.toString());
+            else
+                email.send();
         } catch (EmailException e) {
             throw new RuntimeException(e);
         }

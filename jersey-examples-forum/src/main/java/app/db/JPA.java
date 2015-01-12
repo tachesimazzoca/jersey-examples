@@ -1,4 +1,4 @@
-package app.core;
+package app.db;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -11,7 +11,7 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
-import app.core.Pagination;
+import app.core.util.Pagination;
 
 public class JPA {
     public static EntityManagerFactory ef(String name) {
