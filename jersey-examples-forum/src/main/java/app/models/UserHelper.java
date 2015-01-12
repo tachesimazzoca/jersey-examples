@@ -7,14 +7,14 @@ import javax.ws.rs.core.NewCookie;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ForumUser {
+public class UserHelper {
     private static final String KEY_ATTRIBUTES = "attributes";
     private static final String KEY_FLASH = "flash";
     private static final String KEY_ACCOUNT_ID = "accountId";
     private final StorageSession session;
     private final AccountDao accountDao;
 
-    public ForumUser(StorageSession session, AccountDao accountDao) {
+    public UserHelper(StorageSession session, AccountDao accountDao) {
         this.session = session;
         this.accountDao = accountDao;
     }

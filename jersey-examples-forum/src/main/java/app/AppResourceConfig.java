@@ -21,6 +21,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.io.IOException;
 import java.util.Map;
 
@@ -40,6 +42,12 @@ public class AppResourceConfig extends ResourceConfig {
         Config config = TypesafeConfig.load("/conf/application.conf");
         register(new ConfigBinder(config));
 
+        // view
+        String templateDir = this.getClass().getResource("/views/freemarker").getPath();
+        Map<String, Object> sharedVariables = params("config", config);
+        Renderer renderer = new FreemarkerRenderer(templateDir, sharedVariables);
+        register(new ViewMessageBodyWriter(renderer));
+
         // storage
         EntityManagerFactory ef = Persistence.createEntityManagerFactory("default");
         Storage<Map<String, Object>> userStorage =
@@ -50,6 +58,9 @@ public class AppResourceConfig extends ResourceConfig {
                 new JPAStorage(ef, "session_storage", "recovery-");
         Storage<Map<String, Object>> profileStorage =
                 new JPAStorage(ef, "session_storage", "profile-");
+
+        // validator
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
         // dao
         AccountDao accountDao = new AccountDao(ef);
@@ -63,15 +74,9 @@ public class AppResourceConfig extends ResourceConfig {
         TextMailerFactory recoveryMailerFactory = factoryConfig.getRecoveryMailerFactory();
         TextMailerFactory profileMailerFactory = factoryConfig.getProfileMailerFactory();
 
-        // renderer
-        String templateDir = this.getClass().getResource("/views/freemarker").getPath();
-        Map<String, Object> sharedVariables = params("config", config);
-        Renderer renderer = new FreemarkerRenderer(templateDir, sharedVariables);
-        register(new ViewMessageBodyWriter(renderer));
-
         // providers
         UserContextFactoryMap factoryMap = new UserContextFactoryMap(
-                new ForumUserFactory(accountDao, userStorage, "APP_SESSION"));
+                new UserHelperFactory(accountDao, userStorage, "APP_SESSION"));
         register(new UserContextFactoryProvider.Binder(factoryMap));
 
         // finder
@@ -86,12 +91,15 @@ public class AppResourceConfig extends ResourceConfig {
 
         // controllers
         register(new PagesController());
-        register(new AccountsController(accountDao, signupStorage, signupMailerFactory));
-        register(new RecoveryController(accountDao, recoveryStorage, recoveryMailerFactory));
+        register(new AccountsController(validator, accountDao,
+                signupStorage, signupMailerFactory));
+        register(new RecoveryController(validator, accountDao,
+                recoveryStorage, recoveryMailerFactory));
         register(new DashboardController(questionDao, answerDao));
-        register(new ProfileController(accountDao, tempFileHelper, accountsIconFinder,
+        register(new ProfileController(validator, accountDao, tempFileHelper, accountsIconFinder,
                 profileStorage, profileMailerFactory));
-        register(new QuestionsController(questionDao, answerDao, accountDao, accountQuestionDao));
-        register(new AnswersController(questionDao, answerDao, accountAnswerDao));
+        register(new QuestionsController(validator, questionDao, answerDao,
+                accountDao, accountQuestionDao));
+        register(new AnswersController(validator, questionDao, answerDao, accountAnswerDao));
     }
 }

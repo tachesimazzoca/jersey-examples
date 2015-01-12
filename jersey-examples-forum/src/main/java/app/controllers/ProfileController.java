@@ -1,23 +1,22 @@
 package app.controllers;
 
-import app.core.mail.MailerException;
-import app.models.TempFileHelper;
 import app.core.inject.UserContext;
+import app.core.mail.MailerException;
+import app.core.mail.TextMailerFactory;
 import app.core.storage.Storage;
 import app.core.util.FileHelper;
 import app.core.view.FormHelper;
 import app.core.view.View;
-import app.core.mail.TextMailerFactory;
 import app.models.Account;
 import app.models.AccountDao;
-import app.models.ForumUser;
 import app.models.ProfileEditForm;
+import app.models.TempFileHelper;
+import app.models.UserHelper;
 import com.google.common.base.Optional;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -39,12 +38,13 @@ public class ProfileController {
     private final TextMailerFactory profileMailerFactory;
 
     public ProfileController(
+            Validator validator,
             AccountDao accountDao,
             TempFileHelper tempFileHelper,
             FileHelper accountsIconFinder,
             Storage<Map<String, Object>> profileStorage,
             TextMailerFactory profileMailerFactory) {
-        this.validator = Validation.buildDefaultValidatorFactory().getValidator();
+        this.validator = validator;
         this.accountDao = accountDao;
         this.tempFileHelper = tempFileHelper;
         this.accountsIconFinder = accountsIconFinder;
@@ -55,12 +55,12 @@ public class ProfileController {
     @GET
     @Path("edit")
     public Response edit(
-            @UserContext ForumUser forumUser,
-            @Context UriInfo uinfo) {
+            @UserContext UserHelper userHelper,
+            @Context UriInfo uriInfo) {
 
-        Optional<Account> accountOpt = forumUser.getAccount();
+        Optional<Account> accountOpt = userHelper.getAccount();
         if (!accountOpt.isPresent())
-            return redirectToLogin(uinfo);
+            return redirectToLogin(uriInfo);
         Account account = accountOpt.get();
         boolean icon = accountsIconFinder.find(account.getId().toString()).isPresent();
 
@@ -69,7 +69,7 @@ public class ProfileController {
                 "account", account,
                 "form", new FormHelper<ProfileEditForm>(form),
                 "icon", icon,
-                "flash", forumUser.getFlash().orNull()));
+                "flash", userHelper.getFlash().orNull()));
         return Response.ok(view).build();
     }
 
@@ -77,14 +77,14 @@ public class ProfileController {
     @Path("edit")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEdit(
-            @UserContext ForumUser forumUser,
-            @Context UriInfo uinfo,
+            @UserContext UserHelper userHelper,
+            @Context UriInfo uriInfo,
             MultivaluedMap<String, String> formParams) throws
             IOException, MailerException {
 
-        Optional<Account> accountOpt = forumUser.getAccount();
+        Optional<Account> accountOpt = userHelper.getAccount();
         if (!accountOpt.isPresent())
-            return redirectToLogin(uinfo);
+            return redirectToLogin(uriInfo);
         Account account = accountOpt.get();
         Boolean icon = accountsIconFinder.find(account.getId().toString()).isPresent();
 
@@ -132,44 +132,44 @@ public class ProfileController {
         }
 
         if (form.getEmail().equals(account.getEmail())) {
-            forumUser.setFlash("saved");
-            return Response.seeOther(uinfo.getBaseUriBuilder()
+            userHelper.setFlash("saved");
+            return Response.seeOther(uriInfo.getBaseUriBuilder()
                     .path("/profile/edit").build())
-                    .cookie(forumUser.toCookie()).build();
+                    .cookie(userHelper.toCookie()).build();
         }
 
         Map<String, Object> params = params(
                 "id", account.getId(),
                 "email", form.getEmail());
         String code = profileStorage.create(params);
-        String url = uinfo.getBaseUriBuilder()
+        String url = uriInfo.getBaseUriBuilder()
                 .path("/profile/activate")
                 .queryParam("code", code)
                 .build()
                 .toString();
         profileMailerFactory.create(form.getEmail(), url).send();
 
-        return Response.seeOther(uinfo.getBaseUriBuilder()
+        return Response.seeOther(uriInfo.getBaseUriBuilder()
                 .path("/profile/verify").build()).build();
     }
 
     @GET
     @Path("verify")
-    public Response verify(@UserContext ForumUser forumUser) {
+    public Response verify(@UserContext UserHelper userHelper) {
         return Response.ok(new View("profile/verify", params(
-                "account", forumUser.getAccount().orNull()))).build();
+                "account", userHelper.getAccount().orNull()))).build();
     }
 
     @GET
     @Path("activate")
     public Response activate(
-            @UserContext ForumUser forumUser,
-            @Context UriInfo uinfo,
+            @UserContext UserHelper userHelper,
+            @Context UriInfo uriInfo,
             @QueryParam("code") String code) {
         Optional<Map<String, Object>> opt = profileStorage.read(code);
         profileStorage.delete(code);
         if (!opt.isPresent()) {
-            return Response.seeOther(uinfo.getBaseUriBuilder()
+            return Response.seeOther(uriInfo.getBaseUriBuilder()
                     .path("/profile/errors/session").build()).build();
         }
 
@@ -177,23 +177,23 @@ public class ProfileController {
         Long id = (Long) params.get("id");
         String email = (String) params.get("email");
 
-        Optional<Account> accountOpt = forumUser.getAccount();
+        Optional<Account> accountOpt = userHelper.getAccount();
         if (accountOpt.isPresent()) {
             Account account = accountOpt.get();
             if (!id.equals(account.getId())) {
                 // The current user is not a verified user.
-                return Response.seeOther(uinfo.getBaseUriBuilder()
+                return Response.seeOther(uriInfo.getBaseUriBuilder()
                         .path("/profile/errors/session").build()).build();
             }
         }
 
         accountOpt = accountDao.find(id);
         if (!accountOpt.isPresent()) {
-            return Response.seeOther(uinfo.getBaseUriBuilder()
+            return Response.seeOther(uriInfo.getBaseUriBuilder()
                     .path("/profile/errors/session").build()).build();
         }
         if (accountDao.findByEmail(email).isPresent()) {
-            return Response.seeOther(uinfo.getBaseUriBuilder()
+            return Response.seeOther(uriInfo.getBaseUriBuilder()
                     .path("/profile/errors/email").build()).build();
         }
 
@@ -207,15 +207,15 @@ public class ProfileController {
     @GET
     @Path("errors/{name}")
     public Response errors(
-            @UserContext ForumUser forumUser,
+            @UserContext UserHelper userHelper,
             @PathParam("name") String name) {
         return Response.status(Response.Status.FORBIDDEN)
                 .entity(new View("profile/errors/" + name, params(
-                        "account", forumUser.getAccount().orNull()))).build();
+                        "account", userHelper.getAccount().orNull()))).build();
     }
 
-    private Response redirectToLogin(UriInfo uinfo) {
-        return Response.seeOther(uinfo.getBaseUriBuilder()
+    private Response redirectToLogin(UriInfo uriInfo) {
+        return Response.seeOther(uriInfo.getBaseUriBuilder()
                 .path("/accounts/signin")
                 .queryParam("returnTo", "/profile/edit")
                 .build()).build();

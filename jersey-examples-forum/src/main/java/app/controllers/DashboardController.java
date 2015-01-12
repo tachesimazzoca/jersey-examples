@@ -6,9 +6,9 @@ import app.core.view.View;
 import app.models.Account;
 import app.models.AnswerDao;
 import app.models.AnswersResult;
-import app.models.ForumUser;
 import app.models.QuestionDao;
 import app.models.QuestionsResult;
+import app.models.UserHelper;
 import com.google.common.base.Optional;
 
 import javax.ws.rs.*;
@@ -31,12 +31,12 @@ public class DashboardController {
 
     @GET
     public Response index(
-            @UserContext ForumUser forumUser,
-            @Context UriInfo uinfo) {
+            @UserContext UserHelper userHelper,
+            @Context UriInfo uriInfo) {
 
-        Optional<Account> accountOpt = forumUser.getAccount();
+        Optional<Account> accountOpt = userHelper.getAccount();
         if (!accountOpt.isPresent())
-            return redirectToLogin(uinfo, "/dashboard");
+            return redirectToLogin(uriInfo, "/dashboard");
         Account account = accountOpt.get();
 
         return Response.ok(new View("dashboard/index", params(
@@ -46,14 +46,14 @@ public class DashboardController {
     @GET
     @Path("questions")
     public Response questions(
-            @UserContext ForumUser forumUser,
-            @Context UriInfo uinfo,
+            @UserContext UserHelper userHelper,
+            @Context UriInfo uriInfo,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
 
-        Optional<Account> accountOpt = forumUser.getAccount();
+        Optional<Account> accountOpt = userHelper.getAccount();
         if (!accountOpt.isPresent())
-            return redirectToLogin(uinfo, "/dashboard/questions");
+            return redirectToLogin(uriInfo, "/dashboard/questions");
         Account account = accountOpt.get();
 
         Pagination<QuestionsResult> questions =
@@ -66,14 +66,14 @@ public class DashboardController {
     @GET
     @Path("answers")
     public Response answers(
-            @UserContext ForumUser forumUser,
-            @Context UriInfo uinfo,
+            @UserContext UserHelper userHelper,
+            @Context UriInfo uriInfo,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("20") int limit) {
 
-        Optional<Account> accountOpt = forumUser.getAccount();
+        Optional<Account> accountOpt = userHelper.getAccount();
         if (!accountOpt.isPresent())
-            return redirectToLogin(uinfo, "/dashboard/answers");
+            return redirectToLogin(uriInfo, "/dashboard/answers");
         Account account = accountOpt.get();
 
         Pagination<AnswersResult> answers =
@@ -83,8 +83,8 @@ public class DashboardController {
                 "answers", answers))).build();
     }
 
-    private Response redirectToLogin(UriInfo uinfo, String returnTo) {
-        return Response.seeOther(uinfo.getBaseUriBuilder()
+    private Response redirectToLogin(UriInfo uriInfo, String returnTo) {
+        return Response.seeOther(uriInfo.getBaseUriBuilder()
                 .path("/accounts/signin")
                 .queryParam("returnTo", returnTo)
                 .build()).build();

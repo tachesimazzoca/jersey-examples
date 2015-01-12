@@ -8,13 +8,12 @@ import app.core.view.FormHelper;
 import app.core.view.View;
 import app.models.Account;
 import app.models.AccountDao;
-import app.models.ForumUser;
 import app.models.RecoveryEntryForm;
 import app.models.RecoveryResetForm;
+import app.models.UserHelper;
 import com.google.common.base.Optional;
 
 import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -32,10 +31,11 @@ public class RecoveryController {
     private final TextMailerFactory recoveryMailerFactory;
 
     public RecoveryController(
+            Validator validator,
             AccountDao accountDao,
             Storage<Map<String, Object>> recoveryStorage,
             TextMailerFactory recoveryMailerFactory) {
-        this.validator = Validation.buildDefaultValidatorFactory().getValidator();
+        this.validator = validator;
         this.accountDao = accountDao;
         this.recoveryStorage = recoveryStorage;
         this.recoveryMailerFactory = recoveryMailerFactory;
@@ -51,24 +51,24 @@ public class RecoveryController {
 
     @GET
     @Path("entry")
-    public Response entry(@UserContext ForumUser forumUser) {
-        forumUser.logout();
+    public Response entry(@UserContext UserHelper userHelper) {
+        userHelper.logout();
         RecoveryEntryForm form = RecoveryEntryForm.defaultForm();
         View view = new View("recovery/entry", params(
                 "form", new FormHelper<RecoveryEntryForm>(form)));
-        return Response.ok(view).cookie(forumUser.toCookie()).build();
+        return Response.ok(view).cookie(userHelper.toCookie()).build();
     }
 
     @POST
     @Path("entry")
     @Consumes("application/x-www-form-urlencoded")
     public Response postEntry(
-            @UserContext ForumUser forumUser,
-            @Context UriInfo uinfo,
+            @UserContext UserHelper userHelper,
+            @Context UriInfo uriInfo,
             MultivaluedMap<String, String> formParams)
             throws MailerException {
 
-        forumUser.logout();
+        userHelper.logout();
 
         RecoveryEntryForm form = RecoveryEntryForm.bindFrom(formParams);
         Account account = null;
@@ -85,12 +85,12 @@ public class RecoveryController {
             View view = new View("recovery/entry", params(
                     "form", new FormHelper<RecoveryEntryForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .cookie(forumUser.toCookie()).build();
+                    .cookie(userHelper.toCookie()).build();
         }
 
         Map<String, Object> params = params("id", account.getId());
         String code = recoveryStorage.create(params);
-        String url = uinfo.getBaseUriBuilder()
+        String url = uriInfo.getBaseUriBuilder()
                 .path("/recovery/reset")
                 .queryParam("code", code)
                 .build()
@@ -98,57 +98,57 @@ public class RecoveryController {
         recoveryMailerFactory.create(form.getEmail(), url).send();
 
         return Response.ok(new View("recovery/verify"))
-                .cookie(forumUser.toCookie()).build();
+                .cookie(userHelper.toCookie()).build();
     }
 
     @GET
     @Path("reset")
     public Response reset(
-            @UserContext ForumUser forumUser,
-            @Context UriInfo uinfo,
+            @UserContext UserHelper userHelper,
+            @Context UriInfo uriInfo,
             @QueryParam("code") String code) {
 
-        forumUser.logout();
+        userHelper.logout();
 
         Optional<Map<String, Object>> opt = recoveryStorage.read(code);
         if (!opt.isPresent()) {
-            return Response.seeOther(uinfo.getBaseUriBuilder()
+            return Response.seeOther(uriInfo.getBaseUriBuilder()
                     .path("/recovery/errors/session").build())
-                    .cookie(forumUser.toCookie()).build();
+                    .cookie(userHelper.toCookie()).build();
         }
         RecoveryResetForm form = RecoveryResetForm.defaultForm();
         form.setCode(code);
         View view = new View("recovery/reset", params(
                 "form", new FormHelper<RecoveryResetForm>(form)));
-        return Response.ok(view).cookie(forumUser.toCookie()).build();
+        return Response.ok(view).cookie(userHelper.toCookie()).build();
     }
 
     @POST
     @Path("reset")
     @Consumes("application/x-www-form-urlencoded")
     public Response postReset(
-            @UserContext ForumUser forumUser,
-            @Context UriInfo uinfo,
+            @UserContext UserHelper userHelper,
+            @Context UriInfo uriInfo,
             MultivaluedMap<String, String> formParams) {
 
-        forumUser.logout();
+        userHelper.logout();
 
         RecoveryResetForm form = RecoveryResetForm.bindFrom(formParams);
 
         Optional<Map<String, Object>> opt = recoveryStorage.read(form.getCode());
         if (!opt.isPresent()) {
-            return Response.seeOther(uinfo.getBaseUriBuilder()
+            return Response.seeOther(uriInfo.getBaseUriBuilder()
                     .path("/recovery/errors/session").build())
-                    .cookie(forumUser.toCookie()).build();
+                    .cookie(userHelper.toCookie()).build();
         }
         Map<String, Object> params = opt.get();
 
         Long id = (Long) params.get("id");
         Optional<Account> accountOpt = accountDao.find(id);
         if (!accountOpt.isPresent()) {
-            return Response.seeOther(uinfo.getBaseUriBuilder()
+            return Response.seeOther(uriInfo.getBaseUriBuilder()
                     .path("/recovery/errors/session").build())
-                    .cookie(forumUser.toCookie()).build();
+                    .cookie(userHelper.toCookie()).build();
         }
         Account account = accountOpt.get();
 
@@ -157,7 +157,7 @@ public class RecoveryController {
             View view = new View("recovery/reset", params(
                     "form", new FormHelper<RecoveryResetForm>(form, errors)));
             return Response.status(Response.Status.FORBIDDEN).entity(view)
-                    .cookie(forumUser.toCookie()).build();
+                    .cookie(userHelper.toCookie()).build();
         }
 
         account.refreshPassword(form.getPassword());
@@ -166,6 +166,6 @@ public class RecoveryController {
         recoveryStorage.delete(form.getCode());
 
         return Response.ok(new View("recovery/complete"))
-                .cookie(forumUser.toCookie()).build();
+                .cookie(userHelper.toCookie()).build();
     }
 }

@@ -7,7 +7,7 @@ import app.core.storage.Storage;
 import javax.ws.rs.core.*;
 import java.util.Map;
 
-public class ForumUserFactory extends UserContextFactory<ForumUser> {
+public class UserHelperFactory extends UserContextFactory<UserHelper> {
     @Context
     HttpHeaders headers;
 
@@ -17,14 +17,14 @@ public class ForumUserFactory extends UserContextFactory<ForumUser> {
     private final String path;
     private final String domain;
 
-    public ForumUserFactory(
+    public UserHelperFactory(
             AccountDao accountDao,
             Storage<Map<String, Object>> storage,
             String cookieName) {
         this(accountDao, storage, cookieName, "/", "");
     }
 
-    public ForumUserFactory(
+    public UserHelperFactory(
             AccountDao accountDao,
             Storage<Map<String, Object>> storage,
             String cookieName,
@@ -39,7 +39,7 @@ public class ForumUserFactory extends UserContextFactory<ForumUser> {
 
     @Override
     public UserContextFactory clone() {
-        return new ForumUserFactory(accountDao, storage, cookieName, path, domain);
+        return new UserHelperFactory(accountDao, storage, cookieName, path, domain);
     }
 
     public void setHttpHeaders(HttpHeaders headers) {
@@ -47,12 +47,12 @@ public class ForumUserFactory extends UserContextFactory<ForumUser> {
     }
 
     @Override
-    public Class<ForumUser> getGeneratedClass() {
-        return ForumUser.class;
+    public Class<UserHelper> getGeneratedClass() {
+        return UserHelper.class;
     }
 
     @Override
-    public ForumUser provide() {
+    public UserHelper provide() {
         String sessionId = null;
         Map<String, Cookie> cookies = headers.getCookies();
         if (cookies.containsKey(cookieName))
@@ -61,6 +61,6 @@ public class ForumUserFactory extends UserContextFactory<ForumUser> {
                 cookieName, sessionId, path, domain,
                 NewCookie.DEFAULT_VERSION, "",
                 NewCookie.DEFAULT_MAX_AGE, false);
-        return new ForumUser(new StorageSession(storage, cookie, sessionId), accountDao);
+        return new UserHelper(new StorageSession(storage, cookie, sessionId), accountDao);
     }
 }
