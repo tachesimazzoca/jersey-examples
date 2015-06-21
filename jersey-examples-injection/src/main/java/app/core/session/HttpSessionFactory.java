@@ -1,4 +1,4 @@
-package app.inject;
+package app.core.session;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -12,19 +12,16 @@ public class HttpSessionFactory implements Factory<HttpSession> {
 
     @Inject
     public HttpSessionFactory(HttpServletRequest request) {
-        System.out.println("HttpSessionFactory");
         this.request = request;
     }
 
     @Override
     public HttpSession provide() {
-        System.out.println("HttpSessionFactory#provide");
         return request.getSession();
     }
 
     @Override
-    public void dispose(HttpSession httpSession) {
-        System.out.println("HttpSessionFactory#dispose");
+    public void dispose(HttpSession t) {
     }
 
     public static class Binder extends AbstractBinder {
