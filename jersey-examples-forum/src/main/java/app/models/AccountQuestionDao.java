@@ -18,7 +18,7 @@ public class AccountQuestionDao {
         JPA.withTransaction(ef, new JPA.TransactionBlock<Void>() {
             public Void apply(EntityManager em) {
                 em.createNativeQuery(
-                        "DELETE account_questions WHERE account_id = ?1 AND question_id = ?2")
+                        "DELETE FROM account_questions WHERE account_id = ?1 AND question_id = ?2")
                         .setParameter(1, accountId)
                         .setParameter(2, questionId)
                         .executeUpdate();
