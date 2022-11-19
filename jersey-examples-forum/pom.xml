@@ -10,6 +10,7 @@
 
   <artifactId>jersey-examples-forum</artifactId>
   <name>Jersey Examples | Forum</name>
+  <packaging>war</packaging>
   <properties>
     <el.version>2.2.4</el.version>
     <hibernate.version>4.3.6.Final</hibernate.version>
@@ -95,7 +96,7 @@
       <plugin>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
-        <version>9.2.2.v20140723</version>
+        <version>9.4.49.v20220914</version>
         <configuration>
           <httpConnector>
             <port>9000</port>
