@@ -12,7 +12,7 @@
     <name>Jersey Examples | Core Library</name>
 
     <properties>
-        <jackson.version>2.13.4</jackson.version>
+        <jackson.version>2.13.4.2</jackson.version>
     </properties>
 
     <dependencies>
